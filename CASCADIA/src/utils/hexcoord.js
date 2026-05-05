@@ -1,11 +1,13 @@
 export default class HexCoord {
-    constructor(q, r, hexSize = 1) {
-        this.q = q; // column
-        this.r = r; // row
+    constructor(c, r, hexSize = 1) {
+        // Axiale Koordinaten des Hex-Gitters.
+        // `c` entspricht der Spalten-/q-Achse (column), `r` der Reihen-/r-Achse (row).
+        this.column = c;
+        this.row = r;
         this.hexSize = hexSize;
     }
 
-    // Pointy-top axial directions
+    // Nachbar-Richtungen für ein pointy-top Hex-Gitter in axialen Koordinaten.
     static Directions = [
         new HexCoord(1, 0),
         new HexCoord(1, -1),
@@ -16,31 +18,32 @@ export default class HexCoord {
     ];
 
     neighbor(dir) {
-        const d = HexCoord.Directions[dir];
-        return new HexCoord(this.q + d.q, this.r + d.r);
+        const direction = HexCoord.Directions[dir];
+        return new HexCoord(this.column + direction.column, this.row - direction.row);
     }
 
     static add(a, b) {
-        return new HexCoord(a.q + b.q, a.r + b.r);
+        return new HexCoord(a.column + b.column, a.row + b.row);
     }
 
     equals(other) {
         if (!(other instanceof HexCoord)) return false;
-        return this.q === other.q && this.r === other.r;
+        return this.column === other.column && this.row === other.row;
     }
 
     hashCode() {
-        return `${this.q},${this.r}`;
+        return `${this.column},${this.row}`;
     }
 
     toString() {
-        return `(${this.q}, ${this.r})`;
+        return `(${this.column}, ${this.row})`;
     }
 
     static distance(a, b) {
-        const dq = a.q - b.q;
-        const dr = a.r - b.r;
-        const ds = (-a.q - a.r) - (-b.q - b.r);
+        // Distanz im axialen Koordinatensystem, umgerechnet über Cube-Koordinaten.
+        const dq = a.column - b.column;
+        const dr = a.row - b.row;
+        const ds = (-a.column - a.row) - (-b.column - b.row);
 
         return Math.max(Math.abs(dq), Math.abs(dr), Math.abs(ds));
     }
@@ -56,22 +59,25 @@ export default class HexCoord {
     }
 
     hexToWorld() {
-        const x = this.hexSize * Math.sqrt(3) * (this.q + this.r * 0.5);
-        const z = this.hexSize * (1.5 * this.r);
+        // Pointy-top axial -> Weltkoordinaten: X/Z-Ebene, Y bleibt auf 0.
+        const x = this.hexSize * Math.sqrt(3) * (this.column + this.row * 0.5);
+        const z = this.hexSize * (1.5 * this.row);
 
         return { x, y: 0, z };
     }
 
     static worldToHex(pos, hexSize = 1) {
-        const q = (Math.sqrt(3) / 3 * pos.x - 1 / 3 * pos.z) / hexSize;
-        const r = (2 / 3 * pos.z) / hexSize;
+        // Umkehrung von hexToWorld() für pointy-top Hexfelder.
+        const column = (Math.sqrt(3) / 3 * pos.x - 1 / 3 * pos.z) / hexSize;
+        const row = (2 / 3 * pos.z) / hexSize;
 
-        return HexCoord.hexRound(q, r, hexSize);
+        return HexCoord.hexRound(column, row, hexSize);
     }
 
-    static hexRound(q, r, hexSize = 1) {
-        let x = q;
-        let z = r;
+    static hexRound(column, row, hexSize = 1) {
+        // Rundet zunächst auf Cube-Koordinaten und korrigiert dann die größte Abweichung.
+        let x = column;
+        let z = row;
         let y = -x - z;
 
         let rx = Math.round(x);

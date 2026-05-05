@@ -25,8 +25,8 @@ export default class App {
         this.setupAudioUnlock();
     }
 
-    async start() {
-        await this.sceneManager.change(new MenuScene(this));
+    start() {
+        this.sceneManager.change(new MenuScene(this));
         this.loop(0);
     }
 

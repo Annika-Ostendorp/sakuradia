@@ -4,13 +4,13 @@ export default class SceneManager {
         this.current = null;
     }
 
-    async change(scene) {
+    change(scene) {
         if (this.current) {
             this.current.exit();
         }
 
         this.current = scene;
-        await this.current.enter();
+        this.current.enter();
     }
 
     update(delta) {
