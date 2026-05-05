@@ -17,13 +17,16 @@ export default class GameScene extends BaseScene {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x1a1a2e);
 
-        this.camera = new THREE.PerspectiveCamera(
-            75,
-            window.innerWidth / window.innerHeight
+        this.camera = createGameCamera();
+        this.controls = createGameOrbitControls(
+            this.camera,
+            this.game.renderer.getDOMElement()
         );
 
         this.camera.position.set(0, 15, 0);
         this.camera.lookAt(0, 0, 0);
+        this.camera.rotation.x = -Math.PI / 2; // 90 Grad nach unten geneigt
+        this.camera.rotation.z = Math.PI; // 180 Grad um die Hochachse gedreht, damit "oben" im Spiel auch oben auf dem Bildschirm ist
 
         // 🔊 Audio Listener an Kamera hängen
         this.listener = new THREE.AudioListener();
@@ -54,11 +57,7 @@ export default class GameScene extends BaseScene {
         this.gameplayManager.spawnTile({ column: 0, row: -1 }, randomStarterTile.leftTile, 2);
     }
 
-    exit() {
-        this.controls?.dispose();
-    }
-
     update(delta) {
-
+        this.controls?.update();        
     }
 }
