@@ -2,19 +2,21 @@
 import * as THREE from "three";
 import BaseScene from "./BaseScene.js";
 import GameplayManager from "../managers/GameplayManager.js";
+import {
+    createGameCamera,
+    createGameOrbitControls
+} from "../rendering/camera/camera.js";
 
 export default class GameScene extends BaseScene {
     async enter() {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x1a1a2e);
 
-        this.camera = new THREE.PerspectiveCamera(
-            75,
-            window.innerWidth / window.innerHeight
+        this.camera = createGameCamera();
+        this.controls = createGameOrbitControls(
+            this.camera,
+            this.game.renderer.getDOMElement()
         );
-
-        this.camera.position.set(0, 15, 0);
-        this.camera.lookAt(0, 0, 0);
 
         // 🔊 Audio Listener an Kamera hängen
         this.listener = new THREE.AudioListener();
@@ -45,7 +47,11 @@ export default class GameScene extends BaseScene {
         ]);
     }
 
-    update(delta) {
+    exit() {
+        this.controls?.dispose();
+    }
 
+    update(delta) {
+        this.controls?.update();
     }
 }
