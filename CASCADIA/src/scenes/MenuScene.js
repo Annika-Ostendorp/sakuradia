@@ -30,17 +30,13 @@ export default class MenuScene extends BaseScene {
             this.sound.setLoop(true);
 
             this.game.audioManager.add("menu", this.sound, AudioType.AMBIENCE);
-
-            this.game.audioManager.resume().then(() => {
-                this.game.audioManager.play("menu");
-            });
         });
 
         // Start Button erstellen
         this.button = createButton("Start Game");
 
-        this.button.addEventListener("click", async () => {
-            await this.game.sceneManager.change(new GameScene(this.game));
+        this.button.addEventListener("click", () => {
+            this.game.sceneManager.change(new GameScene(this.game));
         });
     }
 
