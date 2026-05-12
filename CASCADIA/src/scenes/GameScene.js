@@ -10,7 +10,7 @@ import { Animal } from "enums/Animal.js";
 import { Landscape } from "../enums/Landscape.js";
 import Library from "../data/Library.js";
 import { TileData, StarterTile } from "../gameplay/Tile.js";
-import HexCoord from "../utils/hexcoord.js";
+import HexCoord from "../utils/HexCoord.js";
 
 export default class GameScene extends BaseScene {
     enter() {

@@ -1,8 +1,0 @@
-class tileData{
-    constructor(primaryLandscape, secondaryLandscape = Landscape.UNDEFINED, animals = [], count = 1) {
-        this.primaryLandscape = primaryLandscape;
-        this.secondaryLandscape = secondaryLandscape;
-        this.animals = animals;
-        this.count = count;
-    }
-}
