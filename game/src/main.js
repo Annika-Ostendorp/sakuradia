@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import './styles/global.css';
 import './ui/styles/menuBackground.css';
 import { createGameCamera, createGameOrbitControls } from './rendering/orbitalcamera.js';
-import { getGameConfig } from './states/gameConfigState.js';
+import { getGameConfig, updateGameConfig } from './states/gameConfigState.js';
 import { createMainMenu } from './ui/components/createMainMenu.js';
 
 const canvas = document.querySelector('#game-canvas');
@@ -15,6 +15,9 @@ if (!canvas || !menuRoot) {
 const gameConfig = getGameConfig();
 const mainMenu = createMainMenu({
   initialConfig: gameConfig,
+  onConfigChange: (config) => {
+    updateGameConfig(config);
+  },
   onStart: (config) => {
     console.info('Start button clicked with config:', config);
   },

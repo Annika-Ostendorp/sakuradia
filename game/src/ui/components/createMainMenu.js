@@ -1,10 +1,11 @@
 import '../styles/mainMenu.css';
+import { createRoundSlider } from './createRoundSlider.js';
 
-export function createMainMenu({ initialConfig, onStart }) {
+export function createMainMenu({ initialConfig, onConfigChange, onStart }) {
   const menuElement = document.createElement('section');
   menuElement.className = 'main-menu';
 
-  const rounds = String(initialConfig.rounds ?? '');
+  let currentConfig = { ...initialConfig };
 
   menuElement.innerHTML = `
     <p class="main-menu__eyebrow">Sakuradia</p>
@@ -14,20 +15,38 @@ export function createMainMenu({ initialConfig, onStart }) {
     </p>
     <div class="main-menu__config-preview" aria-label="Aktuelle Spielkonfiguration">
       <span class="main-menu__config-label">Geplante Runden</span>
-      <strong class="main-menu__config-value">${rounds}</strong>
-      <span class="main-menu__config-note">Der Slider folgt im naechsten Schritt.</span>
+      <strong class="main-menu__config-value">${currentConfig.rounds}</strong>
+      <span class="main-menu__config-note">Passe die Runden vor dem Start flexibel an.</span>
     </div>
+    <div class="main-menu__slider-slot"></div>
     <button class="main-menu__start-button" type="button">Spiel starten</button>
   `;
 
+  const configValue = menuElement.querySelector('.main-menu__config-value');
+  const sliderSlot = menuElement.querySelector('.main-menu__slider-slot');
   const startButton = menuElement.querySelector('.main-menu__start-button');
 
-  if (!startButton) {
+  if (!configValue || !sliderSlot || !startButton) {
     throw new Error('Main menu could not be created.');
   }
 
+  const roundSlider = createRoundSlider({
+    value: currentConfig.rounds,
+    onChange: (rounds) => {
+      currentConfig = {
+        ...currentConfig,
+        rounds,
+      };
+
+      configValue.textContent = String(rounds);
+      onConfigChange?.(currentConfig);
+    },
+  });
+
+  sliderSlot.append(roundSlider);
+
   startButton.addEventListener('click', () => {
-    onStart?.(initialConfig);
+    onStart?.(currentConfig);
   });
 
   return menuElement;
