@@ -1,0 +1,83 @@
+.hand-panel {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(18rem, 42vw);
+  padding: 0.9rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(12, 16, 22, 0.88);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  color: #f4f5f7;
+  pointer-events: auto;
+  z-index: 5;
+}
+
+.hand-panel__title {
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+.hand-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.hand-panel__pair {
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
+}
+
+.hand-panel__pair:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.09);
+  transform: translateX(2px);
+}
+
+.hand-panel__pair--selected {
+  border-color: #7dc7ff;
+  background: rgba(75, 140, 190, 0.28);
+}
+
+.hand-panel__pair--empty {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.hand-panel__pair-index {
+  font-size: 0.72rem;
+  color: #b8beca;
+}
+
+.hand-panel__pair-title {
+  font-size: 0.87rem;
+  font-weight: 700;
+}
+
+.hand-panel__pair-meta {
+  font-size: 0.78rem;
+  color: #d4dae4;
+}
+
+@media (max-width: 700px) {
+  .hand-panel {
+    top: auto;
+    bottom: 0.9rem;
+    transform: none;
+    width: calc(100vw - 1.8rem);
+    max-width: 24rem;
+  }
+}
