@@ -4,7 +4,7 @@ import Library from "../data/Library.js";
 export default class DeckLogic {
     constructor(library) {
         // Mische alle verfügbaren Tiles (85) ins Deck
-        this.deck = library.getTileDataList(); 
+        this.deck = library.getTileDataList();
 
         this.deck.sort(() => Math.random() - 0.5);
 

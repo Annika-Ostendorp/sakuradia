@@ -8,7 +8,12 @@ export default class Library {
      * @returns {Array<TileData>}
      */
     getTileDataList() {
-        return this.getAllTiles();
+        var list = []
+        for (var tileData of this.getAllTiles())
+            for (var i = 0; i < tileData.count; i++)
+                list.push(tileData);
+            
+        return list;
     }
 
     /**
