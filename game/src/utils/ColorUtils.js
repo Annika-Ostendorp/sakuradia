@@ -1,19 +1,19 @@
-import { Landscape } from "../data/Landscape";
+import { Landscape } from "../data/Landscape.js";
 
 export default class ColorUtils {
 
     getColorForLandscape(landscape) {
         switch (landscape) {
             case Landscape.MOUNTAIN:
-                return 0x888888; // Grau
-            case Landscape.RIVER:
-                return 0x0000ff; // Blau
+                return 0x000008; // Grau
+            case Landscape.POND:
+                return 0x3083BC; // Blau
             case Landscape.WETLAND:
                 return 0x00ff00; // Gruen
             case Landscape.BAMBOOFOREST:
                 return 0x228b22; // Dunkelgrün
-            case Landscape.GRASSLAND:
-                return 0x7cfc00; // Hellgrün
+            case Landscape.SAKURA:
+                return 0xFFB7C5; // Rosa
             default:
                 return 0xffffff; // Weiss für undefined oder unbekannte Landschaften
         }

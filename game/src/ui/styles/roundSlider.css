@@ -1,0 +1,21 @@
+.round-slider {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.round-slider__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.round-slider__label {
+  color: rgba(255, 239, 227, 0.82);
+}
+
+.round-slider__input {
+  width: 100%;
+  accent-color: #f0a943;
+  cursor: pointer;
+}

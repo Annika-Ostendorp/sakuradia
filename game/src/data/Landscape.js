@@ -3,8 +3,8 @@ const Landscape = Object.freeze({
     "MOUNTAIN": "Mountain",
     "BAMBOOFOREST": "BambooForest",
     "WETLAND": "Wetland",
-    "RIVER": "River",
-    "GRASSLAND": "Grassland"
+    "POND": "Pond",
+    "SAKURA": "Sakura"
 });
 
 export { Landscape };

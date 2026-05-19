@@ -14,8 +14,8 @@ export default class Game {
         this.library = new Library();
         this.deckLogic = new DeckLogic(this.library);
         this.gridManager = new GridManager(this.scene);
-        this.tilesOnHand = []; // Stack der aktuell gezogenen Tiles, die der Spieler platzieren kann.
-        this.animalsOnHand = []; // Stack der aktuell gezogenen Tiere, die der Spieler platzieren kann.
+        this.tilesOnHand = []; // Queue der aktuell gezogenen Tiles, die der Spieler platzieren kann.
+        this.animalsOnHand = []; // Queue der aktuell gezogenen Tiere, die der Spieler platzieren kann.
     }
 
     // Startet das Spiel, indem das Startertile initialisiert wird.
@@ -34,11 +34,36 @@ export default class Game {
         this.gridManager.setTile(new HexCoord(1, -1), starterTileData.rightTile, 0);
     }
 
-    pushTileToHand(tileData) {
+    enqueueTileToHand(tileData) {
         this.tilesOnHand.push(tileData);
     }
 
-    pushAnimalToHand(animal) {
+    dequeueTileFromHand() {
+        return this.tilesOnHand.shift();
+    }
+
+    peekTileOnHand() {
+        return this.tilesOnHand[0];
+    }
+
+    enqueueAnimalToHand(animal) {
         this.animalsOnHand.push(animal);
+    }
+
+    dequeueAnimalFromHand() {
+        return this.animalsOnHand.shift();
+    }
+
+    peekAnimalOnHand() {
+        return this.animalsOnHand[0];
+    }
+
+    // Backward-compatible helpers used by older callers.
+    pushTileToHand(tileData) {
+        this.enqueueTileToHand(tileData);
+    }
+
+    pushAnimalToHand(animal) {
+        this.enqueueAnimalToHand(animal);
     }
 }
