@@ -23,12 +23,13 @@ export function createGameOrbitControls(camera, domElement) {
 	controls.minDistance = 2;
 	controls.maxDistance = 30;
 
-	controls.minPolarAngle = 0.2;
+	controls.minPolarAngle = 0;
 	controls.maxPolarAngle = Math.PI / 2 - 0.05;
 
 	controls.minAzimuthAngle = -Infinity;
 	controls.maxAzimuthAngle = Infinity;
 
 	controls.update();
+
 	return controls;
 }

@@ -1,8 +1,8 @@
 export default class HexCoord {
-    constructor(c, r) {
+    constructor(column, row) {
         // Axiale Koordinaten des Hex-Gitters.
-        this.column = c;
-        this.row = r;
+        this.column = column;
+        this.row = row;
     }
 
     // Nachbar-Richtungen für ein pointy-top Hex-Gitter in axialen Koordinaten.
@@ -64,9 +64,9 @@ export default class HexCoord {
     }
 
     // Berechnet die Weltkoordinaten für die Mitte dieses Hex-Felds, basierend auf der hexSize.
-    hexToWorld() {
-        const x = Math.sqrt(3) * (this.column + this.row * 0.5);
-        const z = 1.5 * this.row;
+    hexToWorld(hexCoord) {
+        const x = Math.sqrt(3) * (hexCoord.column + hexCoord.row * 0.5);
+        const z = 1.5 * hexCoord.row;
 
         return { x, y: 0, z };
     }

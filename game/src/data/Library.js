@@ -1,18 +1,22 @@
+import Landscape from "./Landscape.js";
+import Animal from "./Animal.js";
+import { TileData, StarterTileData } from "../gameplay/Tile.js";
+
 export default class Library {
     /**
      * Backward-compatible static accessor used by legacy callers.
      * @returns {Array<TileData>}
      */
     getTileDataList() {
-        return new getAllTiles();
+        return this.getAllTiles();
     }
 
     /**
      * Backward-compatible static accessor used by legacy callers.
-     * @returns {Array<StarterTile>}
+     * @returns {Array<StarterTileData>}
      */
     getStarterTileDataList() {
-        return getAllStarterTiles();
+        return this.getAllStarterTiles();
     }
 
     /**
@@ -122,35 +126,39 @@ export default class Library {
      * Returns a hard-coded collection of TileData-like objects used for
      * quick testing and prototyping.
      * Each entry is an instance of the local `tileData` class below.
-     * @returns {Array<starterTile>}
+     * @returns {Array<StarterTileData>}
      */
     getAllStarterTiles() {
         return [
-            new StarterTile(
+            new StarterTileData([
                 new TileData(Landscape.MOUNTAIN, Landscape.UNDEFINED, [Animal.BEAR]),
                 new TileData(Landscape.BAMBOOFOREST, Landscape.WETLAND, [Animal.ELK, Animal.FOX, Animal.HAWK]),
                 new TileData(Landscape.GRASSLAND, Landscape.RIVER, [Animal.BEAR, Animal.SALMON])
-            ),
-            new StarterTile(
+            ]),
+
+            new StarterTileData([
                 new TileData(Landscape.WETLAND, Landscape.UNDEFINED, [Animal.HAWK]),
                 new TileData(Landscape.BAMBOOFOREST, Landscape.RIVER, [Animal.ELK, Animal.HAWK, Animal.SALMON]),
                 new TileData(Landscape.GRASSLAND, Landscape.MOUNTAIN, [Animal.BEAR, Animal.FOX])
-            ),
-            new StarterTile(
+            ]),
+
+            new StarterTileData([
                 new TileData(Landscape.GRASSLAND, Landscape.UNDEFINED, [Animal.FOX]),
                 new TileData(Landscape.WETLAND, Landscape.RIVER, [Animal.FOX, Animal.HAWK, Animal.SALMON]),
                 new TileData(Landscape.BAMBOOFOREST, Landscape.MOUNTAIN, [Animal.BEAR, Animal.ELK])
-            ),
-            new StarterTile(
+            ]),
+
+            new StarterTileData([
                 new TileData(Landscape.RIVER, Landscape.UNDEFINED, [Animal.SALMON]),
                 new TileData(Landscape.GRASSLAND, Landscape.BAMBOOFOREST, [Animal.BEAR, Animal.ELK, Animal.SALMON]),
                 new TileData(Landscape.MOUNTAIN, Landscape.WETLAND, [Animal.FOX, Animal.HAWK])
-            ),
-            new StarterTile(
+            ]),
+
+            new StarterTileData([
                 new TileData(Landscape.BAMBOOFOREST, Landscape.UNDEFINED, [Animal.ELK]),
                 new TileData(Landscape.MOUNTAIN, Landscape.RIVER, [Animal.BEAR, Animal.ELK, Animal.HAWK]),
                 new TileData(Landscape.WETLAND, Landscape.GRASSLAND, [Animal.FOX, Animal.SALMON])
-            )
+            ])
         ];
     }
 }
