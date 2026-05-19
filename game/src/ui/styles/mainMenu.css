@@ -1,0 +1,79 @@
+.main-menu {
+  pointer-events: auto;
+  width: min(30rem, calc(100vw - 2rem));
+  padding: 2rem;
+  border: 1px solid rgba(255, 244, 229, 0.3);
+  border-radius: 1.5rem;
+  background: linear-gradient(180deg, rgba(71, 30, 46, 0.78), rgba(34, 20, 28, 0.88));
+  box-shadow: 0 1.5rem 4rem rgba(18, 7, 11, 0.35);
+  color: #fff5ea;
+  text-align: left;
+  backdrop-filter: blur(0.35rem);
+}
+
+.main-menu__eyebrow {
+  margin: 0 0 0.75rem;
+  color: #ffd7c4;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.24rem;
+  text-transform: uppercase;
+}
+
+.main-menu__title {
+  margin: 0;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 0.95;
+}
+
+.main-menu__description {
+  margin: 1rem 0 0;
+  color: rgba(255, 245, 234, 0.88);
+  line-height: 1.5;
+}
+
+.main-menu__config-preview {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 1.75rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  background: rgba(255, 239, 227, 0.12);
+}
+
+.main-menu__config-label,
+.main-menu__config-note {
+  color: rgba(255, 239, 227, 0.78);
+}
+
+.main-menu__config-value {
+  font-size: 2rem;
+}
+
+.main-menu__start-button {
+  width: 100%;
+  margin-top: 1.75rem;
+  padding: 1rem 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffd36d, #f0a943);
+  color: #3f2314;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.main-menu__start-button:hover {
+  filter: brightness(1.05);
+}
+
+.main-menu__start-button:focus-visible {
+  outline: 3px solid rgba(255, 244, 229, 0.8);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .main-menu {
+    padding: 1.5rem;
+  }
+}

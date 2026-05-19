@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import './styles/global.css';
 import './ui/styles/menuBackground.css';
 import { createGameCamera, createGameOrbitControls } from './rendering/orbitalcamera.js';
+import { getGameConfig } from './states/gameConfigState.js';
+import { createMainMenu } from './ui/components/createMainMenu.js';
 
 const canvas = document.querySelector('#game-canvas');
 const menuRoot = document.querySelector('#menu-root');
@@ -9,6 +11,16 @@ const menuRoot = document.querySelector('#menu-root');
 if (!canvas || !menuRoot) {
   throw new Error('App shell is missing required DOM nodes.');
 }
+
+const gameConfig = getGameConfig();
+const mainMenu = createMainMenu({
+  initialConfig: gameConfig,
+  onStart: (config) => {
+    console.info('Start button clicked with config:', config);
+  },
+});
+
+menuRoot.append(mainMenu);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x20242a);
