@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import './styles/global.css';
+import './ui/styles/menuBackground.css';
 import { createGameCamera, createGameOrbitControls } from './rendering/orbitalcamera.js';
 
 const canvas = document.querySelector('#game-canvas');
