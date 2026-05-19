@@ -3,6 +3,11 @@ import './styles/global.css';
 import { createGameCamera, createGameOrbitControls } from './rendering/orbitalcamera.js';
 
 const canvas = document.querySelector('#game-canvas');
+const menuRoot = document.querySelector('#menu-root');
+
+if (!canvas || !menuRoot) {
+  throw new Error('App shell is missing required DOM nodes.');
+}
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x20242a);
