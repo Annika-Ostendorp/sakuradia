@@ -4,34 +4,18 @@
   margin-top: 1.25rem;
 }
 
-.round-slider__header,
-.round-slider__scale {
+.round-slider__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.round-slider__label,
-.round-slider__scale {
+.round-slider__label {
   color: rgba(255, 239, 227, 0.82);
-}
-
-.round-slider__value {
-  min-width: 2.5rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: 999px;
-  background: rgba(255, 239, 227, 0.14);
-  color: #fff5ea;
-  font-weight: 700;
-  text-align: center;
 }
 
 .round-slider__input {
   width: 100%;
   accent-color: #f0a943;
   cursor: pointer;
-}
-
-.round-slider__scale {
-  font-size: 0.9rem;
 }
