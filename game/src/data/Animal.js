@@ -1,9 +1,9 @@
 const Animal = Object.freeze({
-    BEAR: 'Bear',
-    ELK: 'Elk',
-    FOX: 'Fox',
-    HAWK: 'Hawk',
-    SALMON: 'Salmon',
+    PANDA: 'Panda',
+    SIKA: 'Sika',
+    JAPANMAKAK: 'Japanmakak',
+    CRANE: 'Crane',
+    KOI: 'Koi',
 });
 
 export { Animal };

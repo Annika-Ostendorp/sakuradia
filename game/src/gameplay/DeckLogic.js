@@ -12,11 +12,11 @@ export default class DeckLogic {
         // Füge alle Tiere 20 mal zum animalDeck hinzu
         this.animalDeck = [];
         for (let i = 0; i < 20; i++) {
-            this.animalDeck.push(Animal.BEAR);
-            this.animalDeck.push(Animal.FOX);
-            this.animalDeck.push(Animal.HAWK);
-            this.animalDeck.push(Animal.SALMON);
-            this.animalDeck.push(Animal.ELK);
+            this.animalDeck.push(Animal.PANDA);
+            this.animalDeck.push(Animal.JAPANMAKAK);
+            this.animalDeck.push(Animal.CRANE);
+            this.animalDeck.push(Animal.KOI);
+            this.animalDeck.push(Animal.SIKA);
         }
 
         // Mische die Tiere
@@ -25,14 +25,16 @@ export default class DeckLogic {
 
     getNextTile(){
         if (this.deck.length === 0) {
-            throw new Error("Deck ist leer!");
+            console.warn("Tile Deck ist leer!");
+            return null; // Rückgabe von null, wenn das Deck leer ist
         }
         return this.deck.pop();
     }
 
     getNextAnimal(){
         if (this.animalDeck.length === 0) {
-            throw new Error("Animal Deck ist leer!");
+            console.warn("Animal Deck ist leer!");
+            return null; // Rückgabe von null, wenn das Deck leer ist
         }
         return this.animalDeck.pop();
     }

@@ -7,8 +7,7 @@ export default class InputManager{
         this.gameplayManager = gameplayManager;
 
         this.canvas.addEventListener("click", (event) => {
-            console.log("Clicked canvas:", event.clientX, event.clientY);
-
+            //console.log("Clicked canvas:", event.clientX, event.clientY);
             this.handleBoardClick(event);
         });
     }

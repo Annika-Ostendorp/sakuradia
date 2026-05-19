@@ -1,5 +1,6 @@
-import GameScene from './scenes/GameScene.js';
+import MenuScene from './scenes/MenuScene.js';
 
 window.addEventListener('DOMContentLoaded', () => {
-	new GameScene();
+	new MenuScene();
 });
+

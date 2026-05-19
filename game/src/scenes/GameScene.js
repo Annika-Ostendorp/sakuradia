@@ -5,13 +5,14 @@ import GameplayManager from '../gameplay/GameplayManager.js';
 import InputManager from '../input/InputManager.js';
 
 export default class GameScene {
-    constructor() {
+    constructor(gameConfig) {
+        this.gameConfig = gameConfig;
         this.initialization();
 
         this.animate = this.animate.bind(this);
         this.animate();
 
-        this.gameplayManager = new GameplayManager(this.scene);
+        this.gameplayManager = new GameplayManager(this.scene, this.gameConfig);
         this.inputManager = new InputManager(this.scene, this.canvas, this.gameplayManager);
     }
 

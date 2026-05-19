@@ -1,10 +1,10 @@
 const DEFAULT_GAME_CONFIG = Object.freeze({
-  rounds: 5,
+  rounds: 85,
   gameStarted: false,
 });
 
 const MIN_ROUNDS = 1;
-const MAX_ROUNDS = 20;
+const MAX_ROUNDS = 85;
 
 let gameConfig = { ...DEFAULT_GAME_CONFIG };
 
