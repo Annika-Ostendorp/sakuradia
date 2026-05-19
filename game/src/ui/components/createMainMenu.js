@@ -9,14 +9,12 @@ export function createMainMenu({ initialConfig, onConfigChange, onStart }) {
 
   menuElement.innerHTML = `
     <p class="main-menu__eyebrow">Sakuradia</p>
-    <h1 class="main-menu__title">Hauptmenue</h1>
+    <h1 class="main-menu__title">Hauptmenü</h1>
     <p class="main-menu__description">
-      Stelle vor dem Spielstart deine Runde ein und starte dann in die aktuelle Szene.
+      Stelle vor dem Spielstart eine Rundenzahl ein und starte dann das Spiel.
     </p>
     <div class="main-menu__config-preview" aria-label="Aktuelle Spielkonfiguration">
-      <span class="main-menu__config-label">Geplante Runden</span>
       <strong class="main-menu__config-value">${currentConfig.rounds}</strong>
-      <span class="main-menu__config-note">Passe die Runden vor dem Start flexibel an.</span>
     </div>
     <div class="main-menu__slider-slot"></div>
     <button class="main-menu__start-button" type="button">Spiel starten</button>

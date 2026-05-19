@@ -12,14 +12,38 @@ if (!canvas || !menuRoot) {
   throw new Error('App shell is missing required DOM nodes.');
 }
 
+let isGameStarted = false;
+let rotationStep = 0.01;
+
 const gameConfig = getGameConfig();
+
+function startGame(config) {
+  if (isGameStarted) {
+    return;
+  }
+
+  const nextConfig = updateGameConfig({
+    ...config,
+    gameStarted: true,
+  });
+
+  // Higher round counts increase cube speed to show the selected config is applied.
+  rotationStep = 0.002 + nextConfig.rounds * 0.0015;
+  isGameStarted = true;
+
+  menuRoot.classList.add('menu-root--hidden');
+  menuRoot.setAttribute('aria-hidden', 'true');
+
+  animate();
+}
+
 const mainMenu = createMainMenu({
   initialConfig: gameConfig,
   onConfigChange: (config) => {
     updateGameConfig(config);
   },
   onStart: (config) => {
-    console.info('Start button clicked with config:', config);
+    startGame(config);
   },
 });
 
@@ -67,10 +91,10 @@ window.addEventListener('resize', handleResize);
 function animate() {
   requestAnimationFrame(animate);
 
-  cube.rotation.x += 0.01;
-  cube.rotation.y += 0.01;
+  cube.rotation.x += rotationStep;
+  cube.rotation.y += rotationStep;
 
   renderer.render(scene, camera);
 }
 
-animate();
+renderer.render(scene, camera);

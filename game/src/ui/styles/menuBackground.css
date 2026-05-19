@@ -3,6 +3,10 @@
   place-items: center;
 }
 
+#menu-root.menu-root--hidden {
+  display: none;
+}
+
 #menu-root::before,
 #menu-root::after {
   content: '';
