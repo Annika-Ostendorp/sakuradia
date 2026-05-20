@@ -4,6 +4,17 @@ import { createGameCamera, createGameOrbitControls } from '../rendering/OrbitalC
 import GameplayManager from '../gameplay/GameplayManager.js';
 import InputManager from '../input/InputManager.js';
 
+/**
+ * GameScene
+ *
+ * Baut die 3D-Szene auf und startet die Render-Schleife. Initialisiert Kamera,
+ * Renderer, Lichtquellen und delegiert die Spiel- sowie Input-Initialisierung an
+ * `GameplayManager` bzw. `InputManager`.
+ *
+ * Wichtiger Ablaufpunkt: Die `animate()`-Schleife wird bereits vor der
+ * Initialisierung der Spiel-Logik gestartet. Das ist unkritisch, da die Szene
+ * zunächst leer ist und das Rendering weiterhin korrekt arbeitet.
+ */
 export default class GameScene {
     constructor(gameConfig) {
         this.gameConfig = gameConfig;
@@ -12,6 +23,7 @@ export default class GameScene {
         this.animate = this.animate.bind(this);
         this.animate();
 
+        // Gameplay- und Input-Manager erst nach Start der Render-Schleife.
         this.gameplayManager = new GameplayManager(this.scene, this.gameConfig);
         this.inputManager = new InputManager(this.scene, this.canvas, this.gameplayManager);
     }
@@ -30,19 +42,17 @@ export default class GameScene {
         this.camera = createGameCamera();
         this.controls = createGameOrbitControls(this.camera, this.renderer.domElement);
 
+        // Kamera-Startposition: Blick von oben auf das Zentrum
         this.camera.position.set(0, 15, 0);
         this.camera.lookAt(0, 0, 0);
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
 
-        // const axesHelper = new THREE.AxesHelper(5);
-        // this.scene.add(axesHelper);
-
         this.handleResize = this.handleResize.bind(this);
         window.addEventListener('resize', this.handleResize);
 
-        // Lichter hinzufügen
+        // Lichter hinzufügen: Ambient + Directional für Schatten
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
 
@@ -54,7 +64,6 @@ export default class GameScene {
         directionalLight.shadow.camera.top = 50;
         directionalLight.shadow.camera.bottom = -50;
         this.scene.add(directionalLight);
-
     }
 
     handleResize() {
@@ -63,6 +72,7 @@ export default class GameScene {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    // Render-Loop: kept minimal — weitere Animationen/Updates können hier ergänzt werden.
     animate() {
         requestAnimationFrame(this.animate);
 

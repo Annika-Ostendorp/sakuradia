@@ -5,8 +5,18 @@ import { TileData, StarterTileData } from "../gameplay/Tile.js";
 import HexCoord from "../utils/HexCoord.js";
 
 /**
- * Hält die Hauptlogik des Spiels, einschließlich der Verwaltung von Deck, Spielfeld und Spielregeln.
- * Initialisiert das Startertile und koordiniert die Interaktionen zwischen den verschiedenen Komponenten des Spiels.
+ * `Game`
+ *
+ * Zentrale Klasse, die die Spielzustände und -ressourcen zusammenhält:
+ * - `library`: Statische Daten/Assets (Tile-Definitionen, Starter-Setups)
+ * - `deckLogic`: Logik für Ziehen/Verwalten von Tile- und Animal-Decks
+ * - `gridManager`: Verwaltung des aktuellen Spielfelds und der 3D-Modelle
+ * - `tilesOnHand`/`animalsOnHand`: parallele Queues, die Paarungen repräsentieren
+ *
+ * Verantwortlichkeiten:
+ * - Initialisieren des Starter-Layouts auf dem Grid
+ * - Bereitstellen einfacher API-Methoden für Hand-Operationen (enqueue/dequeue/peek)
+ * - Bietet `getHandPairs()` um UI/Manager mit synchronisierten Paaren zu versorgen
  */
 export default class Game {
     constructor(scene) {
@@ -14,26 +24,32 @@ export default class Game {
         this.library = new Library();
         this.deckLogic = new DeckLogic(this.library);
         this.gridManager = new GridManager(this.scene);
-        this.tilesOnHand = []; // Queue der aktuell gezogenen Tiles, die der Spieler platzieren kann.
-        this.animalsOnHand = []; // Queue der aktuell gezogenen Tiere, die der Spieler platzieren kann.
+        // Parallele Arrays: tilesOnHand[i] gehört zu animalsOnHand[i]
+        this.tilesOnHand = [];
+        this.animalsOnHand = [];
     }
 
-    // Startet das Spiel, indem das Startertile initialisiert wird.
+    // Startet das Spiel.
     start() {
         this.initializeStarterTile();
     }
 
-    // Spawnt ein Startertile auf dem Spielfeld
+    // Platziert das Starter-Set auf dem Grid.
+    // Hinweis zu Platzierung: Die Koordinaten (0,0), (0,-1), (1,-1) entsprechen
+    // einem kleinen, vordefinierten Dreieck von Hex-Zellen; die angegebenen
+    // Rotationen sind Indexwerte (0-5) die mit 60° multipliziert werden.
     initializeStarterTile(){
         const starterTiles = this.library.getAllStarterTiles();
         const randomIndex = Math.floor(Math.random() * starterTiles.length);
         const starterTileData = starterTiles[randomIndex];
-        
+
+        // Keystone in der Mitte, zwei weitere Hälften an angrenzenden Hexes.
         this.gridManager.setTile(new HexCoord(0, 0), starterTileData.keystone);
         this.gridManager.setTile(new HexCoord(0, -1), starterTileData.leftTile, 2);
         this.gridManager.setTile(new HexCoord(1, -1), starterTileData.rightTile, 0);
     }
 
+    // --- Hand-Queue API ---
     enqueueTileToHand(tileData) {
         this.tilesOnHand.push(tileData);
     }
@@ -58,6 +74,7 @@ export default class Game {
         return this.animalsOnHand[0];
     }
 
+    // Liefert ein Array synchronisierter Paare für die UI.
     getHandPairs() {
         return this.tilesOnHand.map((tileData, index) => ({
             tileData,
@@ -65,6 +82,8 @@ export default class Game {
         }));
     }
 
+    // Entfernt ein Paar an Index `index` aus beiden Queues und gibt es zurück.
+    // Gibt `{tileData: null, animal: null}` zurück, wenn der Index ungültig ist.
     removePairFromHand(index = 0) {
         if (index < 0 || index >= this.tilesOnHand.length || index >= this.animalsOnHand.length) {
             return {
