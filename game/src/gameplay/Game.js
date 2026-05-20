@@ -58,6 +58,30 @@ export default class Game {
         return this.animalsOnHand[0];
     }
 
+    getHandPairs() {
+        return this.tilesOnHand.map((tileData, index) => ({
+            tileData,
+            animal: this.animalsOnHand[index],
+        }));
+    }
+
+    removePairFromHand(index = 0) {
+        if (index < 0 || index >= this.tilesOnHand.length || index >= this.animalsOnHand.length) {
+            return {
+                tileData: null,
+                animal: null,
+            };
+        }
+
+        const [tileData] = this.tilesOnHand.splice(index, 1);
+        const [animal] = this.animalsOnHand.splice(index, 1);
+
+        return {
+            tileData,
+            animal,
+        };
+    }
+
     // Backward-compatible helpers used by older callers.
     pushTileToHand(tileData) {
         this.enqueueTileToHand(tileData);
