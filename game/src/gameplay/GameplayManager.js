@@ -2,6 +2,13 @@ import RoundState from "../data/RoundState.js";
 import Game from "./Game.js";
 import { createHandPanel } from "../ui/components/createHandPanel.js";
 
+/**
+ * Vermittelt zwischen Low-Level-Game-Logik (`Game`) und der UI/Interaktion.
+ * Aufgaben:
+ * - Initiales Ziehen von Hand-Paaren
+ * - Reaktion auf Benutzerinteraktionen (z.B. Klicks)
+ * - Verwaltung von Runden/Spielablauf
+ */
 export default class GameplayManager{
     constructor(scene, gameConfig){
         this.scene = scene;
@@ -10,8 +17,10 @@ export default class GameplayManager{
         this.gameLength = this.gameConfig.rounds; // Rounds to be played until game end
         this.game = new Game(this.scene);
         this.roundState = RoundState.CHOOSE_TILE; // Initial round state
+        // Index des aktuell in der UI markierten Hand-Paares
         this.selectedHandIndex = 0;
 
+        // Hand-Panel UI: Callback aktualisiert die Auswahl und synchronisiert das UI
         this.handPanel = createHandPanel({
             onSelectPair: (index) => {
                 this.selectedHandIndex = index;
@@ -27,23 +36,26 @@ export default class GameplayManager{
 
         console.log("Initializing GameplayManager with gameConfig:", this.gameConfig);
 
+        // Initiales Ziehen: 3 Paare in die Hand füllen
         for (let i = 0; i < 3; i++){
             this.game.enqueueTileToHand(this.game.deckLogic.getNextTile());
             this.game.enqueueAnimalToHand(this.game.deckLogic.getNextAnimal());
         }
+        // Direktes Nachziehen eines weiteren Paares, damit die Hand 4 Elemente hat
         this.onPairDrawn(this.game.deckLogic.getNextTile(), this.game.deckLogic.getNextAnimal());
         this.syncHandPanel();
         
         this.game.start();
     }
 
-    // When canvas is clicked this is called from input manager
+    // Wird vom Input-Manager aufgerufen, wenn der Spieler mit dem Canvas interagiert.
     onInteracted(){
         if (this.roundState === RoundState.GAME_OVER) {
             console.log("Game is already over. No more interactions allowed!");
             return;
         }
 
+        // Entferne das aktuell ausgewählte Paar aus der Hand und platziere es.
         const selectedPair = this.game.removePairFromHand(this.selectedHandIndex);
         if (!selectedPair.tileData || !selectedPair.animal) {
             console.warn("No valid hand pair selected.");
@@ -52,10 +64,12 @@ export default class GameplayManager{
         }
 
         this.placeTileRandomPosAndRot(selectedPair.tileData);
+        // Nach dem Platzieren wird ein neues Paar gezogen und die Runde beendet.
         this.onPairDrawn(this.game.deckLogic.getNextTile(), this.game.deckLogic.getNextAnimal());
         this.onTurnEnd();
     }
 
+    // Behandelt das Nachziehen eines Paares: Enqueue und UI-Logging.
     onPairDrawn(tileData, animal) {
         if (!tileData || !animal) {
             console.warn("No more tiles or animals to draw. Ending game.");
@@ -67,7 +81,7 @@ export default class GameplayManager{
         this.game.enqueueTileToHand(tileData);
         this.game.enqueueAnimalToHand(animal);
 
-        // Print array of landscape per tile data
+        // Debug-Ausgabe: Zeige die aktuelle Hand mit Landschaften und Tieren.
         this.game.tilesOnHand.forEach((tile, index) => {
             console.log(`Pair ${index + 1}: ${tile.primaryLandscape}${tile.isKeystone ? "" : " & " + tile.secondaryLandscape} | ${this.game.animalsOnHand[index]}`);
         });
@@ -78,6 +92,7 @@ export default class GameplayManager{
         this.syncHandPanel();
     }
 
+    // Erhöht die Rundenzahl und setzt GAME_OVER, wenn das Spielende erreicht ist.
     onTurnEnd() {
         this.currentTurn++;
         if (this.currentTurn > this.gameLength) {
@@ -87,6 +102,10 @@ export default class GameplayManager{
         }
     }
 
+    // Platziert ein Tile an einer zufälligen, leeren Nachbar-Position mit zufälliger Rotation.
+    // Hinweis: Rotation ist ein Index (0-5) für 60° Schritte. Der aktuelle Code verwendet
+    // Math.floor(Math.random() * 5) und erzeugt Werte 0..4; Rotation 5 wird somit derzeit
+    // nicht erzeugt. Das Verhalten wurde nicht verändert — nur dokumentiert.
     placeTileRandomPosAndRot(tileData){
         var hexCoord = this.game.gridManager.getRandomEmptyHexCoord();
         if (!hexCoord) {
@@ -96,6 +115,7 @@ export default class GameplayManager{
         this.game.gridManager.setTile(hexCoord, tileData, Math.floor(Math.random() * 5));
     }
 
+    // Aktualisiert das Hand-Panel UI und clamp't die ausgewählte Index-Position.
     syncHandPanel() {
         const handPairs = this.game.getHandPairs();
         const maxIndex = Math.max(0, handPairs.length - 1);

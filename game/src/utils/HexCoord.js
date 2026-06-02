@@ -80,7 +80,9 @@ export default class HexCoord {
         return HexCoord.hexRound(column, row, hexSize);
     }
 
-    // Rundet zunächst auf Cube-Koordinaten und korrigiert dann die größte Abweichung.
+    /**
+     * Rundet zunächst auf Cube-Koordinaten und korrigiert dann die größte Abweichung.
+     */
     static hexRound(column, row, hexSize = 1) {
         let x = column;
         let z = row;

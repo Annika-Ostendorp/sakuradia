@@ -4,6 +4,15 @@ import { getGameConfig, updateGameConfig } from '../states/gameConfigState.js';
 import { createMainMenu } from '../ui/components/createMainMenu.js';
 import GameScene from './GameScene.js';
 
+/**
+ * Verantwortlich für das Anzeigen und Verwalten des Hauptmenüs. Lädt die
+ * aktuelle `gameConfig` aus dem State, übergibt Änderungen an `updateGameConfig`
+ * und startet `GameScene` beim Klick auf "Start".
+ *
+ * UI-Verhalten:
+ * - Beim Starten des Spiels wird das Menü verborgen (CSS-Klasse + aria-hidden)
+ *   und `GameScene` instanziiert.
+ */
 export default class MenuScene {
     constructor() {
         this.canvas = document.querySelector('#game-canvas');
@@ -30,6 +39,8 @@ export default class MenuScene {
         this.menuRoot.append(this.mainMenu);
     }
 
+    // Startet das Spiel: verhindert mehrfaches Starten, updated den globalen
+    // State, blendet das Menu aus und erzeugt die `GameScene`.
     startGame(config) {
         if (this.isGameStarted) {
             return;
