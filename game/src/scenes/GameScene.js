@@ -5,8 +5,6 @@ import GameplayManager from '../gameplay/GameplayManager.js';
 import InputManager from '../input/InputManager.js';
 
 /**
- * GameScene
- *
  * Baut die 3D-Szene auf und startet die Render-Schleife. Initialisiert Kamera,
  * Renderer, Lichtquellen und delegiert die Spiel- sowie Input-Initialisierung an
  * `GameplayManager` bzw. `InputManager`.

@@ -2,22 +2,32 @@ import Landscape from "./Landscape.js";
 import Animal from "./Animal.js";
 import { TileData, StarterTileData } from "../gameplay/Tile.js";
 
+/**
+ * Sammlung hartkodierter Kachel- und Starterdaten, die zum Befüllen von
+ * Decks, zum schnellen Prototyping oder für Tests genutzt werden.
+ *
+ * Die Klasse liefert einfache Accessor-Methoden, die Kopien bzw. aufgefaltete
+ * Listen zurückgeben, sodass Aufrufer die Daten nicht direkt mutieren.
+ */
 export default class Library {
     /**
-     * Backward-compatible static accessor used by legacy callers.
+     * Rückwärtskompatibler Zugriff: Liefert eine flache Liste aller `TileData`
+     * Instanzen, wobei Einträge entsprechend ihrem `count`-Feld mehrfach
+     * dupliziert werden (für Deck-Erzeugung).
      * @returns {Array<TileData>}
      */
     getTileDataList() {
-        var list = []
+        var list = [];
+        // Jedes TileData mit seiner angegebenen Anzahl in die Liste einfügen
         for (var tileData of this.getAllTiles())
             for (var i = 0; i < tileData.count; i++)
                 list.push(tileData);
-            
+        
         return list;
     }
 
     /**
-     * Backward-compatible static accessor used by legacy callers.
+     * Rückwärtskompatibler Zugriff auf Starter-Sets.
      * @returns {Array<StarterTileData>}
      */
     getStarterTileDataList() {
@@ -25,9 +35,9 @@ export default class Library {
     }
 
     /**
-     * Returns a hard-coded collection of TileData-like objects used for
-     * quick testing and prototyping.
-     * Each entry is an instance of the local `TileData` class below.
+     * Gibt eine hartkodierte Sammlung von `TileData`-Objekten zurück. Diese
+     * Daten dienen als Basis für das Kartendeck und enthalten sowohl Keystone-
+     * als auch Kombinationskacheln.
      * @returns {Array<TileData>}
      */
     getAllTiles() {
@@ -128,9 +138,9 @@ export default class Library {
     }
 
     /**
-     * Returns a hard-coded collection of TileData-like objects used for
-     * quick testing and prototyping.
-     * Each entry is an instance of the local `tileData` class below.
+     * Liefert eine Liste vordefinierter Starter-Hands (jeweils drei Kacheln),
+     * die beim Spielstart verwendet werden können. Nützlich für Tests und Demo-
+     * Modi.
      * @returns {Array<StarterTileData>}
      */
     getAllStarterTiles() {
@@ -167,4 +177,3 @@ export default class Library {
         ];
     }
 }
-

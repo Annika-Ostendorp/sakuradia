@@ -1,8 +1,6 @@
 import { Landscape } from "../data/Landscape.js";
 
 /**
- * Tile
- *
  * Repräsentiert eine platzierbare Kachel im Spiel. Enthält:
  * - `tileData`: die statische Definition (`TileData`) der Landschaften/Tiere
  * - `rotation`: Index 0-5 für 60°-Schritte (darauf basieren Render-Rotationen)

@@ -1,5 +1,10 @@
 import { Landscape } from "../data/Landscape.js";
 
+
+/**
+ * Gibt eine Farbe je nach Landschaftstyp zurück.
+ * Diese Farben werden für die placeholder 3D-Modelle der Tiles verwendet.
+ */
 export default class ColorUtils {
 
     getColorForLandscape(landscape) {

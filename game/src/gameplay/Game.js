@@ -5,8 +5,6 @@ import { TileData, StarterTileData } from "../gameplay/Tile.js";
 import HexCoord from "../utils/HexCoord.js";
 
 /**
- * `Game`
- *
  * Zentrale Klasse, die die Spielzustände und -ressourcen zusammenhält:
  * - `library`: Statische Daten/Assets (Tile-Definitionen, Starter-Setups)
  * - `deckLogic`: Logik für Ziehen/Verwalten von Tile- und Animal-Decks

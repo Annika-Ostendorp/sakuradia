@@ -4,8 +4,6 @@ import ModelLoader from "../utils/ModelLoader.js";
 import ColorUtils from "../utils/ColorUtils.js";
 
 /**
- * GridManager
- *
  * Verantwortlich für das Speichern und Verwalten des hexagonalen Spielfelds
  * während des Gameplays. Verwaltet eine Map von `HexCoord` -> `Tile` sowie das
  * Erzeugen und Platzieren von 3D-Modellen in der Szene.

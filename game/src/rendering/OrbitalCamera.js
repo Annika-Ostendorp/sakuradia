@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
+// Enthält Funktionen zum Erstellen der Orbital-Kamera und ihrer Steuerung.
+
 export function createGameCamera() {
 	const camera = new THREE.PerspectiveCamera(
 		60,

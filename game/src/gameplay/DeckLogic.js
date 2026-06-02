@@ -2,8 +2,6 @@ import { Animal } from "../data/Animal.js";
 import Library from "../data/Library.js";
 
 /**
- * DeckLogic
- *
  * Verwaltet die beiden Spiele-Decks:
  * - `deck` (TileData): Liste aller verfügbaren Tiles, gemischt beim Start
  * - `animalDeck` (Animal enums): Sammlung von Tieren, mehrfach enthalten

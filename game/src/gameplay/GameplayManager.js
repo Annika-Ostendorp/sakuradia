@@ -3,8 +3,6 @@ import Game from "./Game.js";
 import { createHandPanel } from "../ui/components/createHandPanel.js";
 
 /**
- * `GameplayManager`
- *
  * Vermittelt zwischen Low-Level-Game-Logik (`Game`) und der UI/Interaktion.
  * Aufgaben:
  * - Initiales Ziehen von Hand-Paaren

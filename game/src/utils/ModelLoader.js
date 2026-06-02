@@ -3,7 +3,19 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { Landscape } from "../data/Landscape.js";
 import ColorUtils from "./ColorUtils.js";
 
+/**
+ * `ModelLoader`
+ *
+ * Verantwortlich für das Laden, Cachen und Einfärben von 3D-Modellen (GLTF).
+ * - Kapselt `GLTFLoader` und stellt einen einfachen Cache bereit.
+ * - Liefert fertige `THREE.Group`-Objekte für Kacheln (Voll- und Halbmodelle).
+ * - Verwendet `ColorUtils` zur Bestimmung der Landschaftsfarben.
+ */
 export default class ModelLoader {
+    /**
+     * Konstruktor
+     * @param {Object|null} library - Optionales Objekt mit Ressourcenpfaden (nicht zwingend benötigt).
+     */
     constructor(library = null) {
         this.gltfLoader = new GLTFLoader();
         this.modelCache = new Map(); // Cache für geladene Modelle.
@@ -81,6 +93,11 @@ export default class ModelLoader {
         });
     }
 
+    /**
+     * Geht durch die Model-Hierarchie und setzt die Materialfarbe aller Meshes.
+     * Klont Materialien zuerst, um Seiteneffekte auf gecachte Instanzen zu vermeiden.
+     */
+
     applyColorToModel(model, color) {
         model.traverse((child) => {
             if (child.isMesh) {
@@ -93,12 +110,17 @@ export default class ModelLoader {
     }
 
     /**
-        * Delegiert die Farbsuche an ColorUtils und gibt Hex oder THREE.Color zurück.
+     * Delegiert die Farbsuche an `ColorUtils` und gibt ein Hex-Farbstring oder
+     * ein `THREE.Color` zurück. Erwartet einen Wert aus `Landscape`.
      */
     getColorForLandscape(landscape) {
         return this.colorUtils.getColorForLandscape(landscape);
     }
 
+    /**
+     * Liefert den Dateinamen des Modells für eine gegebene Kachel zurück.
+     * Vollmodell für Keystones, Halbmodell für normale Kacheln.
+     */
     getModelNameForTile(tile) {
         return tile.isKeystone ? "Hexagon_Full.glb" : "Hexagon_Half.glb";
     }

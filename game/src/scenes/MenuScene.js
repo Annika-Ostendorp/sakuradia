@@ -5,8 +5,6 @@ import { createMainMenu } from '../ui/components/createMainMenu.js';
 import GameScene from './GameScene.js';
 
 /**
- * MenuScene
- *
  * Verantwortlich für das Anzeigen und Verwalten des Hauptmenüs. Lädt die
  * aktuelle `gameConfig` aus dem State, übergibt Änderungen an `updateGameConfig`
  * und startet `GameScene` beim Klick auf "Start".
