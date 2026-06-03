@@ -13,8 +13,13 @@ export default class GameplayManager{
     constructor(scene, gameConfig){
         this.scene = scene;
         this.gameConfig = gameConfig;
-        this.currentTurn = 1; // Current turn number
+        this.playerCount = Math.max(1, Number(this.gameConfig.playerCount || 1));
+        this.currentTurn = 1; // Absoluter Zugzähler über alle Spieler
+        this.currentRound = 1;
+        this.currentPlayer = 1;
+        this.playerScores = Array.from({ length: this.playerCount }, () => 0);
         this.gameLength = this.gameConfig.rounds; // Rounds to be played until game end
+        this.maxTurns = this.gameLength * this.playerCount;
         this.game = new Game(this.scene);
         this.roundState = RoundState.CHOOSE_TILE; // Initial round state
         // Index des aktuell in der UI markierten Hand-Paares
@@ -44,6 +49,7 @@ export default class GameplayManager{
         // Direktes Nachziehen eines weiteren Paares, damit die Hand 4 Elemente hat
         this.onPairDrawn(this.game.deckLogic.getNextTile(), this.game.deckLogic.getNextAnimal());
         this.syncHandPanel();
+        this.syncTurnStatus();
         
         this.game.start();
     }
@@ -64,6 +70,10 @@ export default class GameplayManager{
         }
 
         this.placeTileRandomPosAndRot(selectedPair.tileData);
+
+        // Platzhalter-Scoring: jeder gesetzte Zug gibt dem aktiven Spieler 1 Punkt.
+        this.playerScores[this.currentPlayer - 1] += 1;
+
         // Nach dem Platzieren wird ein neues Paar gezogen und die Runde beendet.
         this.onPairDrawn(this.game.deckLogic.getNextTile(), this.game.deckLogic.getNextAnimal());
         this.onTurnEnd();
@@ -85,7 +95,7 @@ export default class GameplayManager{
         this.game.tilesOnHand.forEach((tile, index) => {
             console.log(`Pair ${index + 1}: ${tile.primaryLandscape}${tile.isKeystone ? "" : " & " + tile.secondaryLandscape} | ${this.game.animalsOnHand[index]}`);
         });
-        console.log(`Current round: ${this.currentTurn}/${this.gameLength}.
+        console.log(`Current turn: ${this.currentTurn}/${this.maxTurns}.
             \nTiles left in deck: ${this.game.deckLogic.deck.length}.
             \nAnimals left in deck: ${this.game.deckLogic.animalDeck.length}.`);
 
@@ -95,11 +105,17 @@ export default class GameplayManager{
     // Erhöht die Rundenzahl und setzt GAME_OVER, wenn das Spielende erreicht ist.
     onTurnEnd() {
         this.currentTurn++;
-        if (this.currentTurn > this.gameLength) {
+        this.currentPlayer = ((this.currentTurn - 1) % this.playerCount) + 1;
+        this.currentRound = Math.ceil(this.currentTurn / this.playerCount);
+
+        if (this.currentTurn > this.maxTurns) {
             console.log("Game Over");
             this.roundState = RoundState.GAME_OVER;
+            this.syncTurnStatus();
             return;
         }
+
+        this.syncTurnStatus();
     }
 
     // Platziert ein Tile an einer zufälligen, leeren Nachbar-Position mit zufälliger Rotation.
@@ -121,5 +137,15 @@ export default class GameplayManager{
         const maxIndex = Math.max(0, handPairs.length - 1);
         this.selectedHandIndex = Math.min(this.selectedHandIndex, maxIndex);
         this.handPanel.update(handPairs, this.selectedHandIndex);
+    }
+
+    syncTurnStatus() {
+        this.handPanel.updateStatus({
+            currentRound: Math.min(this.currentRound, this.gameLength),
+            totalRounds: this.gameLength,
+            currentPlayer: this.currentPlayer,
+            playerCount: this.playerCount,
+            scoresByPlayer: this.playerScores,
+        });
     }
 }
