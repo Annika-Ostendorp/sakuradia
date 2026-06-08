@@ -320,7 +320,7 @@ export default class GridManager {
         // 6 Nachbarfelder holen
         const neighbors = hexCoord.getNeighbors();
 
-        for (const neighbor in neighbors) {
+        for (const neighbor of neighbors) {
             // Tile an dieser Nachbarposition suchen wie vorhin
             const neighborTile = this.getTileFromGridAt(grid, neighbor);
 
@@ -348,7 +348,7 @@ export default class GridManager {
 
     // Ist Koordinate in best. Set schon enthalten? (da HexCoords Objekte sind und JavaScript ja normalerweise nur über Referenz von Objekten vergleicht)
     setContainsCoord(set, hexCoord) {
-        // nach Objekt-Referenz prüfen mit coord.equals(hexCoord)
+        // prüfen mit coord.equals(hexCoord) gegen Objekt-Referenz-Problematik -> nach gleichen Koordinatenwerten prüfen
         for (const coord of set) {
             if (coord.equals(hexCoord)) {
                 return true;
