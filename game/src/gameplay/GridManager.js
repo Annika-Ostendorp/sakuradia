@@ -1,5 +1,5 @@
 import HexCoord from "../utils/HexCoord.js";
-import { TileData } from "./Tile.js";
+import { TileData, Tile } from "./Tile.js";
 import ModelLoader from "../utils/ModelLoader.js";
 import ColorUtils from "../utils/ColorUtils.js";
 
