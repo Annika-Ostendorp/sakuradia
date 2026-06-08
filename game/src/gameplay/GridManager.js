@@ -231,6 +231,7 @@ export default class GridManager {
         return this.getRandomEmptyNeighbor();
     }
 
+    // Hauptfunktion: alle Koi finden, Koi-Gruppen bilden, jede Gruppe prüfen, Punkte zusammenzählen
     get_points_for_koi(grid) {
         let sum = 0; // Endausgabe der insgesamt gesammelten Punkte für Koi-Reihen
 
@@ -268,6 +269,112 @@ export default class GridManager {
         }
 
         return sum; // am Ende Gesamtpunktzahl zurückgeben
+    }
+
+    // Alle Koi finden, die zu derselben Gruppe gehören -> solange bis keine neuen Koi mehr gefunden werden
+    getNeighborKoi(hexCoord, grid, set) {
+        // Aktuelle Koordinate gehört wieder zur aktuellen Koi-Gruppe
+        set.add(hexCoord);
+
+        // Hex-Felder haben 6 Nachbarn -> diese holen
+        const neighbors = hexCoord.getNeighbors();
+
+        // Jeden Nachbarn prüfen
+        for (const neighbor of neighbors) {
+            // Wenn Nachbar schon im Set --> nicht mehr endlos im Kreis suchen
+            if (this.setContainsCoord(set, neighbor)) {
+                continue;
+            }
+
+            // Tile an Nachbarposition suchen
+            const neighborTile = this.getTileFromGridAt(grid, neighbor);
+
+            // Wenn dort Tile liegt und darauf Koi ist --> dieser Nachbar gehört zur selben Koi-Gruppe
+            if (neighborTile !== undefined && neighborTile.occupiedBy === Animal.KOI) {
+                set.add(neighbor);
+
+                // Von diesem Nachbar-Koi aus dann weiter suchen
+                this.getNeighborKoi(neighbor, grid, set);
+            }
+        }
+    }
+
+    // Prüfen, ob Gruppe überhaupt gültige Koi-Reihe ist -> Form der Gruppe prüfen
+    isValidKoiLine(set) {
+        // Eine Koi-Reihe ist gültig, wenn jeder Koi höchstens zwei andere Koi direkt als Nachbarn hat
+
+        // Dadurch sind einfache Reihen erlaubt:
+
+        // K - K - K
+
+        // Auch ein Dreieck aus 3 Koi ist erlaubt, weil jeder Koi dort genau 2 Koi-Nachbarn hat
+
+        // Verzweigungen sind nicht erlaubt, weil dann ein Koi 3 oder mehr Koi-Nachbarn hätte
+
+        for (const koi of set) {
+            let koiNeighborCount = 0;
+
+            const neighbors = koi.getNeighbors();
+
+            for (const neighbor of neighbors) {
+                // nur Nachbarn zählen, die auch in derselben Koi-Gruppe sind
+                if (this.setContainsCoord(set, neighbor)) {
+                    koiNeighborCount++;
+                }
+            }
+
+            // mehr als 2 Koi-Nachbarn --> keine Reihe mehr, sondern verzweigte Gruppe
+            if (koiNeighborCount > 2) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Länge einer Reihe in Punkte übersetzen
+    getKoiPoints(length) {
+        // Punktetabelle aus der User Story:
+
+        // 1 Koi  = 2 Punkte
+
+        // 2 Koi  = 4 Punkte
+
+        // 3 Koi  = 7 Punkte
+
+        // 4 Koi  = 11 Punkte
+
+        // 5 Koi  = 15 Punkte
+
+        // 6 Koi  = 20 Punkte
+
+        // 7+ Koi = 26 Punkte
+        
+        if (length === 1) {
+            return 2;
+        }
+
+        if (length === 2) {
+            return 4;
+        }
+
+        if (length === 3) {
+            return 7;
+        }
+
+        if (length === 4) {
+            return 11;
+        }
+
+        if (length === 5) {
+            return 15;
+        }
+
+        if (length === 6) {
+            return 20;
+        }
+
+        return 26;
     }
 }
 
