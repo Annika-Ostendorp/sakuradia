@@ -1,5 +1,5 @@
 import HexCoord from "../utils/HexCoord.js";
-import { TileData } from "./Tile.js";
+import { TileData, Tile } from "./Tile.js";
 import ModelLoader from "../utils/ModelLoader.js";
 import ColorUtils from "../utils/ColorUtils.js";
 
@@ -228,6 +228,10 @@ export default class GridManager {
      */
     getRandomEmptyHexCoord() {
         return this.getRandomEmptyNeighbor();
+    }
+
+    get_points_for_koi(grid) {
+        let sum = 0
     }
 }
 

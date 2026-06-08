@@ -11,7 +11,7 @@ export default class Tile {
     constructor(tileData, rotation = 0, hexCoord = null) {
         this.hexCoord = hexCoord;
         this.tileData = tileData;
-        this.occupied = false;
+        this.occupiedBy = Animal.NONE;
         this.rotation = rotation;
     }
 
