@@ -2,6 +2,7 @@ import HexCoord from "../utils/HexCoord.js";
 import { TileData, Tile } from "./Tile.js";
 import ModelLoader from "../utils/ModelLoader.js";
 import ColorUtils from "../utils/ColorUtils.js";
+import Animal from "../data/Animal.js"
 
 /**
  * Verantwortlich für das Speichern und Verwalten des hexagonalen Spielfelds
@@ -231,7 +232,42 @@ export default class GridManager {
     }
 
     get_points_for_koi(grid) {
-        let sum = 0
+        let sum = 0; // Endausgabe der insgesamt gesammelten Punkte für Koi-Reihen
+
+        // Speichern von allen gefundenen zusammenhängenden Koi-Gruppen
+        const sets = [];
+
+        // Über jedes Tile im Grid gehen
+        for (const [hexCoord, tile] of grid.entries()) {
+            // Wenn auf diesem Tile kein Koi --> überspringen (continue)
+            if (tile.occupiedBy !== Animal.KOI) {
+                continue;
+            }
+
+            // Wenn best. Koi schon in gefundener Gruppe -> nicht nochmal von ihm aus suchen
+            if (this.setsContainCoord(sets, hexCoord)) {
+                continue;
+            }
+
+            // Neues Set für zusammenhängende Koi-Gruppe
+            const set = new Set();
+
+            // Rekursiv alle benachbarten Koi finden
+            this.getNeighborKoi(hexCoord, grid, set);
+
+            // Gefundene Gruppe speichern
+            sets.push(set);
+        }
+
+        // jede gefundene Koi-Gruppe auswerten
+        for (const set of sets) {
+            // Koi-Gruppe zählt nur, wenn sie gültige Reihe ist
+            if (this.isValidKoiLine(set)) {
+                sum += this.getKoiPoints(set.size);
+            }
+        }
+
+        return sum; // am Ende Gesamtpunktzahl zurückgeben
     }
 }
 
