@@ -231,6 +231,7 @@ export default class GridManager {
         return this.getRandomEmptyNeighbor();
     }
 
+    // Hauptfunktion: alle Pandas finden, zusammenhängende Panda-Gruppen finden, jede Gruppe zählen, für jede Gruppe mit genau 3 Pandas 10 Punkte vergeben
     get_points_for_panda(grid) {
         let sum = 0; // für End-Ausgabe der insgesamt gesammelten Punkte für Panda-Gruppen
 
@@ -283,6 +284,90 @@ export default class GridManager {
         }
 
     return sum;
+    }
+
+    // Rekursive Funktion: bei einem Panda starten und dann alle Pandas finden, die zu derselben Gruppe gehören (bis keine neuen Panda-Nachbarn mehr gefunden werden)
+    getNeighborPandas(hexCoord, grid, set) { 
+        // Aktuelle Koordinate gehört zur aktuellen Panda-Gruppe
+        set.add(hexCoord);
+
+        // Hex-Felder haben immer 6 Nachbarn
+        const neighbors = hexCoord.getNeighbors();
+
+        // jetzt jeden Nachbarn einzeln prüfen
+        for (const neighbor of neighbors) {
+            // wenn Nachbar schon im Set --> würden endlos im Kreis suchen --> deshalb continue
+            if (this.setContainsCoord(set, neighbor)) {
+                continue;
+            }
+
+            // Tile suchen, dass an dieser Nachbar-Koordinate liegt
+            const neighborTile = this.getTileFromGridAt(grid, neighbor);
+
+            // wenn dort Tile liegt und darauf Panda ist, dann gehört Nachbar zur selben Panda-Gruppe
+            if (neighborTile !== undefined && neighborTile.occupiedBy === Animal.PANDA) {
+                set.add(neighbor);
+
+                // dann von diesem Nachbar-Panda aus weiter suchen
+                this.getNeighborPandas(neighbor, grid, set);
+            }
+        }
+    }
+
+    // Hat Panda überhaupt einen Panda-Nachbarn?
+    // falls z.B. alleine -> keine Gruppe möglich -> direkt überspringen -> dadurch Rekursion erst gar nicht starten
+    hasPandaNeighbor(hexCoord, grid) {
+        // 6 Nachbarfelder holen
+        const neighbors = hexCoord.getNeighbors();
+
+        for (const neighbor in neighbors) {
+            // Tile an dieser Nachbarposition suchen wie vorhin
+            const neighborTile = this.getTileFromGridAt(grid, neighbor);
+
+            // falls dort Panda liegt --> gefundener Panda hat Panda-Nachbarn
+            if (neighborTile !== undefined && neighborTile.occupiedBy === Animal.PANDA) {
+                return true;
+            }
+        }
+
+        return false; // falls kein Panda-Nachbar gefunden
+    }
+
+    // Wurde Panda schon Gruppe zugeordnet? --> falls z.B. best. Panda nochmal in Schleife auftauchen -> soll nicht nochmal diesselbe Gruppe erzeugen
+    setsContainCoord(sets, hexCoord) {
+        // sets ist Liste von Panda-Gruppen -> siehe oben
+        // prüfen, ob übergebene Koordinate in irgendeiner Gruppe schon vorkommt
+        for (const set of sets) {
+            if (this.setContainsCoord(set, hexCoord)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Ist Koordinate in best. Set schon enthalten? (da HexCoords Objekte sind und JavaScript ja normalerweise nur über Referenz von Objekten vergleicht)
+    setContainsCoord(set, hexCoord) {
+        // nach Objekt-Referenz prüfen mit coord.equals(hexCoord)
+        for (const coord of set) {
+            if (coord.equals(hexCoord)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Tile an best. Koordinate geben
+    getTileFromGridAt(grid, hexCoord) {
+        // Map verwendet HexCoord-Objekte auch als Key --> nach Koordinate suchen mit gleichen Werten
+        for (const [placedHexCoord, tile] of grid.entries()) {
+            if (placedHexCoord.equals(hexCoord)) {
+                return tile;
+            }
+        }
+
+        return undefined; // wenn kein Tile an dieser Koordinate gefunden wurde
     }
 }
 
