@@ -2,6 +2,7 @@ import HexCoord from "../utils/HexCoord.js";
 import { TileData, Tile } from "./Tile.js";
 import ModelLoader from "../utils/ModelLoader.js";
 import ColorUtils from "../utils/ColorUtils.js";
+import Animal from "../data/Animal.js"
 
 /**
  * Verantwortlich für das Speichern und Verwalten des hexagonalen Spielfelds
@@ -228,6 +229,60 @@ export default class GridManager {
      */
     getRandomEmptyHexCoord() {
         return this.getRandomEmptyNeighbor();
+    }
+
+    get_points_for_panda(grid) {
+        let sum = 0; // für End-Ausgabe der insgesamt gesammelten Punkte für Panda-Gruppen
+
+        // alle Koordinaten sammeln, auf denen Panda liegt
+        const pandas = [];
+        
+        // über jedes Tile in grid gehen -> grid ist Map<HexCoord, Tile> mit key = HexCoord und value = Tile
+        for (const [hexCoord, tile] of grid.entries()) {
+            if (tile.occupiedBy === Animal.PANDA) { // falls Tile Animal Panda besitzt (occupiedBy), Hex-Koordinaten zu pandas Liste hinzufügen
+                pandas.push(hexCoord);
+            } 
+        }
+
+        // wenn es < 3 Pandas gibt -> können keine Dreiergruppe ergeben
+        if (pandas.length < 3) {
+            return 0;
+        }
+
+        // Sets-Liste erstellen für später gefundene Panda-Gruppen; jede Gruppe ist Set
+        const sets = [];
+
+        // jetzt jeden einzelnen Panda anschauen aus voriger pandas-Liste
+        for (const panda of pandas) {
+            // Wenn bestimmter Panda schon im Set steckt -> überspringen (continue), nicht ausversehen nochmal nehmen
+            if (this.setsContainCoord(sets, panda)) {
+                continue;
+            }
+
+            // Wenn bestimmter Panda keine Panda-Nachbarn hat -> keine Dreiergruppe bilden
+            if (!this.hasPandaNeighbor(panda, grid)) {
+                continue;
+            }
+
+            // Neues Set für zusammenhängende Panda-Gruppe erstellen
+            const set = new Set();
+
+            // Rekursiv alle benachbarten Pandas finden
+            this.getNeighborPandas(panda, grid, set);
+
+            // Gruppe speichern
+            sets.push(set);
+        }
+
+        // jetzt noch alle gefundenen Gruppen prüfen
+        for (const set of sets) {
+            // Panda-Regel --> genau 3 zusammenhängende Pandas = 10 Punkte
+            if (set.size === 3) {
+                sum += 10;
+            }
+        }
+
+    return sum;
     }
 }
 
