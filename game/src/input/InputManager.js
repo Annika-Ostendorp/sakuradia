@@ -1,6 +1,7 @@
 import * as THREE from 'three';
+import RoundState from "../data/RoundState.js";
 
-// Schickt input benachrichtigung an GameplayManager je nach round state
+// Schickt input Benachrichtigung an GameplayManager je nach round state
 export default class InputManager{
     constructor(scene, canvas, gameplayManager) {
         this.scene = scene;
@@ -15,14 +16,47 @@ export default class InputManager{
             right: false,
         };
 
+        // Richtungs-Logik
         this.moveDirection = new THREE.Vector2();
 
+        // Event subscriptions
         window.addEventListener('keydown', (event) => this.handleKey(event, true));
         window.addEventListener('keyup', (event) => this.handleKey(event, false));
+    }
 
-        this.canvas.addEventListener("click", (event) => {
-            this.handleBoardClick(event);
-        });
+    // Wird vom GameplayManager aufgerufen
+    update(deltaTime) {
+        // Lese Rundenstatus im GameplayManager
+        const roundState = this.gameplayManager.getCurrentRoundState();
+
+        // Je nach State
+        switch(roundState){
+            case RoundState.GAME_OVER:
+            case RoundState.DRAW:
+                return; // Kein Input Update wenn gezogen wird oder das Spiel vorbei ist
+
+            case RoundState.CHOOSE_TILE:
+                this.handleChooseTile(deltaTime); // Vertikale Bewegung durch Tile-Tier-Paare
+                break;
+
+            case RoundState.PLACE_TILE:
+                this.handlePlaceTile(deltaTime); // Dynamische Bewegung durch Hex-Grid
+                break;
+
+            default:
+                console.log("default case");
+                break;
+        }
+    }
+
+    // Vertikale Bewegung durch Tile-Tier-Paare
+    handleChooseTile(deltaTime){
+        
+    }
+
+    // Dynamische Bewegung durch Hex-Grid
+    handlePlaceTile(deltaTime){
+
     }
 
     // Aktualisiert den Status der Tasten basierend auf Keydown/Keyup-Events.
