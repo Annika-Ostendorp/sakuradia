@@ -52,24 +52,8 @@ export default class Game {
         this.tilesOnHand.push(tileData);
     }
 
-    dequeueTileFromHand() {
-        return this.tilesOnHand.shift();
-    }
-
-    peekTileOnHand() {
-        return this.tilesOnHand[0];
-    }
-
     enqueueAnimalToHand(animal) {
         this.animalsOnHand.push(animal);
-    }
-
-    dequeueAnimalFromHand() {
-        return this.animalsOnHand.shift();
-    }
-
-    peekAnimalOnHand() {
-        return this.animalsOnHand[0];
     }
 
     // Liefert ein Array synchronisierter Paare für die UI.
