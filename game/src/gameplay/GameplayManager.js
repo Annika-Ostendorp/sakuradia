@@ -57,6 +57,25 @@ export default class GameplayManager{
         this.selectedHandIndex = index;
     }
 
+    onSubmitted(){
+        const roundState = this.getCurrentRoundState();
+
+        // Je nach State
+        switch(roundState){
+            case RoundState.CHOOSE_TILE:
+                this.roundState = RoundState.PLACE_TILE;
+                break;
+
+            case RoundState.PLACE_TILE:
+                this.roundState = RoundState.DRAW;
+                break;
+
+            default:
+                console.warn("default case");
+                break;
+        }
+    }
+
     // Wird vom Input-Manager aufgerufen, wenn der Spieler mit dem Canvas interagiert.
     onInteracted(){
         if (this.roundState === RoundState.GAME_OVER) {

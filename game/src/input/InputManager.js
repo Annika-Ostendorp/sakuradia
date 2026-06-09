@@ -13,7 +13,7 @@ export default class InputManager{
             up: false,
             down: false,
             left: false,
-            right: false,
+            right: false
         };
 
         // Hand-Logik
@@ -42,10 +42,6 @@ export default class InputManager{
 
         // Je nach State
         switch(roundState){
-            case RoundState.GAME_OVER:
-            case RoundState.DRAW:
-                return; // Kein Input Update wenn gezogen wird oder das Spiel vorbei ist
-
             case RoundState.CHOOSE_TILE:
                 this.handleChooseTile(deltaTime); // Vertikale Bewegung durch Tile-Tier-Paare
                 break;
@@ -55,7 +51,7 @@ export default class InputManager{
                 break;
 
             default:
-                console.log("default case");
+                console.warn("default case");
                 break;
         }
     }
@@ -126,6 +122,7 @@ export default class InputManager{
     // Aktualisiert den Status der Tasten basierend auf Keydown/Keyup-Events.
     // event.code z.B. "KeyW" für W oder "ArrowUp" für Pfeil nach oben. isPressed ist true bei Keydown, false bei Keyup.
     handleKey(event, isPressed) {
+        console.log(event.code);
         switch (event.code) {
             case 'KeyW':
             case 'ArrowUp':
@@ -145,6 +142,10 @@ export default class InputManager{
             case 'KeyD':
             case 'ArrowRight':
                 this.keys.right = isPressed;
+                break;
+
+            case 'Enter':
+                this.onSubmit();
                 break;
         }
     }
@@ -217,5 +218,9 @@ export default class InputManager{
         this.selectedTileOnHandIndex = index;
         this.gameplayManager.onHoverTileOnHand(index);
         console.log(this.selectedTileOnHandIndex);
+    }
+
+    onSubmit(){
+        this.gameplayManager.onSubmitted();
     }
 }
