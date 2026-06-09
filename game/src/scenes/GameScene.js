@@ -17,13 +17,13 @@ export default class GameScene {
     constructor(gameConfig) {
         this.gameConfig = gameConfig;
         this.initialization();
+        this.timer = new THREE.Timer();
+
+        this.gameplayManager = new GameplayManager(this.scene, this.gameConfig);
+        this.inputManager = new InputManager(this.scene, this.canvas, this.gameplayManager);
 
         this.animate = this.animate.bind(this);
         this.animate();
-
-        // Gameplay- und Input-Manager erst nach Start der Render-Schleife initialisieren
-        this.gameplayManager = new GameplayManager(this.scene, this.gameConfig);
-        this.inputManager = new InputManager(this.scene, this.canvas, this.gameplayManager);
     }
 
     initialization() {
@@ -73,6 +73,12 @@ export default class GameScene {
     // Render-Loop
     animate() {
         requestAnimationFrame(this.animate);
+
+        this.timer.update();
+        const deltaTime = this.timer.getDelta(); // Die Zeit seit dem letzten Frame
+        const elapsed = this.timer.getElapsed(); // Die Zeit seit Start des Timers
+
+        this.inputManager.update(deltaTime);
 
         this.renderer.render(this.scene, this.camera);
     }

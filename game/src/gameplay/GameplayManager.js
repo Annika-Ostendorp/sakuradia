@@ -46,21 +46,14 @@ export default class GameplayManager{
         this.syncHandPanel();
         
         this.game.start();
-
-        const clock = new THREE.Clock();
-        this.animate = this.animate.bind(this);
-        this.animate();
-    }
-
-    // Gameplay loop
-    animate() {
-        requestAnimationFrame(this.animate);
-
-        const deltaTime = this.clock.getDelta();
     }
 
     getCurrentRoundState(){
         return this.roundState;
+    }
+
+    onHoverTileOnHand(index){
+        this.handPanel.update(index);
     }
 
     // Wird vom Input-Manager aufgerufen, wenn der Spieler mit dem Canvas interagiert.
