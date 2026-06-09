@@ -55,7 +55,6 @@ export default class GameplayManager{
     onHoverTileOnHand(index){
         // Hover tile visually
         this.selectedHandIndex = index;
-        console.log(this.selectedHandIndex);
     }
 
     // Wird vom Input-Manager aufgerufen, wenn der Spieler mit dem Canvas interagiert.
