@@ -16,6 +16,17 @@ export default class InputManager{
             right: false,
         };
 
+        // Hand-Logik
+        this.selectedTileOnHandIndex = 0;
+        this.selectedAnimalOnHandIndex = 0;
+
+        this.holdDelay = 0.5; // Beim Halten wird nach "holdDelay" Sekunden die Intervall-Logik gestartet
+        this.holdInterval = 0.2; // Beim Halten wird jede "holdInterval" Sekunden die Bewegung ausgeführt
+
+        this.isHolding = false;
+        this.timer_HoldDelay = 0;
+        this.timer_HoldInterval = 0;
+
         // Richtungs-Logik
         this.moveDirection = new THREE.Vector2();
 
@@ -51,13 +62,66 @@ export default class InputManager{
 
     // Vertikale Bewegung durch Tile-Tier-Paare
     handleChooseTile(deltaTime){
+        // Get normalisierten input vektor
+        const inputDir = this.getInputDirection();
         
+        // Wenn keine Eingabe getätig wird
+        if (inputDir.lengthSq() <= 0.1){ // Input weniger als 0,1 um float-Vergleichfehler auszuschließen
+            // Reset holding
+            if(this.isHolding){
+                this.isHolding = false;
+                this.timer_HoldDelay = 0;
+                this.timer_HoldInterval = 0;
+            }
+            return;
+        }
+
+        // Andernfalls, falls Eingabe gehalten wird
+        if(this.isHolding){
+            // Falls wir auf den Hold timer warten
+            if(this.timer_HoldDelay > 0){
+                this.timer_HoldDelay -= deltaTime;
+                return; // Return early
+            }
+
+            // Falls wir auf den Interval timer warten
+            if(this.timer_HoldInterval > 0){
+                this.timer_HoldInterval -= deltaTime;
+                return; // Return early
+            }
+
+            // Setze hold interval zurück, wenn er abgelaufen ist
+            this.timer_HoldInterval = this.holdInterval;
+        }
+
+        // Falls Eingabe getätigt wird, wir aber noch nicht im Hold Zustand sind
+        else{
+            this.isHolding = true;
+            this.timer_HoldDelay = this.holdDelay;
+        }
+
+        // Ändere Index direkt bzw. nach intervall
+        let indexDirection = 1; // Default index++
+        if (inputDir.y != 0){
+            indexDirection = inputDir.y > 0 ? -1 : 1 // Wenn y positiv ist, navigiere nach oben (index--) vice versa
+        }
+        // Wenn y == 0 (Tastatur rechts/links)
+        else{
+            indexDirection = inputDir.x > 0 ? 1 : -1 // Wenn x positiv ist, navigiere nach unten (index++) vice versa
+        }
+        const newIndex = (4 + this.selectedTileOnHandIndex + indexDirection) % 4; // +4, damit wir nicht in den negativen Bereich geraten
+        this.updateIndex(newIndex);
     }
 
     // Dynamische Bewegung durch Hex-Grid
     handlePlaceTile(deltaTime){
 
     }
+
+    // For later implementation
+    //handleCancelPlaceTile(event){
+        // Let GameplayManager reset state to RoundState.CHOOSE_TILE
+    //}
 
     // Aktualisiert den Status der Tasten basierend auf Keydown/Keyup-Events.
     // event.code z.B. "KeyW" für W oder "ArrowUp" für Pfeil nach oben. isPressed ist true bei Keydown, false bei Keyup.
@@ -147,5 +211,11 @@ export default class InputManager{
         }
 
         return direction;
+    }
+
+    updateIndex(index){
+        this.selectedTileOnHandIndex = index;
+        this.gameplayManager.onHoverTileOnHand(index);
+        console.log(this.selectedTileOnHandIndex);
     }
 }
