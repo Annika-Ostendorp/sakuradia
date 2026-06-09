@@ -79,10 +79,12 @@ export default class GridManager {
      * @param {Tile} tile
      * @param {number} rotation - Optionaler Rotationswert für das Tile (0-5).
      */
-    setTile(hexCoord, tile, rotation = 0) {
+    setTile(hexCoord, tile, rotation = 0, setToGrid = true) {
         tile.rotation = rotation;
-        this.grid.set(hexCoord, tile);
         this.spawnTile(hexCoord, tile);
+        if (setToGrid){
+            this.grid.set(hexCoord, tile);
+        }
     }
 
     spawnTile(hexCoord, tile) {
@@ -177,19 +179,51 @@ export default class GridManager {
     }
 
     /**
-     *  Gibt eine zufällige, benachbarte Hex-Koordinate zurück, die noch kein Tile enthält.
-     * @returns {HexCoord | null} Eine zufällige, leere Nachbar-Hex-Koordinate oder null, wenn keine vorhanden ist.
+     * Gibt eine zufällige leere Hex-Koordinate innerhalb des Spielfeldbereichs zurück.
+     * @returns {HexCoord | null}
      */
-    getRandomEmptyNeighbor() {
-        const keys = Array.from(this.grid.keys());
-        if (keys.length === 0) {
+    getRandomEmptyHexCoord() {
+        // Bekomme alle leeren Felder mit Nachbarn
+        const emptyHexCoords = this.getAllEmptyHexCoordsWithNeighbour();
+
+        if(emptyHexCoords.length === 0){
             return null;
         }
+
+        // Wähle zufällig eine Kandidaten-Koordinate.
+        const randomIndex = Math.floor(Math.random() * emptyHexCoords.length);
+        return emptyHexCoords[randomIndex];
+    }
+
+    /**
+     * Gibt alle leeren Hex-Nachbarn für ein HexCoord zurück.
+     * @returns {HexCoord[]}
+     */
+    getEmptyNeighbours(hexCoord){
+        const list = [];
+        for (const neighbour in hexCoord.getNeighbors()){
+            if (this.isOccupied(neighbour) == false){
+                list.push(neighbour);
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Gibt eine Liste an unique HexCoords zurück, die nicht im Grid platziert wurden, jedoch platzierte Nachbarn haben.
+     * @returns {HexCoord[]}
+     */
+    getAllEmptyHexCoordsWithNeighbour(){
+        const keys = Array.from(this.grid.keys());
+        if (keys.length === 0) {
+            return [];
+        }
+
         // Sammle alle benachbarten Hex-Koordinaten um bereits platzierte Tiles
         // und filtere doppelte Einträge mittels eines Hash-Caches. Dadurch wird
         // verhindert, dass dieselbe Koordinate mehrfach als Kandidat auftaucht.
-        const emptyNeighborCandidates = [];
         const seen = new Set();
+        const emptyNeighborCandidates = [];
 
         for (const placedHexCoord of keys) {
             for (const neighbor of placedHexCoord.getNeighbors()) {
@@ -198,9 +232,9 @@ export default class GridManager {
                     continue;
                 }
 
-                // `hashCode()` sollte eine stabile, koordinatenbasierte Repräsentation
-                // liefern; damit können wir Duplikate erkennen, auch wenn die
-                // `HexCoord`-Objekte unterschiedliche Referenzen sind.
+                // hashCode() liefert eine stabile, koordinatenbasierte Repräsentation
+                // damit können wir Duplikate erkennen, auch wenn die
+                // HexCoord-Objekte unterschiedliche Referenzen sind.
                 const key = neighbor.hashCode();
                 if (seen.has(key)) {
                     continue;
@@ -214,20 +248,44 @@ export default class GridManager {
         if (emptyNeighborCandidates.length === 0) {
             return null;
         }
-
-        // Wähle zufällig eine Kandidaten-Koordinate. Da die Liste aus allen
-        // Nachbarn aller platzierten Tiles besteht, ist die Auswahl gleichverteilt
-        // über die Kandidaten.
-        const randomIndex = Math.floor(Math.random() * emptyNeighborCandidates.length);
-        return emptyNeighborCandidates[randomIndex];
+        return emptyNeighborCandidates;
     }
 
     /**
-     * Gibt eine zufällige leere Hex-Koordinate innerhalb des Spielfeldbereichs zurück.
+     * Gibt das nächste freie Feld in die 2D Vektor Richtung an
      * @returns {HexCoord | null}
      */
-    getRandomEmptyHexCoord() {
-        return this.getRandomEmptyNeighbor();
+    getHexCoordInWorldDirection(hexCoord, direction){
+        // Bekomme alle leeren Felder mit Nachbarn
+        const emptyHexCoords = this.getAllEmptyHexCoordsWithNeighbour();
+
+        // Checks für Richtung
+        const xDirectionIsPositive = direction.x > 0 ? true : false;
+        const yDirectionIsPositive = direction.y > 0 ? true : false;
+
+        // Bekomme Liste an HexCoords, die in der angegebenen Richtung liegen
+        const hexCoordsInDirection = []
+        for(const coord in emptyHexCoords){
+            let coordPos = hexToWorld(coord);
+            // Füge valide hex der Liste hinzu
+            if (xDirectionIsPositive == coordPos.x > 0 && yDirectionIsPositive == coordPos.y > 0){
+                hexCoordsInDirection.push(coord);
+            }
+        }
+
+        // Bekomme den nähesten HexCoord
+        let leastDistance = 1000;
+        let targetCoord = null;
+        for (const validCoord in hexCoordsInDirection){
+            const distance = HexCoord.distance(hexCoord, validCoord);
+            // Wenn Distanz kleiner, mindestens jedoch 0.5 beträgt, setze neue nähsten HexCoord
+            if (distance < leastDistance && distance >= 0.5){
+                leastDistance = distance;
+                targetCoord = validCoord;
+            }
+        }
+
+        return targetCoord;
     }
 }
 
