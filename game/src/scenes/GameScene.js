@@ -21,7 +21,7 @@ export default class GameScene {
         this.animate = this.animate.bind(this);
         this.animate();
 
-        // Gameplay- und Input-Manager erst nach Start der Render-Schleife.
+        // Gameplay- und Input-Manager erst nach Start der Render-Schleife initialisieren
         this.gameplayManager = new GameplayManager(this.scene, this.gameConfig);
         this.inputManager = new InputManager(this.scene, this.canvas, this.gameplayManager);
     }
@@ -70,7 +70,7 @@ export default class GameScene {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    // Render-Loop: kept minimal — weitere Animationen/Updates können hier ergänzt werden.
+    // Render-Loop
     animate() {
         requestAnimationFrame(this.animate);
 
