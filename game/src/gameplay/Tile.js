@@ -1,3 +1,4 @@
+import Animal from "../data/Animal.js";
 import { Landscape } from "../data/Landscape.js";
 
 /**
@@ -5,13 +6,13 @@ import { Landscape } from "../data/Landscape.js";
  * - `tileData`: die statische Definition (`TileData`) der Landschaften/Tiere
  * - `rotation`: Index 0-5 für 60°-Schritte (darauf basieren Render-Rotationen)
  * - `hexCoord`: optional die Logik-Koordinate, auf der das Tile sitzt
- * - `occupied`: Hilfsflag, derzeit nicht breit genutzt aber vorhanden
+ * - `occupiedBy`: das Tier, das auf der Kachel sitzt (oder `Animal.NONE` wenn leer)
  */
 export default class Tile {
     constructor(tileData, rotation = 0, hexCoord = null) {
         this.hexCoord = hexCoord;
         this.tileData = tileData;
-        this.occupied = false;
+        this.occupiedBy = Animal.NONE; // Standardmäßig kein Tier auf der Kachel
         this.rotation = rotation;
     }
 
