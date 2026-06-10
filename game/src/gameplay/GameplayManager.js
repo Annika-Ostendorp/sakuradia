@@ -72,8 +72,7 @@ export default class GameplayManager{
                 break;
                 
             case RoundState.CHOOSE_TILE:
-                this.roundState = RoundState.PLACE_TILE;
-
+                console.log("Submitting chosen tile at index", this.selectedHandIndex);
                 // Spawn preview tile (without updating the grid)
                 this.previewTileHexCoord = this.getRandomEmptyHexCord();
                 this.previewTileRotation = this.getRandomRotation();
@@ -95,12 +94,14 @@ export default class GameplayManager{
                             } catch (e) {
                                 console.warn('Failed to position preview model after load', e);
                             }
+                            this.roundState = RoundState.PLACE_TILE;
                         }
                     })
                     .catch((err) => {
                         console.error('Error spawning preview tile model:', err);
                         this.previewTileModelPromise = null;
                     });
+
                 break;
 
             case RoundState.PLACE_TILE:
