@@ -18,7 +18,7 @@ export default class HexCoord {
     // Gibt die Hex-Koordinaten des Nachbarfelds in der angegebenen Richtung zurück.
     neighbor(dir) {
         const direction = HexCoord.Directions[dir];
-        return new HexCoord(this.column + direction.column, this.row - direction.row);
+        return new HexCoord(this.column + direction.column, this.row + direction.row);
     }
 
     // Addiert zwei Hex-Koordinaten, z.B. für die Berechnung von Nachbarn.
