@@ -81,10 +81,10 @@ export default class GridManager {
      */
     setTile(hexCoord, tile, rotation = 0, setToGrid = true) {
         tile.rotation = rotation;
-        this.spawnTile(hexCoord, tile);
         if (setToGrid){
             this.grid.set(hexCoord, tile);
         }
+        return this.spawnTile(hexCoord, tile);
     }
 
     spawnTile(hexCoord, tile) {
@@ -101,7 +101,7 @@ export default class GridManager {
         tile.rotation = tile.rotation || 0;
         this.grid.set(hexObj, tile);
 
-        // Konvertiere Logik-Koordinate in Welt-Position für das 3D-Modell.
+        // Konvertiere HexCoord in Welt-Position für das 3D-Modell.
         var worldPos = hexObj.hexToWorld(hexCoord);
 
         // Keystones werden als ein einzelnes Modell geladen (statt zwei Hälften).
@@ -201,7 +201,7 @@ export default class GridManager {
      */
     getEmptyNeighbours(hexCoord){
         const list = [];
-        for (const neighbour in hexCoord.getNeighbors()){
+        for (const neighbour of hexCoord.getNeighbors()){
             if (this.isOccupied(neighbour) == false){
                 list.push(neighbour);
             }
@@ -256,32 +256,46 @@ export default class GridManager {
      * @returns {HexCoord | null}
      */
     getHexCoordInWorldDirection(hexCoord, direction){
-        // Bekomme alle leeren Felder mit Nachbarn
-        const emptyHexCoords = this.getAllEmptyHexCoordsWithNeighbour();
+        // Nur direkt benachbarte, leere Nachbarn als Kandidaten verwenden
+        let neighborCandidates = this.getEmptyNeighbours(hexCoord);
+        if (!neighborCandidates || neighborCandidates.length === 0) return null;
 
-        // Checks für Richtung
-        const xDirectionIsPositive = direction.x > 0 ? true : false;
-        const yDirectionIsPositive = direction.y > 0 ? true : false;
-
-        // Bekomme Liste an HexCoords, die in der angegebenen Richtung liegen
-        const hexCoordsInDirection = []
-        for(const coord in emptyHexCoords){
-            let coordPos = hexToWorld(coord);
-            // Füge valide hex der Liste hinzu
-            if (xDirectionIsPositive == coordPos.x > 0 && yDirectionIsPositive == coordPos.y > 0){
-                hexCoordsInDirection.push(coord);
+        // Weiter einschränken: Kandidat muss außerdem mindestens einen bereits platzierten Nachbarn haben
+        neighborCandidates = neighborCandidates.filter(candidate => {
+            for (const n of candidate.getNeighbors()) {
+                if (this.isOccupied(n)) return true;
             }
-        }
+            return false;
+        });
+        if (neighborCandidates.length === 0) return null;
 
-        // Bekomme den nähesten HexCoord
-        let leastDistance = 1000;
+        // Referenz-Weltposition des Start-Hex
+        const originPos = hexCoord.hexToWorld(hexCoord);
+
+        // Mappe Eingabe-Richtung (x, y) auf Welt-Richtung (x, z)
+        const dirWorld = { x: direction.x, z: direction.y };
+        const dirLength = Math.hypot(dirWorld.x, dirWorld.z);
+        if (dirLength === 0) return null;
+        dirWorld.x /= dirLength;
+        dirWorld.z /= dirLength;
+
+        // Wähle den benachbarten Kandidaten, dessen Projektion auf die Richtung am größten ist
+        let bestScore = -Number.POSITIVE_INFINITY;
         let targetCoord = null;
-        for (const validCoord in hexCoordsInDirection){
-            const distance = HexCoord.distance(hexCoord, validCoord);
-            // Wenn Distanz kleiner, mindestens jedoch 0.5 beträgt, setze neue nähsten HexCoord
-            if (distance < leastDistance && distance >= 0.5){
-                leastDistance = distance;
-                targetCoord = validCoord;
+
+        for (const candidate of neighborCandidates) {
+            const candPos = candidate.hexToWorld(candidate);
+            const dx = candPos.x - originPos.x;
+            const dz = candPos.z - originPos.z;
+
+            // Projektion (dot product) — je größer desto näher an gewünschter Richtung
+            const projection = dx * dirWorld.x + dz * dirWorld.z;
+
+            if (projection <= 0) continue; // nur vorwärts
+
+            if (projection > bestScore) {
+                bestScore = projection;
+                targetCoord = candidate;
             }
         }
 
