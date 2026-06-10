@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import RoundState from "../data/RoundState.js";
+import GridManager from "../gameplay/GameplayManager.js";
 
 // Schickt input Benachrichtigung an GameplayManager je nach round state
 export default class InputManager{
@@ -13,7 +14,8 @@ export default class InputManager{
             up: false,
             down: false,
             left: false,
-            right: false
+            right: false,
+            submit: false
         };
 
         // Hand-Logik
@@ -42,6 +44,10 @@ export default class InputManager{
 
         // Je nach State
         switch(roundState){
+            case RoundState.GAME_OVER:
+            case RoundState.DRAW:
+                return;
+
             case RoundState.CHOOSE_TILE:
                 this.handleChooseTile(deltaTime); // Vertikale Bewegung durch Tile-Tier-Paare
                 break;
@@ -58,46 +64,14 @@ export default class InputManager{
 
     // Vertikale Bewegung durch Tile-Tier-Paare
     handleChooseTile(deltaTime){
-        // Get normalisierten input vektor
-        const inputDir = this.getInputDirection();
-        
-        // Wenn keine Eingabe getätig wird
-        if (inputDir.lengthSq() <= 0.1){ // Input weniger als 0,1 um float-Vergleichfehler auszuschließen
-            // Reset holding
-            if(this.isHolding){
-                this.isHolding = false;
-                this.timer_HoldDelay = 0;
-                this.timer_HoldInterval = 0;
-            }
+        // Bekomme normalisierten input vector
+        const inputDir = this.updateDirection(deltaTime);
+        if (inputDir == null){
             return;
         }
 
-        // Andernfalls, falls Eingabe gehalten wird
-        if(this.isHolding){
-            // Falls wir auf den Hold timer warten
-            if(this.timer_HoldDelay > 0){
-                this.timer_HoldDelay -= deltaTime;
-                return; // Return early
-            }
-
-            // Falls wir auf den Interval timer warten
-            if(this.timer_HoldInterval > 0){
-                this.timer_HoldInterval -= deltaTime;
-                return; // Return early
-            }
-
-            // Setze hold interval zurück, wenn er abgelaufen ist
-            this.timer_HoldInterval = this.holdInterval;
-        }
-
-        // Falls Eingabe getätigt wird, wir aber noch nicht im Hold Zustand sind
-        else{
-            this.isHolding = true;
-            this.timer_HoldDelay = this.holdDelay;
-        }
-
         // Ändere Index direkt bzw. nach intervall
-        let indexDirection = 1; // Default index++
+        var indexDirection = 1; // Default index++
         if (inputDir.y != 0){
             indexDirection = inputDir.y > 0 ? -1 : 1 // Wenn y positiv ist, navigiere nach oben (index--) vice versa
         }
@@ -111,7 +85,32 @@ export default class InputManager{
 
     // Dynamische Bewegung durch Hex-Grid
     handlePlaceTile(deltaTime){
+        // Bekomme normalisierten input vector
+        var inputDir = this.updateDirection(deltaTime);
+        if (inputDir == null){
+            return;
+        }
+        // Flip x direction
+        inputDir.x = -inputDir.x;
 
+        const previewHexCoord = this.gameplayManager.previewTileHexCoord;
+        if (previewHexCoord == null){
+            console.error("PreviewHexCoord is null!")
+            return;
+        }
+        const game = this.gameplayManager.getGame();
+        const gridManager = game.getGridManager();
+        const targetPosition = gridManager.getHexCoordInWorldDirection(previewHexCoord, inputDir)
+        if (!targetPosition) {
+            console.info("No targetPosition found in handlePlaceTile");
+            return;
+        }
+        if(targetPosition == undefined){
+            console.warn("targetPosition is undefined in handlePlaceTile");
+            return;
+        }
+
+        this.gameplayManager.updatePreviewTilePosition(targetPosition);
     }
 
     // For later implementation
@@ -122,7 +121,6 @@ export default class InputManager{
     // Aktualisiert den Status der Tasten basierend auf Keydown/Keyup-Events.
     // event.code z.B. "KeyW" für W oder "ArrowUp" für Pfeil nach oben. isPressed ist true bei Keydown, false bei Keyup.
     handleKey(event, isPressed) {
-        console.log(event.code);
         switch (event.code) {
             case 'KeyW':
             case 'ArrowUp':
@@ -145,7 +143,10 @@ export default class InputManager{
                 break;
 
             case 'Enter':
-                this.onSubmit();
+                if (!this.keys.submit){ // Nur Bestätigen, wenn zuvor noch nicht bestätigt war
+                    this.onSubmit();
+                }
+                this.keys.submit = isPressed;
                 break;
         }
     }
@@ -214,10 +215,54 @@ export default class InputManager{
         return direction;
     }
 
+    resetHoldingState(){
+        this.isHolding = false;
+        this.timer_HoldDelay = 0;
+        this.timer_HoldInterval = 0;
+    }
+
     updateIndex(index){
         this.selectedTileOnHandIndex = index;
         this.gameplayManager.onHoverTileOnHand(index);
         console.log(this.selectedTileOnHandIndex);
+    }
+
+    // Returns inptu direction
+    updateDirection(deltaTime){
+        const inputDir = this.getInputDirection();
+
+        // Wenn keine Eingabe getätig wird und die holding flag noch true ist
+        if (inputDir.lengthSq() <= 0.1){ // Input weniger als 0,1 um float-Vergleichfehler auszuschließen
+            if (this.isHolding){
+                this.resetHoldingState()
+            }
+            return null;
+        }
+
+        // Bei Eingabe
+        if(this.isHolding){
+            // Falls wir auf den Hold timer warten
+            if(this.timer_HoldDelay > 0){
+                this.timer_HoldDelay -= deltaTime;
+                return null; // Return early
+            }
+
+            // Falls wir auf den Interval timer warten
+            if(this.timer_HoldInterval > 0){
+                this.timer_HoldInterval -= deltaTime;
+                return null; // Return early
+            }
+
+            // Setze hold interval zurück, wenn er abgelaufen ist
+            this.timer_HoldInterval = this.holdInterval;
+        }
+        // Falls Eingabe getätigt wird, wir aber noch nicht im Hold Zustand sind
+        else{
+            this.isHolding = true;
+            this.timer_HoldDelay = this.holdDelay;
+        }
+
+        return inputDir;
     }
 
     onSubmit(){
