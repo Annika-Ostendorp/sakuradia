@@ -1,6 +1,7 @@
 import RoundState from "../data/RoundState.js";
 import Game from "./Game.js";
 import { createHandPanel } from "../ui/components/createHandPanel.js";
+import HexCoord from "../utils/HexCoord.js";
 
 /**
  * Vermittelt zwischen Low-Level-Game-Logik (`Game`) und der UI/Interaktion.
@@ -19,6 +20,10 @@ export default class GameplayManager{
         this.roundState = RoundState.CHOOSE_TILE; // Initial round state
         // Index des aktuell in der UI markierten Hand-Paares
         this.selectedHandIndex = 0;
+        this.previewTileModel = null;
+        this.previewTileModelPromise = null;
+        this.previewTileHexCoord = null;
+        this.previewTileRotation = 0;
 
         // Hand-Panel UI: Callback aktualisiert die Auswahl und synchronisiert das UI
         this.handPanel = createHandPanel({
@@ -58,43 +63,84 @@ export default class GameplayManager{
     }
 
     onSubmitted(){
-        const roundState = this.getCurrentRoundState();
+        const previousState = this.getCurrentRoundState();
 
         // Je nach State
-        switch(roundState){
+        switch(previousState){
+            case RoundState.GAME_OVER:
+            case RoundState.DRAW:
+                break;
+                
             case RoundState.CHOOSE_TILE:
                 this.roundState = RoundState.PLACE_TILE;
+
+                // Spawn preview tile (without updating the grid)
+                this.previewTileHexCoord = this.getRandomEmptyHexCord();
+                this.previewTileRotation = this.getRandomRotation();
+                // setTile returns a Promise; keep promise separate from the resolved model
+                this.previewTileModel = null;
+                this.previewTileModelPromise = this.placePreviewTile(
+                    this.previewTileHexCoord,
+                    this.game.tilesOnHand[this.selectedHandIndex],
+                    this.previewTileRotation
+                );
+                this.previewTileModelPromise
+                    .then((model) => {
+                        this.previewTileModel = model;
+                        this.previewTileModelPromise = null;
+                        // Wenn bereits eine gewünschte HexCoord gesetzt wurde, positioniere das geladene Modell sofort.
+                        if (this.previewTileHexCoord) {
+                            try {
+                                this.updatePreviewTilePosition(this.previewTileHexCoord);
+                            } catch (e) {
+                                console.warn('Failed to position preview model after load', e);
+                            }
+                        }
+                    })
+                    .catch((err) => {
+                        console.error('Error spawning preview tile model:', err);
+                        this.previewTileModelPromise = null;
+                    });
                 break;
 
             case RoundState.PLACE_TILE:
+                // Delete preview model (handle resolved or pending promise)
+                const removeModelFromScene = (m) => {
+                    if (!m) return;
+                    // Einzelnes Objekt mit position
+                    if (m.position) {
+                        this.scene.remove(m);
+                        return;
+                    }
+                    // Objekt mit halves
+                    if (m.primaryHalf) this.scene.remove(m.primaryHalf);
+                    if (m.secondaryHalf) this.scene.remove(m.secondaryHalf);
+                };
+
+                if (this.previewTileModel) {
+                    removeModelFromScene(this.previewTileModel);
+                } else if (this.previewTileModelPromise) {
+                    this.previewTileModelPromise.then((model) => {
+                        removeModelFromScene(model);
+                    }).catch(() => {});
+                }
+                this.placeTile(
+                    this.previewTileHexCoord,
+                    this.game.tilesOnHand[this.selectedHandIndex],
+                    this.previewTileRotation
+                );
+
                 this.roundState = RoundState.DRAW;
+                this.onPairDrawn(this.game.deckLogic.getNextTile(), this.game.deckLogic.getNextAnimal());
+                this.onTurnEnd();
+                this.syncHandPanel();
                 break;
 
             default:
                 console.warn("default case");
                 break;
         }
-    }
-
-    // Wird vom Input-Manager aufgerufen, wenn der Spieler mit dem Canvas interagiert.
-    onInteracted(){
-        if (this.roundState === RoundState.GAME_OVER) {
-            console.log("Game is already over. No more interactions allowed!");
-            return;
-        }
-
-        // Entferne das aktuell ausgewählte Paar aus der Hand und platziere es.
-        const selectedPair = this.game.removePairFromHand(this.selectedHandIndex);
-        if (!selectedPair.tileData || !selectedPair.animal) {
-            console.warn("No valid hand pair selected.");
-            this.syncHandPanel();
-            return;
-        }
-
-        this.placeTileRandomPosAndRot(selectedPair.tileData);
-        // Nach dem Platzieren wird ein neues Paar gezogen und die Runde beendet.
-        this.onPairDrawn(this.game.deckLogic.getNextTile(), this.game.deckLogic.getNextAnimal());
-        this.onTurnEnd();
+        console.log("Changed from " +previousState+ " to " +this.roundState)
     }
 
     // Behandelt das Nachziehen eines Paares: Enqueue und UI-Logging.
@@ -128,19 +174,33 @@ export default class GameplayManager{
             this.roundState = RoundState.GAME_OVER;
             return;
         }
+        this.roundState = RoundState.CHOOSE_TILE;
     }
 
     // Platziert ein Tile an einer zufälligen, leeren Nachbar-Position mit zufälliger Rotation.
-    // Hinweis: Rotation ist ein Index (0-5) für 60° Schritte. Der aktuelle Code verwendet
-    // Math.floor(Math.random() * 5) und erzeugt Werte 0..4; Rotation 5 wird somit derzeit
-    // nicht erzeugt. Das Verhalten wurde nicht verändert — nur dokumentiert.
-    placeTileRandomPosAndRot(tileData){
-        var hexCoord = this.game.gridManager.getRandomEmptyHexCoord();
-        if (!hexCoord) {
-            console.warn("No empty neighboring hex available for tile placement!");
-            return;
-        }
-        this.game.gridManager.setTile(hexCoord, tileData, Math.floor(Math.random() * 5));
+    // Hinweis: Rotation ist ein Index (0-5) für 60° Schritte.
+    // Returnt das model
+    placePreviewTile(hexCoord, tileData, rotation = 0, setToGrid = false){        
+        return this.game.gridManager.setTile(hexCoord, tileData, rotation, setToGrid);
+    }
+
+    // Platziert ein Tile an einer zufälligen, leeren Nachbar-Position mit zufälliger Rotation
+    // und fügt es dem Grid hinzu
+    // Returnt das model
+    placeTile(hexCoord, tileData, rotation){
+        return this.game.gridManager.setTile(hexCoord, tileData, rotation);
+    }
+
+    getRandomEmptyHexCord(){
+        return this.game.gridManager.getRandomEmptyHexCoord();
+    }
+
+    getRandomRotation(){
+        return Math.floor(Math.random() * 6);
+    }
+
+    getGame(){
+        return this.game;
     }
 
     // Aktualisiert das Hand-Panel UI und clamp't die ausgewählte Index-Position.
@@ -149,5 +209,43 @@ export default class GameplayManager{
         const maxIndex = Math.max(0, handPairs.length - 1);
         this.selectedHandIndex = Math.min(this.selectedHandIndex, maxIndex);
         this.handPanel.update(handPairs, this.selectedHandIndex);
+    }
+
+    updatePreviewTilePosition(newHexCoord){
+        // Sicherheitsprüfungen: nichts machen, wenn kein HexCoord oder kein Model vorhanden.
+        if (!newHexCoord) {
+            console.error("updatePreviewTilePosition called with null newHexCoord");
+            return;
+        }
+        console.info(newHexCoord.hashCode())
+        // Aktualisiere preview Werte
+        this.previewTileHexCoord = newHexCoord;
+
+        // Wenn Modell noch nicht geladen, warten bis Promise aufgelöst wird
+        if (!this.previewTileModel) {
+            return;
+        }
+
+        // Konvertiere HexCoord in Welt-Position für das 3D-Modell.
+        var worldPos = newHexCoord.hexToWorld(newHexCoord);
+
+        // Falls geladener Rückgabewert ein einzelnes Objekt mit `position`
+        if (this.previewTileModel.position) {
+            this.previewTileModel.position.set(worldPos.x, worldPos.y, worldPos.z);
+            return;
+        }
+
+        // Falls Rückgabe ein Objekt mit zwei Hälften
+        if (this.previewTileModel.primaryHalf || this.previewTileModel.secondaryHalf) {
+            if (this.previewTileModel.primaryHalf && this.previewTileModel.primaryHalf.position) {
+                this.previewTileModel.primaryHalf.position.set(worldPos.x, worldPos.y, worldPos.z);
+            }
+            if (this.previewTileModel.secondaryHalf && this.previewTileModel.secondaryHalf.position) {
+                this.previewTileModel.secondaryHalf.position.set(worldPos.x, worldPos.y, worldPos.z);
+            }
+            return;
+        }
+
+        console.error("updatePreviewTilePosition: previewTileModel shape unknown, cannot set position");
     }
 }
