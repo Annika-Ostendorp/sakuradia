@@ -62,6 +62,10 @@ export default class GameScene {
         directionalLight.shadow.camera.top = 50;
         directionalLight.shadow.camera.bottom = -50;
         this.scene.add(directionalLight);
+
+        // Add axis helper
+        const axesHelper = new THREE.AxesHelper(5);
+        this.scene.add(axesHelper);
     }
 
     handleResize() {
