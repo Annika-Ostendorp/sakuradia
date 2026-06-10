@@ -91,4 +91,8 @@ export default class Game {
     pushAnimalToHand(animal) {
         this.enqueueAnimalToHand(animal);
     }
+
+    getGridManager(){
+        return this.gridManager;
+    }
 }
