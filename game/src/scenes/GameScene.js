@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import '../styles/global.css';
-import { createGameCamera, createGameOrbitControls } from '../rendering/OrbitalCamera.js';
+import {
+	createGameCamera,
+	createGameOrbitControls,
+	updateOrbitControlsWithRightStick
+} from '../rendering/OrbitalCamera.js';
 import GameplayManager from '../gameplay/GameplayManager.js';
 import InputManager from '../input/InputManager.js';
 
@@ -20,7 +24,12 @@ export default class GameScene {
         this.timer = new THREE.Timer();
 
         this.gameplayManager = new GameplayManager(this.scene, this.gameConfig);
-        this.inputManager = new InputManager(this.scene, this.canvas, this.gameplayManager);
+        this.inputManager = new InputManager(
+            this.scene,
+            this.canvas,
+            this.gameplayManager,
+            this.camera
+        );
 
         this.animate = this.animate.bind(this);
         this.animate();
@@ -81,6 +90,9 @@ export default class GameScene {
         this.timer.update();
         const deltaTime = this.timer.getDelta(); // Die Zeit seit dem letzten Frame
         const elapsed = this.timer.getElapsed(); // Die Zeit seit Start des Timers
+
+	    updateOrbitControlsWithRightStick(this.controls, deltaTime);
+        this.controls.update();
 
         this.inputManager.update(deltaTime);
 

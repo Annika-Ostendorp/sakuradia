@@ -2,12 +2,19 @@ import * as THREE from 'three';
 import RoundState from "../data/RoundState.js";
 import GridManager from "../gameplay/GameplayManager.js";
 
+/**
+ * Verantwortlich für die Erfassung und Verarbeitung von Benutzereingaben (Tastatur und Gamepad).
+ * Verbindet sich mit dem GameplayManager, um Aktionen basierend auf dem aktuellen Rundenstatus auszuführen.
+ * Unterstützt Halte-Logik für kontinuierliche Bewegungen und Rotation durch Gamepad-Trigger.
+ */
+
 // Schickt input Benachrichtigung an GameplayManager je nach round state
 export default class InputManager{
-    constructor(scene, canvas, gameplayManager) {
+    constructor(scene, canvas, gameplayManager, camera) {
         this.scene = scene;
         this.canvas = canvas;
         this.gameplayManager = gameplayManager;
+        this.camera = camera;
 
         // Definieren von Tasten-Status
         this.keys = {
@@ -29,7 +36,7 @@ export default class InputManager{
         this.selectedAnimalOnHandIndex = 0;
 
         this.directionalHoldDelay = 0.3; // Beim Halten wird nach "holdDelay" Sekunden die Intervall-Logik gestartet
-        this.directionalHoldInterval = 0.2; // Beim Halten wird jede "holdInterval" Sekunden die Bewegung ausgeführt
+        this.directionalHoldInterval = 0.3; // Beim Halten wird jede "holdInterval" Sekunden die Bewegung ausgeführt
 
         this.isHoldingDirectional = false;
         this.timer_DirectionalHoldDelay = 0;
@@ -107,7 +114,6 @@ export default class InputManager{
 
         // Flip y direction ohne den gemeinsamen Richtungsvektor zu verändern.
         const movementDir = inputDir.clone();
-        movementDir.y = -movementDir.y;
 
         const previewHexCoord = this.gameplayManager.previewTileHexCoord;
         if (previewHexCoord == null){
@@ -116,7 +122,14 @@ export default class InputManager{
         }
         const game = this.gameplayManager.getGame();
         const gridManager = game.getGridManager();
-        const targetPosition = gridManager.getHexCoordInWorldDirection(previewHexCoord, movementDir)
+        
+        const cameraRelativeDir = this.getCameraRelativeDirection(movementDir);
+
+        const targetPosition = gridManager.getHexCoordInWorldDirection(
+            previewHexCoord,
+            cameraRelativeDir
+        );
+
         if (!targetPosition) {
             console.info("No targetPosition found in handlePlaceTile");
             return;
@@ -138,6 +151,7 @@ export default class InputManager{
         const gamepads = navigator.getGamepads();
         return gamepads[0];
     }
+    
     // Aktualisiert den Status der Tasten basierend auf Keydown/Keyup-Events.
     // event.code z.B. "KeyW" für W oder "ArrowUp" für Pfeil nach oben. isPressed ist true bei Keydown, false bei Keyup.
     handleKey(event, isPressed) {
@@ -377,4 +391,51 @@ export default class InputManager{
     onSubmit(){
         this.gameplayManager.onSubmitted();
     }
+
+    
+    /**
+     * 
+     * @returns {THREE.Vector2} Der Vorwärtsvektor der Kamera in der XZ-Ebene, normalisiert.
+     */
+    getCameraRelativeDirection(inputDirection) {
+
+        // Fallback, wenn camera nicht verfügbar
+        if (!this.camera) {
+            console.error("Camera missing in InputManager");
+            return inputDirection.clone();
+        }
+
+        const forward = new THREE.Vector3();
+        this.camera.getWorldDirection(forward);
+
+        // Ignore camera height/tilt.
+        forward.y = 0;
+
+        if (forward.lengthSq() === 0) {
+            return new THREE.Vector2(inputDirection.x, inputDirection.y);
+        }
+
+        forward.normalize();
+
+        const right = new THREE.Vector3();
+        right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+        const worldDirection = new THREE.Vector3();
+
+        // inputDirection.y = forward/backward
+        // inputDirection.x = right/left
+        worldDirection
+            .addScaledVector(forward, inputDirection.y)
+            .addScaledVector(right, inputDirection.x);
+
+        if (worldDirection.lengthSq() === 0) {
+            return new THREE.Vector2(0, 0);
+        }
+
+        worldDirection.normalize();
+
+        // Return as 2D world direction: x/z
+        return new THREE.Vector2(worldDirection.x, worldDirection.z);
+    }
+
 }

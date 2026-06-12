@@ -35,3 +35,34 @@ export function createGameOrbitControls(camera, domElement) {
 
 	return controls;
 }
+
+export function updateOrbitControlsWithRightStick(controls, deltaTime) {
+	const gamepads = navigator.getGamepads();
+	const gamepad = gamepads[0];
+
+	if (!gamepad) {
+		return;
+	}
+
+	const deadzone = 0.2;
+
+	let rightX = gamepad.axes[2] ?? 0;
+	let rightY = gamepad.axes[3] ?? 0;
+
+	if (Math.abs(rightX) < deadzone) {
+		rightX = 0;
+	}
+
+	if (Math.abs(rightY) < deadzone) {
+		rightY = 0;
+	}
+
+	if (rightX === 0 && rightY === 0) {
+		return;
+	}
+
+	const rotationSpeed = 1.5;
+
+	controls.rotateLeft(rightX * rotationSpeed * deltaTime);
+	controls.rotateUp(rightY * rotationSpeed * deltaTime);
+}
