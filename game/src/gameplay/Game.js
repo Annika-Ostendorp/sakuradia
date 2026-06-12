@@ -36,15 +36,16 @@ export default class Game {
     // Hinweis zu Platzierung: Die Koordinaten (0,0), (0,-1), (1,-1) entsprechen
     // einem kleinen, vordefinierten Dreieck von Hex-Zellen; die angegebenen
     // Rotationen sind Indexwerte (0-5) die mit 60° multipliziert werden.
-    initializeStarterTile(){
+    async initializeStarterTile(){
         const starterTiles = this.library.getAllStarterTiles();
         const randomIndex = Math.floor(Math.random() * starterTiles.length);
         const starterTileData = starterTiles[randomIndex];
 
         // Keystone in der Mitte, zwei weitere Hälften an angrenzenden Hexes.
-        this.gridManager.setTile(new HexCoord(0, 0), starterTileData.keystone);
-        this.gridManager.setTile(new HexCoord(0, -1), starterTileData.leftTile, 2);
-        this.gridManager.setTile(new HexCoord(1, -1), starterTileData.rightTile, 0);
+        await new Promise(resolve => setTimeout(resolve, 100)); // Kurze Verzögerung für Debugging
+        await this.gridManager.setTile(new HexCoord(0, 0), starterTileData.keystone);
+        await this.gridManager.setTile(new HexCoord(0, -1), starterTileData.leftTile, 2);
+        await this.gridManager.setTile(new HexCoord(1, -1), starterTileData.rightTile, 0);
     }
 
     // --- Hand-Queue API ---
