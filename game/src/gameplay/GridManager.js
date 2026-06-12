@@ -256,7 +256,7 @@ export default class GridManager {
             this.getAllEmptyHexCoordsWithNeighbour();
 
         if (candidates.length === 0) return null;
-        this.paintBlueprints(candidates, 0x00ff00);
+        this.paintBlueprints(candidates);
 
         // Referenz-Weltposition des Start-Hex
         const originPos = hexCoord.hexToWorld(hexCoord, this.hexSize);
@@ -296,15 +296,30 @@ export default class GridManager {
         return targetCoord;
     }
 
-    refreshBlueprints(hexCoord, onlyDirectNeighbours = false) {
-        const candidates = onlyDirectNeighbours
-            ? this.getUnoccupiedNeighbours(hexCoord)
-            : this.getAllEmptyHexCoordsWithNeighbour();
+    /**
+    // Spawne Three js cubes an den positionen
+     * @param {HexCoord} hexCoord
+     */
+    // Parameter hexCoords: HexCoord Array
+    paintBlueprints(hexCoords, color = 0x84BDFF, clearExisting = true){
+        if (clearExisting) {
+            this.clearBlueprints();
+        }
 
-        this.clearBlueprints();
-
-        if (candidates && candidates.length > 0) {
-            this.paintBlueprints(candidates, 0x00ff00);
+        for (const hexCoord of hexCoords){
+            const worldPos = hexCoord.hexToWorld(hexCoord, this.hexSize);
+            const hexTile = this.createHexTile(
+                this.hexSize * 0.95, // etwas kleiner als die regulären Tiles
+                0.1,
+                color,
+                1
+            );
+            hexTile.position.set(worldPos.x, worldPos.y - 0.25, worldPos.z);
+            hexTile.rotation.y = Math.PI / 3; // Gleiche Ausrichtung wie reguläre Tiles
+            this.blueprints.push(hexTile);
+            if (this.scene) {
+                this.scene.add(hexTile);
+            }
         }
     }
 
@@ -317,26 +332,15 @@ export default class GridManager {
         this.blueprints = [];
     }
 
-    /**
-    // Spawne Three js cubes an den positionen
-     * @param {HexCoord} hexCoord
-     */
-    // Parameter hexCoords: HexCoord Array
-    paintBlueprints(hexCoords, color = 0x00ffff, clearExisting = true){
-        if (clearExisting) {
-            this.clearBlueprints();
-        }
+    refreshBlueprints(hexCoord, onlyDirectNeighbours = false) {
+        const candidates = onlyDirectNeighbours
+            ? this.getUnoccupiedNeighbours(hexCoord)
+            : this.getAllEmptyHexCoordsWithNeighbour();
 
-        for (const hexCoord of hexCoords){
-            const worldPos = hexCoord.hexToWorld(hexCoord, this.hexSize);
-            const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-            const material = new THREE.MeshBasicMaterial({ color: color, opacity: 0.5, transparent: true });
-            const cube = new THREE.Mesh(geometry, material);
-            cube.position.set(worldPos.x, worldPos.y + 0.25, worldPos.z);
-            this.blueprints.push(cube);
-            if (this.scene) {
-                this.scene.add(cube);
-            }
+        this.clearBlueprints();
+
+        if (candidates && candidates.length > 0) {
+            this.paintBlueprints(candidates);
         }
     }
 
@@ -373,5 +377,27 @@ export default class GridManager {
 
         textMesh.material.color.set(color);
     }
+
+    createHexTile(radius = 1, height = 0.15, color = 0x44aa44, opacity = 1) {
+    const geometry = new THREE.CylinderGeometry(
+        radius,     // radiusTop
+        radius,     // radiusBottom
+        height,     // height
+        6           // radialSegments = Hexagon
+    );
+
+    const material = new THREE.MeshStandardMaterial({
+        color: color,
+        transparent: opacity < 1,
+        opacity: opacity
+    });
+
+    const hexTile = new THREE.Mesh(geometry, material);
+
+    // Optional: besser für flache Hex-Grids ausrichten
+    hexTile.rotation.y = Math.PI / 6;
+
+    return hexTile;
+}
 }
 
