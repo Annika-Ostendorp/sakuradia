@@ -533,10 +533,10 @@ export default class GridManager {
    * Diese Methode wird hauptsächlich für Debugging-Zwecke verwendet, um die Logik der Platzierung zu veranschaulichen.
    * Sie erstellt halbtransparente Hexagon-Modelle an den angegebenen Koordinaten und fügt sie der Szene hinzu.
    * @param {HexCoord[]} hexCoords - Liste von Hex-Koordinaten, auf denen die Blueprints platziert werden sollen
-   * @param {number} color - Optionaler Farbwert für die Blueprints (Standard: 0x84bdff - blau)
+   * @param {number} color - Optionaler Farbwert für die Blueprints (Standard: 0xffffff - weiß)
    * @param {boolean} clearExisting - Ob vorhandene Blueprints vor dem Platzieren neuer entfernt werden sollen (Standard: true)
    */
-  tryPaintBlueprints(hexCoords, color = 0x84bdff, clearExisting = true) {
+  tryPaintBlueprints(hexCoords, color = 0xffffff, clearExisting = true) {
     if (!DebugConfig.enabled || !DebugConfig.doShowBlueprints) {
       return;
     }
@@ -547,12 +547,12 @@ export default class GridManager {
     for (const hexCoord of hexCoords) {
       const worldPos = hexCoord.hexToWorld(hexCoord, this.hexSize);
       const hexTile = this.createHexTile(
-        this.hexSize * 0.95, // etwas kleiner als die regulären Tiles
-        0.25,
+        this.hexSize * 0.8, // etwas kleiner als die regulären Tiles
+        0.05,
         color,
-        0.34,
+        1,
       );
-      hexTile.position.set(worldPos.x, worldPos.y, worldPos.z);
+      hexTile.position.set(worldPos.x, worldPos.y-0.15, worldPos.z);
       hexTile.rotation.y = Math.PI / 3; // Gleiche Ausrichtung wie reguläre Tiles
       this.blueprints.push(hexTile);
       if (this.scene) {
@@ -654,13 +654,13 @@ export default class GridManager {
   /**
    * Erstellt ein neues primitives Hex-Tile.
    * Wird beispielsweise für die Blueprint-Modelle verwendet.
-   * @param {number} radius
-   * @param {number} height
-   * @param {number} color
-   * @param {number} opacity
+   * @param {number} radius Der Radius des Hexagons (Abstand von der Mitte zu einer Ecke). Standard ist hexSize=1 harmoniert.
+   * @param {number} height Die Höhe des Hex-Tiles.
+   * @param {number} color Die Farbe des Hex-Tiles als Hexadezimalwert (z.B. 0x44aa44 für Grün).
+   * @param {number} opacity Die Opazität des Hex-Tiles (0 = transparent, 1 = undurchsichtig).
    * @returns
    */
-  createHexTile(radius = 1, height = 0.15, color = 0x44aa44, opacity = 1) {
+  createHexTile(radius = this.hexSize, height = 0.15, color = 0x44aa44, opacity = 1) {
     const geometry = new THREE.CylinderGeometry(
       radius, // radiusTop
       radius, // radiusBottom
