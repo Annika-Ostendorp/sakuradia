@@ -19,17 +19,28 @@ export default class InputManager{
         };
 
         this.gamepadSubmitWasPressed = false;
+        this.gamepadShoulderLeftWasPressed = false;
+        this.gamepadShoulderRightWasPressed = false;
+        this.gamepadTriggerLeftWasPressed = false;
+        this.gamepadTriggerRightWasPressed = false;
 
         // Hand-Logik
         this.selectedTileOnHandIndex = 0;
         this.selectedAnimalOnHandIndex = 0;
 
-        this.holdDelay = 0.5; // Beim Halten wird nach "holdDelay" Sekunden die Intervall-Logik gestartet
-        this.holdInterval = 0.2; // Beim Halten wird jede "holdInterval" Sekunden die Bewegung ausgeführt
+        this.directionalHoldDelay = 0.3; // Beim Halten wird nach "holdDelay" Sekunden die Intervall-Logik gestartet
+        this.directionalHoldInterval = 0.2; // Beim Halten wird jede "holdInterval" Sekunden die Bewegung ausgeführt
 
-        this.isHolding = false;
-        this.timer_HoldDelay = 0;
-        this.timer_HoldInterval = 0;
+        this.isHoldingDirectional = false;
+        this.timer_DirectionalHoldDelay = 0;
+        this.timer_DirectionalInterval = 0;
+
+        this.triggerHoldDelay = 0.3; // Beim Halten wird nach "holdDelay" Sekunden die Intervall-Logik gestartet
+        this.triggerHoldInterval = 0.3; // Beim Halten wird jede "holdInterval" Sekunden die Bewegung ausgeführt
+
+        this.isHoldingTrigger = false;
+        this.timer_TriggerHoldDelay = 0;
+        this.timer_TriggerInterval = 0;
 
         // Richtungs-Logik
         this.moveDirection = new THREE.Vector2();
@@ -41,7 +52,9 @@ export default class InputManager{
 
     // Wird vom GameplayManager aufgerufen
     update(deltaTime) {
-        this.updateGamepadSubmit();
+        const inputDir = this.updateDirectionalHoldingState(deltaTime);
+
+        this.updateGamepadInput();
 
         // Lese Rundenstatus im GameplayManager
         const roundState = this.gameplayManager.getCurrentRoundState();
@@ -53,11 +66,12 @@ export default class InputManager{
                 return;
 
             case RoundState.CHOOSE_TILE:
-                this.handleChooseTile(deltaTime); // Vertikale Bewegung durch Tile-Tier-Paare
+                this.handleChooseTile(inputDir); // Vertikale Bewegung durch Tile-Tier-Paare
                 break;
 
             case RoundState.PLACE_TILE:
-                this.handlePlaceTile(deltaTime); // Dynamische Bewegung durch Hex-Grid
+                this.handlePlaceTile(inputDir); // Dynamische Bewegung durch Hex-Grid
+                this.updateGamepadTriggerHoldingState(deltaTime); // Rotation durch Gamepad Trigger halten
                 break;
 
             default:
@@ -67,9 +81,7 @@ export default class InputManager{
     }
 
     // Vertikale Bewegung durch Tile-Tier-Paare
-    handleChooseTile(deltaTime){
-        // Bekomme normalisierten input vector
-        const inputDir = this.updateDirection(deltaTime);
+    handleChooseTile(inputDir){
         if (inputDir == null){
             return;
         }
@@ -88,14 +100,14 @@ export default class InputManager{
     }
 
     // Dynamische Bewegung durch Hex-Grid
-    handlePlaceTile(deltaTime){
-        // Bekomme normalisierten input vector
-        var inputDir = this.updateDirection(deltaTime);
+    handlePlaceTile(inputDir){
         if (inputDir == null){
             return;
         }
-        // Flip y direction
-        inputDir.y = -inputDir.y;
+
+        // Flip y direction ohne den gemeinsamen Richtungsvektor zu verändern.
+        const movementDir = inputDir.clone();
+        movementDir.y = -movementDir.y;
 
         const previewHexCoord = this.gameplayManager.previewTileHexCoord;
         if (previewHexCoord == null){
@@ -104,7 +116,7 @@ export default class InputManager{
         }
         const game = this.gameplayManager.getGame();
         const gridManager = game.getGridManager();
-        const targetPosition = gridManager.getHexCoordInWorldDirection(previewHexCoord, inputDir)
+        const targetPosition = gridManager.getHexCoordInWorldDirection(previewHexCoord, movementDir)
         if (!targetPosition) {
             console.info("No targetPosition found in handlePlaceTile");
             return;
@@ -151,7 +163,7 @@ export default class InputManager{
                 break;
 
             case 'Enter':
-                if (!this.keys.submit){ // Nur Bestätigen, wenn zuvor noch nicht bestätigt war
+                if (isPressed && !this.keys.submit) {
                     this.onSubmit();
                 }
                 this.keys.submit = isPressed;
@@ -202,7 +214,7 @@ export default class InputManager{
             return direction;
         }
 
-        const deadzone = 0.2;
+        const deadzone = 0.55;
 
         const x = gamepad.axes[0]; 
         const y = gamepad.axes[1];
@@ -222,10 +234,10 @@ export default class InputManager{
         return direction;
     }
 
-    resetHoldingState(){
-        this.isHolding = false;
-        this.timer_HoldDelay = 0;
-        this.timer_HoldInterval = 0;
+    resetDirectionalHoldingState(){
+        this.isHoldingDirectional = false;
+        this.timer_DirectionalHoldDelay = 0;
+        this.timer_DirectionalInterval = 0;
     }
 
     updateIndex(index){
@@ -234,56 +246,58 @@ export default class InputManager{
         console.log(this.selectedTileOnHandIndex);
     }
 
-    // Returns inptu direction
-    updateDirection(deltaTime){
+    /**
+     * Handhabt die Logik für das Halten von Richtungseingaben.
+     * @param {THREE.Vector2}
+     * @returns 
+     */
+    updateDirectionalHoldingState(deltaTime){
         const inputDir = this.getInputDirection();
 
         // Wenn keine Eingabe getätig wird und die holding flag noch true ist
         if (inputDir.lengthSq() <= 0.1){ // Input weniger als 0,1 um float-Vergleichfehler auszuschließen
-            if (this.isHolding){
-                this.resetHoldingState()
+            if (this.isHoldingDirectional){
+                this.resetDirectionalHoldingState()
             }
             return null;
         }
 
         // Bei Eingabe
-        if(this.isHolding){
+        if(this.isHoldingDirectional){
             // Falls wir auf den Hold timer warten
-            if(this.timer_HoldDelay > 0){
-                this.timer_HoldDelay -= deltaTime;
+            if(this.timer_DirectionalHoldDelay > 0){
+                this.timer_DirectionalHoldDelay -= deltaTime;
                 return null; // Return early
             }
 
             // Falls wir auf den Interval timer warten
-            if(this.timer_HoldInterval > 0){
-                this.timer_HoldInterval -= deltaTime;
+            if(this.timer_DirectionalInterval > 0){
+                this.timer_DirectionalInterval -= deltaTime;
                 return null; // Return early
             }
 
             // Setze hold interval zurück, wenn er abgelaufen ist
-            this.timer_HoldInterval = this.holdInterval;
+            this.timer_DirectionalInterval = this.directionalHoldInterval;
         }
         // Falls Eingabe getätigt wird, wir aber noch nicht im Hold Zustand sind
         else{
-            this.isHolding = true;
-            this.timer_HoldDelay = this.holdDelay;
+            this.isHoldingDirectional = true;
+            this.timer_DirectionalHoldDelay = this.directionalHoldDelay;
         }
 
         return inputDir;
     }
 
-    onSubmit(){
-        this.gameplayManager.onSubmitted();
-    }
-
-    updateGamepadSubmit() {
+    updateGamepadInput() {
+        // Validiere gamepad
         const gamepad = this.getGamepad();
 
         if (!gamepad) {
             this.gamepadSubmitWasPressed = false;
             return;
         }
-
+        
+        // Submitting
         const submitButton = gamepad.buttons[0]; // Xbox A / PlayStation Cross
         const isPressed = submitButton?.pressed === true;
 
@@ -292,5 +306,75 @@ export default class InputManager{
         }
 
         this.gamepadSubmitWasPressed = isPressed;
+
+        // LB/RB
+        const shoulderLeftButton = gamepad.buttons[4]; // Xbox LB / PlayStation L1
+        const shoulderRightButton = gamepad.buttons[5]; // Xbox RB / PlayStation R1
+        const triggerLeftButton = gamepad.buttons[6]; // Xbox LT / PlayStation L2
+        const triggerRightButton = gamepad.buttons[7]; // Xbox RT / PlayStation R2
+        const isShoulderLeftPressed = shoulderLeftButton?.pressed === true;
+        const isShoulderRightPressed = shoulderRightButton?.pressed === true;
+        const isTriggerLeftPressed = triggerLeftButton?.pressed === true;
+        const isTriggerRightPressed = triggerRightButton?.pressed === true;
+
+        if (isShoulderLeftPressed && !this.gamepadShoulderLeftWasPressed
+          || isTriggerLeftPressed && !this.gamepadTriggerLeftWasPressed
+        ){
+            this.gameplayManager.rotatePreviewTile(false); // counter-clockwise
+        }
+
+        if (isShoulderRightPressed && !this.gamepadShoulderRightWasPressed
+          || isTriggerRightPressed && !this.gamepadTriggerRightWasPressed){
+            this.gameplayManager.rotatePreviewTile(true); // clockwise
+        }
+
+        this.gamepadShoulderLeftWasPressed = isShoulderLeftPressed;
+        this.gamepadShoulderRightWasPressed = isShoulderRightPressed;
+        this.gamepadTriggerLeftWasPressed = isTriggerLeftPressed;
+        this.gamepadTriggerRightWasPressed = isTriggerRightPressed;
+    }
+
+    updateGamepadTriggerHoldingState(deltaTime){
+        const gamepad = this.getGamepad();
+        if (!gamepad) {
+            this.isHoldingTrigger = false;
+            return;
+        }
+
+        const isHoldingAnyTrigger = this.gamepadShoulderLeftWasPressed
+            || this.gamepadShoulderRightWasPressed
+            || this.gamepadTriggerLeftWasPressed
+            || this.gamepadTriggerRightWasPressed;
+
+        if (isHoldingAnyTrigger !== this.isHoldingTrigger){
+            this.isHoldingTrigger = isHoldingAnyTrigger;
+            this.timer_TriggerHoldDelay = this.triggerHoldDelay;
+            this.timer_TriggerInterval = 0;
+        }
+
+        if (this.isHoldingTrigger){
+            if (this.timer_TriggerHoldDelay > 0){
+                this.timer_TriggerHoldDelay -= deltaTime;
+                return;
+            }
+            if (this.timer_TriggerInterval > 0){
+                this.timer_TriggerInterval -= deltaTime;
+                return;
+            }
+            this.timer_TriggerInterval = this.triggerHoldInterval;
+
+            if (this.gamepadShoulderLeftWasPressed || this.gamepadTriggerLeftWasPressed){
+                this.gameplayManager.rotatePreviewTile(false); // counter-clockwise
+            }
+
+            if (this.gamepadShoulderRightWasPressed|| this.gamepadTriggerRightWasPressed){
+                this.gameplayManager.rotatePreviewTile(true); // clockwise
+            }
+        }
+    }
+
+
+    onSubmit(){
+        this.gameplayManager.onSubmitted();
     }
 }

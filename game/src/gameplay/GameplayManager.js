@@ -248,4 +248,30 @@ export default class GameplayManager{
 
         console.error("updatePreviewTilePosition: previewTileModel shape unknown, cannot set position");
     }
+
+    /**
+     * 
+     * @param {boolean} clockwise = true wenn im Uhrzeigersinn rotiert werden soll, sonst gegen den Uhrzeigersinn
+     */
+    rotatePreviewTile(clockwise = true){
+        if (!this.previewTileModel || this.roundState !== RoundState.PLACE_TILE) {
+            return;
+        }
+
+        // Aktualisiere die Rotation im 60°-Schritt (Index 0-5)
+        this.previewTileRotation = (this.previewTileRotation + (clockwise ? 5 : 1)) % 6;
+
+        // Setze die neue Rotation am Modell (Rotation um Y-Achse)
+        const angle = this.previewTileRotation * (Math.PI / 3); // 60° Schritte
+        if (this.previewTileModel.rotation) {
+            this.previewTileModel.rotation.y = angle;
+        } else {
+            if (this.previewTileModel.primaryHalf && this.previewTileModel.primaryHalf.rotation) {
+                this.previewTileModel.primaryHalf.rotation.y = angle;
+            }
+            if (this.previewTileModel.secondaryHalf && this.previewTileModel.secondaryHalf.rotation) {
+                this.previewTileModel.secondaryHalf.rotation.y = angle;
+            }
+        }
+    }
 }

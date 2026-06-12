@@ -106,73 +106,26 @@ export default class GridManager {
             throw new Error("spawnTile expects a HexCoord instance");
         }
 
-        let hexObj = hexCoord;
         tile.rotation = tile.rotation || 0;
 
         // Konvertiere HexCoord in Welt-Position für das 3D-Modell.
-        let worldPos = hexObj.hexToWorld(hexCoord, this.hexSize);
+        const worldPos = hexCoord.hexToWorld(hexCoord, this.hexSize);
 
-        // Keystones werden als ein einzelnes Modell geladen (statt zwei Hälften).
-        // Das ermöglicht besondere Modelle/Assets für zentrale Kacheln.
-        if (tile.isKeystone) {
-            return this.modelLoader.loadModel(tile)
-                .then(({ scene }) => {
-                    // Klonen, einfärben, positionieren und in Szene einfügen.
-                    let model = scene.clone(true);
-                    this.applyColorToModel(model, this.colorUtils.getColorForLandscape(tile.primaryLandscape));
-                    model.position.set(worldPos.x, worldPos.y, worldPos.z);
+        try {
+            const model = await this.modelLoader.getModelForTile(tile);
 
-                    // Rotation: tile.rotation ist ein Hexagon-Rotationsindex
-                    // (0-5); multipliziere mit 60° (= PI/3) um in Radians zu kommen.
-                    model.rotation.y = tile.rotation * (Math.PI / 3);
+            model.position.set(worldPos.x, worldPos.y, worldPos.z);
+            model.rotation.y = tile.rotation * (Math.PI / 3);
 
-                    if (this.scene) {
-                        this.scene.add(model);
-                    }
+            if (this.scene) {
+                this.scene.add(model);
+            }
 
-                    return model;
-                })
-                .catch((error) => {
-                    // Fehler beim Laden eines Modells sind nicht spielkritisch
-                    // (es darf das Spiel nicht komplett zum Absturz bringen).
-                    console.error("Fehler beim Laden von Tile-Modell:", error);
-                });
+            return model;
+        } catch (error) {
+            console.error("Fehler beim Laden von Tile-Modell:", error);
+            return null;
         }
-
-        // Standardfall: Ein Tile besteht aus zwei Modellhälften (primary/secondary).
-        // Wir laden das gleiche Asset zweimal und konfigurieren Farben und
-        // Rotationen so, dass die beiden Hälften ein vollständiges Tile ergeben.
-        return Promise.all([
-            this.modelLoader.loadModel({ isKeystone: false }),
-            this.modelLoader.loadModel({ isKeystone: false })
-        ])
-            .then(([primaryRes, secondaryRes]) => {
-                let primaryHalf = primaryRes.scene.clone(true);
-                let secondaryHalf = secondaryRes.scene.clone(true);
-
-                // Beide Hälften erhalten dieselbe Position; ihre Texturen/Farben
-                // und Y-Rotation unterscheiden sie.
-                primaryHalf.position.set(worldPos.x, worldPos.y, worldPos.z);
-                secondaryHalf.position.set(worldPos.x, worldPos.y, worldPos.z);
-
-                this.applyColorToModel(primaryHalf, this.colorUtils.getColorForLandscape(tile.primaryLandscape));
-                this.applyColorToModel(secondaryHalf, this.colorUtils.getColorForLandscape(tile.secondaryLandscape));
-
-                // Die zweite Hälfte ist um 180° (3 * 60°) gedreht relativ zur
-                // ersten Hälfte, damit sie die gegenüberliegende Seite repräsentiert.
-                primaryHalf.rotation.y = tile.rotation * (Math.PI / 3);
-                secondaryHalf.rotation.y = (tile.rotation + 3) * (Math.PI / 3);
-
-                if (this.scene) {
-                    this.scene.add(primaryHalf);
-                    this.scene.add(secondaryHalf);
-                }
-
-                return { primaryHalf, secondaryHalf };
-            })
-            .catch((error) => {
-                console.error("Fehler beim Laden von Tile-Modell:", error);
-            });
     }
 
     applyColorToModel(model, color) {

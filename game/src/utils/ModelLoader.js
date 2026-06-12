@@ -28,8 +28,10 @@ export default class ModelLoader {
      * @param {Tile} tile - Die Kachel, für die das Modell geladen werden soll.
      * @returns {Promise<{scene: THREE.Group}>} - Ein Promise, das das geladene Modell enthält.
      */
-    loadModel(tile) {
-        const modelName = this.getModelNameForTile(tile);
+    loadModel(tileOrModelName) {
+        const modelName = typeof tileOrModelName === "string"
+            ? tileOrModelName
+            : this.getModelNameForTile(tileOrModelName);
         if (this.modelCache.has(modelName)) {
             return Promise.resolve(this.modelCache.get(modelName));
         }
@@ -47,51 +49,47 @@ export default class ModelLoader {
         });
     }
 
-    getModelForTile(tile) {
+    async getModelForTile(tile) {
         // Vollmodell für Einzellandschaft laden.
         if (tile.isKeystone) {
-            return this.getModelForKeystone(tile.primaryLandscape);
+            return await this.getModelForKeystone(tile.primaryLandscape);
         }
 
         // Kombination aus Primär- und Sekundärlandschaft behandeln.
-        return this.getModelForLandscapeCombination(tile.primaryLandscape, tile.secondaryLandscape);
+        return await this.getModelForLandscapeCombination(tile.primaryLandscape, tile.secondaryLandscape);
     }
 
-    getModelForKeystone(landscape) {
-        return this.loadModel("Hexagon_Full.glb").then(({scene}) => {
-            this.applyColorToModel(scene, this.getColorForLandscape(landscape));
-            return scene;
-        });
+    async getModelForKeystone(landscape) {
+        const { scene } = await this.loadModel("Hexagon_Full.glb");
+        const model = scene.clone(true);
+        this.applyColorToModel(model, this.getColorForLandscape(landscape));
+        return model;
     }
 
-    getModelForLandscapeCombination(primaryLandscape, secondaryLandscape) {
-        return Promise.all([
-            this.loadModel("Hexagon_Half.glb"),
-            this.loadModel("Hexagon_Half.glb")
-        ]).then(([primaryRes, secondaryRes]) => {
-            const primaryHalf = primaryRes.scene;
-            const secondaryHalf = secondaryRes.scene;
+    async getModelForLandscapeCombination(primaryLandscape, secondaryLandscape) {
+        const { scene } = await this.loadModel("Hexagon_Half.glb");
+        const primaryHalf = scene.clone(true);
+        const secondaryHalf = scene.clone(true);
 
-            // Container für beide Hälften erstellen.
-            const container = new THREE.Group();
+        // Container für beide Hälften erstellen.
+        const container = new THREE.Group();
 
-            // Für Doppellandschafts-Kacheln werden einfache Hälften geladen und eingefärbt.
-            this.applyColorToModel(primaryHalf, this.getColorForLandscape(primaryLandscape));
-            this.applyColorToModel(secondaryHalf, this.getColorForLandscape(secondaryLandscape));
+        // Für Doppellandschafts-Kacheln werden einfache Hälften geladen und eingefärbt.
+        this.applyColorToModel(primaryHalf, this.getColorForLandscape(primaryLandscape));
+        this.applyColorToModel(secondaryHalf, this.getColorForLandscape(secondaryLandscape));
 
-            // Sekundäre Hälfte um 180 Grad um die Y-Achse drehen.
-            secondaryHalf.rotation.y = Math.PI;
+        // Sekundäre Hälfte um 180 Grad um die Y-Achse drehen.
+        secondaryHalf.rotation.y = Math.PI;
 
-            // Beide Hälften dem Container hinzufügen.
-            container.add(primaryHalf);
-            container.add(secondaryHalf);
+        // Beide Hälften dem Container hinzufügen.
+        container.add(primaryHalf);
+        container.add(secondaryHalf);
 
-            container.castShadow = true;
-            container.receiveShadow = true;
+        container.castShadow = true;
+        container.receiveShadow = true;
 
-            return container;
-        });
-    }
+        return container;
+    };
 
     /**
      * Geht durch die Model-Hierarchie und setzt die Materialfarbe aller Meshes.
