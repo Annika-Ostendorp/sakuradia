@@ -1,0 +1,16 @@
+export default class DebugConfig {
+    static enabled = true;
+
+    static doLogGameplayInfo = true;
+    static doShowBlueprints = true;
+    static doShowCoordinateText = true;
+    static doLogInputs = false;
+    static doLogGrid = false;
+    static doShowAxes = true;
+
+    static logGameplayInfo(message) {
+        if (this.enabled && this.doLogGameplayInfo) {
+            console.log(message);
+        }
+    }
+}

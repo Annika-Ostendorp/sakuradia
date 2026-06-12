@@ -4,6 +4,7 @@ import ModelLoader from "../utils/ModelLoader.js";
 import ColorUtils from "../utils/ColorUtils.js";
 import * as THREE from "three";
 import TextSpawner from "../rendering//TextSpawner.js";
+import DebugConfig from "../DebugConfig.js";
 
 /**
  * Verantwortlich für das Speichern und Verwalten des hexagonalen Spielfelds
@@ -92,8 +93,17 @@ export default class GridManager {
         tile.rotation = rotation;
         if (setToGrid){
             this.grid.set(hexCoord, tile);
-            this.clearBlueprints();
-            this.setCoordinateTextColor(hexCoord, 0xffffff); // White für besetzte Felder
+            if (!DebugConfig.enabled) return;
+            if (DebugConfig.doLogGrid) {
+                const [hexCoordStr, tileInfo] = [];
+                for (const [key, value] of this.grid.entries()) {
+                    hexCoordStr.push(key.toString());
+                    tileInfo.push(`Tile(Landscape: ${value.primaryLandscape}, Rotation: ${value.rotation})`);
+                }
+                console.log(`Grid contents: ${hexCoordStr.join(', ')} => ${tileInfo.join(', ')}`);
+            }
+            if (DebugConfig.doShowBlueprints) this.clearBlueprints();
+            if (DebugConfig.doShowCoordinateText) this.setCoordinateTextColor(hexCoord, 0xffffff); // White für besetzte Felder
         }
         return await this.spawnTile(hexCoord, tile);
     }
@@ -302,6 +312,9 @@ export default class GridManager {
      */
     // Parameter hexCoords: HexCoord Array
     paintBlueprints(hexCoords, color = 0x84BDFF, clearExisting = true){
+        if (!DebugConfig.enabled || !DebugConfig.doShowBlueprints) {
+            return;
+        }
         if (clearExisting) {
             this.clearBlueprints();
         }
@@ -345,6 +358,10 @@ export default class GridManager {
     }
 
     async paintCoordinates() {
+        if (!DebugConfig.enabled || !DebugConfig.doShowCoordinateText) {
+            return;
+        }
+
         this.coordGrid = new Map();
         const size = 10;
         for (let column = -size; column <= size; column++) {

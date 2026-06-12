@@ -7,6 +7,7 @@ import {
 } from '../rendering/OrbitalCamera.js';
 import GameplayManager from '../gameplay/GameplayManager.js';
 import InputManager from '../input/InputManager.js';
+import DebugConfig from "../DebugConfig.js";
 
 /**
  * Baut die 3D-Szene auf und startet die Render-Schleife. Initialisiert Kamera,
@@ -73,8 +74,10 @@ export default class GameScene {
         this.scene.add(directionalLight);
 
         // Add axis helper
-        const axesHelper = new THREE.AxesHelper(5);
-        this.scene.add(axesHelper);
+        if (DebugConfig.enabled && DebugConfig.showAxes) {
+            const axesHelper = new THREE.AxesHelper(5);
+            this.scene.add(axesHelper);
+        }
     }
 
     handleResize() {

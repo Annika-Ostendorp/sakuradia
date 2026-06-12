@@ -2,6 +2,7 @@ import RoundState from "../data/RoundState.js";
 import Game from "./Game.js";
 import { createHandPanel } from "../ui/components/createHandPanel.js";
 import HexCoord from "../utils/HexCoord.js";
+import DebugConfig from "../DebugConfig.js";
 
 /**
  * Vermittelt zwischen Low-Level-Game-Logik (`Game`) und der UI/Interaktion.
@@ -39,7 +40,7 @@ export default class GameplayManager{
         }
         appShell.append(this.handPanel.element);
 
-        console.log("Initializing GameplayManager with gameConfig:", this.gameConfig);
+        DebugConfig.logGameplayInfo("Initializing GameplayManager with gameConfig:" + JSON.stringify(this.gameConfig));
 
         // Initiales Ziehen: 3 Paare in die Hand füllen
         for (let i = 0; i < 3; i++){
@@ -160,12 +161,14 @@ export default class GameplayManager{
         this.game.enqueueAnimalToHand(animal);
 
         // Debug-Ausgabe: Zeige die aktuelle Hand mit Landschaften und Tieren.
-        this.game.tilesOnHand.forEach((tile, index) => {
-            console.log(`Pair ${index + 1}: ${tile.primaryLandscape}${tile.isKeystone ? "" : " & " + tile.secondaryLandscape} | ${this.game.animalsOnHand[index]}`);
-        });
-        console.log(`Current round: ${this.currentTurn}/${this.gameLength}.
-            \nTiles left in deck: ${this.game.deckLogic.deck.length}.
-            \nAnimals left in deck: ${this.game.deckLogic.animalDeck.length}.`);
+        if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo){
+            this.game.tilesOnHand.forEach((tile, index) => {
+                DebugConfig.logGameplayInfo(`Pair ${index + 1}: ${tile.primaryLandscape}${tile.isKeystone ? "" : " & " + tile.secondaryLandscape} | ${this.game.animalsOnHand[index]}`);
+            });
+            DebugConfig.logGameplayInfo(`Current round: ${this.currentTurn}/${this.gameLength}.
+                \nTiles left in deck: ${this.game.deckLogic.deck.length}.
+                \nAnimals left in deck: ${this.game.deckLogic.animalDeck.length}.`);
+        }
 
         this.syncHandPanel();
     }
