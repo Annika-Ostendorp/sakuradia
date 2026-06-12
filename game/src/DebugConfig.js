@@ -5,7 +5,6 @@ export default class DebugConfig {
     static doShowBlueprints = true;
     static doShowCoordinateText = true;
     static doLogInputs = false;
-    static doLogGrid = false;
     static doShowAxes = true;
 
     static logGameplayInfo(message) {
