@@ -461,21 +461,25 @@ export default class InputManager{
         const isHoldingOneRotateKey = isHoldingQ !== isHoldingE; // XOR mit "!==" weil BEIDE Tasten => KEINE Rotation
 
         // Gamepad Trigger Buttons
-        const isHoldingLeft = this.gamePadTrigger;
+        const isHoldingLeft = this.gamepadTriggerLeftWasPressed;
         const isHoldingRight = this.gamepadTriggerRightWasPressed;
         const isHoldingOneTrigger = gamepad && isHoldingLeft !== isHoldingRight; // XOR mit "!==" weil BEIDE Tasten => KEINE Rotation
+
+        // Wenn weder Trigger noch Keyboard Rotationstasten gehalten werden,
+        // aber wir noch im holding Zustand sind, resetten
+        if (this.isHoldingTrigger && !isHoldingOneTrigger && !isHoldingOneRotateKey){
+            this.isHoldingTrigger = false;
+            return;
+        }
 
         const wantsClockwise = isHoldingRight || this.keys.clockwise;
         const wantsCounterClockwise = isHoldingLeft || this.keys.counterClockwise;
         const hasValidDirectionInput = wantsClockwise !== wantsCounterClockwise; // XOR mit "!==" weil BEIDE Tasten => KEINE Rotation
         
+        // Wenn ein Trigger oder eine Rotationstaste gehalten wird,
+        // wir aber noch nicht im Hold Zustand sind, starte Hold Timer
         if (!this.isHoldingTrigger && hasValidDirectionInput){
             this.isHoldingTrigger = true;
-        }
-
-        // Wenn weder Trigger noch Keyboard Rotationstasten gehalten werden, aber noch im holding Zustand sind, resetten
-        if (this.isHoldingTrigger && !isHoldingOneTrigger && !isHoldingOneRotateKey){
-            this.isHoldingTrigger = false;
             this.timer_TriggerHoldDelay = this.triggerHoldDelay;
             this.timer_TriggerInterval = 0;
             return;
@@ -490,14 +494,13 @@ export default class InputManager{
             return;
         }
 
+        // Wiederholungslogik für gehaltene Tasten (Hold-Interval)
         if (hasValidDirectionInput){
             this.timer_TriggerInterval = this.triggerHoldInterval;
-            
-            if (this.gamepadShoulderLeftWasPressed || this.gamepadTriggerLeftWasPressed){
+            if (this.gamepadTriggerLeftWasPressed){
                 this.gameplayManager.rotatePreviewTile(false); // counter-clockwise
             }
-
-            if (this.gamepadShoulderRightWasPressed|| this.gamepadTriggerRightWasPressed){
+            if (this.gamepadTriggerRightWasPressed){
                 this.gameplayManager.rotatePreviewTile(true); // clockwise
             }
         }
@@ -553,5 +556,4 @@ export default class InputManager{
         // Return as 2D world direction: x/z
         return new THREE.Vector2(worldDirection.x, worldDirection.z);
     }
-
 }
