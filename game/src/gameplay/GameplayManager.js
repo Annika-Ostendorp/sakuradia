@@ -218,7 +218,7 @@ export default class GameplayManager{
             console.error("updatePreviewTilePosition called with null newHexCoord");
             return;
         }
-        console.info(newHexCoord.hashCode())
+        
         // Aktualisiere preview Werte
         this.previewTileHexCoord = newHexCoord;
 
@@ -228,7 +228,7 @@ export default class GameplayManager{
         }
 
         // Konvertiere HexCoord in Welt-Position für das 3D-Modell.
-        var worldPos = newHexCoord.hexToWorld(newHexCoord);
+        var worldPos = newHexCoord.hexToWorld(newHexCoord, this.game.gridManager.hexSize);
 
         // Falls geladener Rückgabewert ein einzelnes Objekt mit `position`
         if (this.previewTileModel.position) {
