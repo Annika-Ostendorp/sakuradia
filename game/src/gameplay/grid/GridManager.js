@@ -1,17 +1,10 @@
-import * as THREE from "three";
-import HexCoord from "/src/utils/HexCoord.js";
-import { TileData } from "../Tile.js";
-import AnimalManager from "../AnimalManager.js";
-import BlueprintManager from "../BlueprintManager.js";
+import AnimalManager from "/src/gameplay/AnimalManager.js";
+import BlueprintManager from "/src/gameplay/BlueprintManager.js";
 import DebugConfig from "/src/debug/DebugConfig.js";
-import DebugRayDrawer from "/src/debug/DebugRayDrawer.js";
 import DebugTextInWorld from "/src/debug/DebugTextInWorld.js";
-import TextSpawner from "/src/rendering/TextSpawner.js";
-import {
-  getColorForLandscape,
-  applyColorToModel,
-} from "/src/utils/colorUtils.js";
-
+import HexCoord from "/src/utils/HexCoord.js";
+import { spawnTile } from "/src/rendering/tileRenderer.js";
+import * as THREE from "three";
 import {
   getRandomEmptyHexCoord as getRandomEmptyHexCoordUtil,
   getOccupiedNeighbours as getOccupiedNeighboursUtil,
@@ -25,9 +18,8 @@ import {
   getFirstUnoccupiedHexInEachDirection as getFirstUnoccupiedHexInEachDirectionUtil,
   tryGetHexagonalPositionInHexDirection as tryGetHexagonalPositionInHexDirectionUtil,
   getHexagonalMovementForDirection as getHexagonalMovementForDirectionUtil,
-} from "./gridQueryService.js";
+} from "/src/gameplay/grid/gridQueryService.js";
 
-import { createHexTile, spawnTile } from "/src/rendering/tileRenderer.js";
 
 /**
  * Verantwortlich für das Speichern und Verwalten des hexagonalen Spielfelds.
@@ -54,7 +46,6 @@ export default class GridManager {
    */
   constructor(scene) {
     this.scene = scene;
-    this.blueprints = []; // Liste der aktuell platzierten Blueprint-Modelle (für Debugging)
 
     this.debugTextInWorld = new DebugTextInWorld();
     this.animalManager = new AnimalManager(
@@ -70,14 +61,14 @@ export default class GridManager {
   /**
    * @returns {Map<HexCoord, Tile>} Gibt das Grid des GridManagers zurück.
    */
-  getGrid() {
+  get grid() {
     return this.#grid;
   }
 
   /**
    * @returns Gibt die Größe der Hex-Felder im Grid zurück.
    */
-  getHexSize() {
+  get hexSize() {
     return this.#hexSize;
   }
 
@@ -86,7 +77,7 @@ export default class GridManager {
    * @returns {HexCoord[]}
    */
   getOccupiedHexCoords() {
-    return Array.from(this.getGrid().keys());
+    return Array.from(this.grid.keys());
   }
 
   /**
@@ -96,7 +87,7 @@ export default class GridManager {
    * @returns {Tile | undefined} Das Tile-Objekt an der angegebenen Hex-Koordinate oder undefined, wenn kein Tile vorhanden ist.
    */
   getTileAt(hexCoord) {
-    for (const [placedHexCoord, tile] of this.getGrid().entries()) {
+    for (const [placedHexCoord, tile] of this.grid.entries()) {
       if (placedHexCoord.equals(hexCoord)) return tile;
     }
     return undefined;
@@ -133,19 +124,18 @@ export default class GridManager {
         this.trySetCoordinateTextColor(hexCoord, 0xffffff); // White für besetzte Felder
       }
     }
-    return await spawnTile(this.scene, hexCoord, tile, this.getHexSize());
+    return await spawnTile(this.scene, hexCoord, tile, this.hexSize);
   }
 
   /**
    * Setzt ein Tier auf das Tile an der angegebenen Hex-Koordinate, wenn die Platzierungsanforderungen erfüllt sind.
-   * @param {THREE.Vector3} hexCoord Die Koordinaten des Hex-Tiles
+   * @param {HexCoord} hexCoord Die Koordinaten des Hex-Tiles
    * @param {Animal} animal Das Tier, das gesetzt werden soll
    * @param {boolean} overrideAnimalRequirements Gibt an, ob die Anforderungen für das Tier überschrieben werden sollen
    * @returns {boolean} true, wenn das Tier erfolgreich gesetzt wurde, sonst false
    */
   setAnimal(hexCoord, animal, overrideAnimalRequirements = false) {
-    this.animalManager.setAnimal(
-      this,
+    return this.animalManager.setAnimal(
       hexCoord,
       animal,
       overrideAnimalRequirements,
@@ -167,7 +157,7 @@ export default class GridManager {
    * @see getOccupiedNeighboursUtil
    */
   getOccupiedNeighbours(hexCoord) {
-    return getOccupiedNeighboursUtil(this, hexCoord); // <-- Hovern zeigt ganze Signatur
+    return getOccupiedNeighboursUtil(this, hexCoord);
   }
 
   /**
@@ -175,7 +165,7 @@ export default class GridManager {
    * @see getUnoccupiedNeighboursUtil
    */
   getUnoccupiedNeighbours(hexCoord) {
-    return getUnoccupiedNeighboursUtil(this, hexCoord); // <-- Hovern zeigt ganze Signatur
+    return getUnoccupiedNeighboursUtil(this, hexCoord);
   }
 
   /**
@@ -183,7 +173,7 @@ export default class GridManager {
    * @see getRandomUnoccupiedNeighbourUtil
    */
   getRandomUnoccupiedNeighbour(hexCoord) {
-    return getRandomUnoccupiedNeighbourUtil(this, hexCoord); // <-- Hovern zeigt ganze Signatur
+    return getRandomUnoccupiedNeighbourUtil(this, hexCoord);
   }
 
   /**
@@ -191,7 +181,7 @@ export default class GridManager {
    * @see hasOccupiedNeighbourUtil
    */
   hasOccupiedNeighbour(hexCoord) {
-    return hasOccupiedNeighbourUtil(this, hexCoord); // <-- Hovern zeigt ganze Signatur
+    return hasOccupiedNeighbourUtil(this, hexCoord);
   }
 
   /**
@@ -199,7 +189,7 @@ export default class GridManager {
    * @see getAllEmptyHexCoordsWithNeighbourUtil
    */
   getAllEmptyHexCoordsWithNeighbour() {
-    return getAllEmptyHexCoordsWithNeighbourUtil(this); // <-- Hovern zeigt ganze Signatur
+    return getAllEmptyHexCoordsWithNeighbourUtil(this);
   }
 
   /**
@@ -211,12 +201,11 @@ export default class GridManager {
     direction,
     onlyDirectNeighbours = false,
   ) {
-    return getHexCoordInWorldDirectionUtil(
-      // <-- Hovern zeigt ganze Signatur
+    return getHexCoordInWorldDirectionUtil(// <-- Hovern zeigt ganze Signatur
       this,
       hexCoord,
       direction,
-      (onlyDirectNeighbours = false),
+      onlyDirectNeighbours
     );
   }
 
@@ -225,7 +214,7 @@ export default class GridManager {
    * @see getDirectNeighbourInWorldDirectionUtil
    */
   getDirectNeighbourInWorldDirection(hexCoord, direction) {
-    return getDirectNeighbourInWorldDirectionUtil(this, hexCoord, direction); // <-- Hovern zeigt ganze Signatur
+    return getDirectNeighbourInWorldDirectionUtil(this, hexCoord, direction);
   }
 
   /**
@@ -233,7 +222,7 @@ export default class GridManager {
    * @see tryGetHexagonalPositionUtil
    */
   tryGetHexagonalPosition(hexCoord, direction, maxDistance = 10) {
-    return tryGetHexagonalPositionUtil(this, hexCoord, direction, maxDistance); // <-- Hovern zeigt ganze Signatur
+    return tryGetHexagonalPositionUtil(this, hexCoord, direction, maxDistance);
   }
 
   /**
@@ -241,7 +230,7 @@ export default class GridManager {
    * @see getFirstUnoccupiedHexInEachDirectionUtil
    */
   getFirstUnoccupiedHexInEachDirection(hexCoord) {
-    return getFirstUnoccupiedHexInEachDirectionUtil(this, hexCoord); // <-- Hovern zeigt ganze Signatur
+    return getFirstUnoccupiedHexInEachDirectionUtil(this, hexCoord);
   }
 
   /**
@@ -254,7 +243,7 @@ export default class GridManager {
     maxDistance = 10,
   ) {
     return tryGetHexagonalPositionInHexDirectionUtil(
-      // <-- Hovern zeigt ganze Signatur
+     
       this,
       hexCoord,
       hexDirection,
@@ -267,7 +256,7 @@ export default class GridManager {
    * @see getHexagonalMovementForDirectionUtil
    */
   getHexagonalMovementForDirection(direction) {
-    return getHexagonalMovementForDirectionUtil(direction); // <-- Hovern zeigt ganze Signatur
+    return getHexagonalMovementForDirectionUtil(direction);
   }
 
   /**
@@ -290,26 +279,29 @@ export default class GridManager {
   async paintCoordinates() {
     return this.debugTextInWorld.paintCoordinates(
       this.scene,
-      this.getHexSize(),
+      this.hexSize,
     );
   }
 
+  /**
+   * Versucht, die Farbe des Debug-Koordinatentextes an der angegebenen Hex-Koordinate zu ändern.
+   */
   trySetCoordinateTextColor(hexCoord, color) {
-    this.debugTextInWorld.trySetCoordinateTextColorUtil(hexCoord, color);
+    return this.debugTextInWorld.trySetCoordinateTextColorUtil(hexCoord, color);
   }
 
   /**
-   * Debug-Methode: Spawnt über jedem besetzten Tile ein Text-Mesh, das Informationen über das darauf befindliche Tier anzeigt.
+   * Spawnt über jedem besetzten Tile ein Text-Mesh, das Informationen über das darauf befindliche Tier anzeigt.
    * Diese Methode wird aufgerufen, wenn Tiere auf Tiles gesetzt werden, um die Logik der Tierplatzierung zu veranschaulichen.
    */
   async showAnimalDebugLabels() {
-    this.debugTextInWorld.showAnimalDebugLabels(this.scene, this); // Übergibt die Szene und den GridManager an die DebugTextInWorld-Instanz
+    return await this.debugTextInWorld.showAnimalDebugLabels(this.scene, this); // Übergibt die Szene und den GridManager an die DebugTextInWorld-Instanz
   }
 
   debugLogGrid() {
     if (DebugConfig.enabled && DebugConfig.doLogGrid) {
       const [hexCoordStr, tileInfo] = [];
-      for (const [key, value] of this.getGrid().entries()) {
+      for (const [key, value] of this.grid.entries()) {
         hexCoordStr.push(key.toString());
         tileInfo.push(
           `Tile(Landscape: ${value.primaryLandscape}, Rotation: ${value.rotation})`,

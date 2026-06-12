@@ -220,7 +220,7 @@ export function getDirectNeighbourInWorldDirection(
   if (neighbours.length === 0) return null;
 
   // Referenz-Weltposition des Start-Hex
-  const originPos = hexCoord.hexToWorld(hexCoord, gridManager.getHexSize());
+  const originPos = hexCoord.hexToWorld(hexCoord, gridManager.hexSize);
 
   const dirNormalized = new THREE.Vector2(direction.x, direction.y).normalize();
 
@@ -234,7 +234,7 @@ export function getDirectNeighbourInWorldDirection(
   for (const neighbour of neighbours) {
     const neighbourPos = neighbour.hexToWorld(
       neighbour,
-      gridManager.getHexSize(),
+      gridManager.hexSize,
     );
 
     const neighbourDir = new THREE.Vector2(

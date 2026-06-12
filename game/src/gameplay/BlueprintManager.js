@@ -13,7 +13,7 @@ export default class BlueprintManager {
   constructor(scene, gridManager) {
     this.scene = scene;
     this.gridManager = gridManager;
-    this.hexSize = this.gridManager.getHexSize();
+    this.hexSize = this.gridManager.hexSize;
   }
 
   /**

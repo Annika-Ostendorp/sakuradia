@@ -41,14 +41,14 @@ export async function spawnTile(scene, hexCoord, tile, hexSize) {
 /**
  * Erstellt ein neues primitives Hex-Tile.
  * Wird beispielsweise für die Blueprint-Modelle verwendet.
- * @param {number} radius Der Radius des Hexagons (Abstand von der Mitte zu einer Ecke). Standard ist getHexSize()=1 harmoniert.
+ * @param {number} radius Der Radius des Hexagons (Abstand von der Mitte zu einer Ecke). Standard ist hexSize = 1.
  * @param {number} height Die Höhe des Hex-Tiles.
  * @param {number} color Die Farbe des Hex-Tiles als Hexadezimalwert (z.B. 0x44aa44 für Grün).
  * @param {number} opacity Die Opazität des Hex-Tiles (0 = transparent, 1 = undurchsichtig).
  * @returns
  */
 export function createHexTile(
-  radius = this.getHexSize(),
+  radius = this.hexSize,
   height = 0.15,
   color = 0x44aa44,
   opacity = 1,

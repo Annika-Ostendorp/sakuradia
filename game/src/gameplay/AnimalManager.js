@@ -16,8 +16,8 @@ export default class AnimalManager {
        * @param {boolean} overrideAnimalRequirements Gibt an, ob die Anforderungen für das Tier überschrieben werden sollen
        * @returns {boolean} true, wenn das Tier erfolgreich gesetzt wurde, sonst false
        */
-      setAnimal(gridManager, hexCoord, animal, overrideAnimalRequirements = false) {
-        const tile = gridManager.getTileAt(hexCoord);
+      setAnimal(hexCoord, animal, overrideAnimalRequirements = false) {
+        const tile = this.gridManager.getTileAt(hexCoord);
         if (!tile) return;
     
         // Override für Score Testing (Jedes Tier kann auf jedes Tile gesetzt werden)

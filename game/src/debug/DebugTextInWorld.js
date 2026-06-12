@@ -86,14 +86,14 @@ export default class DebugTextInWorld {
     async showAnimalDebugLabels(scene, gridManager) {
       this.clearAnimalDebugLabels(scene);
   
-      for (const [hexCoord, tile] of gridManager.getGrid().entries()) {
+      for (const [hexCoord, tile] of gridManager.grid.entries()) {
         if (!tile || !tile.occupiedBy) {
           continue;
         }
   
         const animalText = String(tile.occupiedBy);
   
-        const worldPos = hexCoord.hexToWorld(hexCoord, gridManager.getHexSize());
+        const worldPos = hexCoord.hexToWorld(hexCoord, gridManager.hexSize);
   
         const labelPos = new THREE.Vector3(worldPos.x, 0.15, worldPos.z + 0.5);
   
