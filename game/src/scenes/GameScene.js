@@ -94,7 +94,13 @@ export default class GameScene {
         const deltaTime = this.timer.getDelta(); // Die Zeit seit dem letzten Frame
         const elapsed = this.timer.getElapsed(); // Die Zeit seit Start des Timers
 
-	    updateOrbitControlsWithRightStick(this.controls, deltaTime);
+	    updateOrbitControlsWithRightStick(
+            this.controls,
+            deltaTime,
+            this.inputManager.getInvertPan(),
+            this.inputManager.getInvertTilt()
+        );
+
         this.controls.update();
 
         this.inputManager.update(deltaTime);

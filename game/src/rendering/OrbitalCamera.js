@@ -36,7 +36,7 @@ export function createGameOrbitControls(camera, domElement) {
 	return controls;
 }
 
-export function updateOrbitControlsWithRightStick(controls, deltaTime) {
+export function updateOrbitControlsWithRightStick(controls, deltaTime, invertPan = false, invertTilt = false) {
 	const gamepads = navigator.getGamepads();
 	const gamepad = gamepads[0];
 
@@ -63,6 +63,6 @@ export function updateOrbitControlsWithRightStick(controls, deltaTime) {
 
 	const rotationSpeed = 1.5;
 
-	controls.rotateLeft(rightX * rotationSpeed * deltaTime);
-	controls.rotateUp(rightY * rotationSpeed * deltaTime);
+	controls.rotateLeft(rightX * rotationSpeed * deltaTime * (invertPan ? -1 : 1));
+	controls.rotateUp(rightY * rotationSpeed * deltaTime * (invertTilt ? -1 : 1));
 }

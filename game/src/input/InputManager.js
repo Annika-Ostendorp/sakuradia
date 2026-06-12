@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import RoundState from "../data/RoundState.js";
 import GridManager from "../gameplay/GameplayManager.js";
+import DebugConfig from "../DebugConfig.js";
 
 /**
  * Verantwortlich für die Erfassung und Verarbeitung von Benutzereingaben (Tastatur und Gamepad).
@@ -22,14 +23,27 @@ export default class InputManager{
             down: false,
             left: false,
             right: false,
-            submit: false
+            submit: false,
+            clockwise: false,
+            counterClockwise: false
         };
 
+        // Kamera-Einstellungen für Controller
+        this.invertPan = false; // Ob die Pan-Bewegung (Links/Rechts) des Controllers invertiert werden soll
+        this.invertTilt = false; // Ob die Tilt-Bewegung (Oben/Unten) des Controllers invertiert werden soll
+
+        // Süd-Button des Gamepads (Xbox A / PlayStation Cross) wird als Submit-Button verwendet
         this.gamepadSubmitWasPressed = false;
-        this.gamepadShoulderLeftWasPressed = false;
-        this.gamepadShoulderRightWasPressed = false;
+
+        // Shoulder sind für Kamera-Rotation zuständig
+        this.gamepadShoulderLeftWasPressed = false; // Wird aktuell nicht benutzt
+        this.gamepadShoulderRightWasPressed = false; // Wird aktuell nicht benutzt
+
+        // Trigger sind für Rotation der Tiles oder durchschalten des Hand-Indexes zuständig, je nach round state
         this.gamepadTriggerLeftWasPressed = false;
         this.gamepadTriggerRightWasPressed = false;
+        this.gamePadTriggerLeftIsHeld = false;
+        this.gamePadTriggerRightIsHeld = false;
 
         // Hand-Logik
         this.selectedTileOnHandIndex = 0;
@@ -57,11 +71,20 @@ export default class InputManager{
         window.addEventListener('keyup', (event) => this.handleKey(event, false));
     }
 
+    getInvertPan(){
+        return this.invertPan;
+    }
+
+    getInvertTilt() {
+        return this.invertTilt;
+    }
+
     // Wird vom GameplayManager aufgerufen
     update(deltaTime) {
         const inputDir = this.updateDirectionalHoldingState(deltaTime);
 
         this.updateGamepadInput();
+        this.updateGamepadTriggerHoldingState(deltaTime); // Rotation durch Gamepad Trigger halten
 
         // Lese Rundenstatus im GameplayManager
         const roundState = this.gameplayManager.getCurrentRoundState();
@@ -78,7 +101,6 @@ export default class InputManager{
 
             case RoundState.PLACE_TILE:
                 this.handlePlaceTile(inputDir); // Dynamische Bewegung durch Hex-Grid
-                this.updateGamepadTriggerHoldingState(deltaTime); // Rotation durch Gamepad Trigger halten
                 break;
 
             default:
@@ -158,7 +180,8 @@ export default class InputManager{
     }
     
     // Aktualisiert den Status der Tasten basierend auf Keydown/Keyup-Events.
-    // event.code z.B. "KeyW" für W oder "ArrowUp" für Pfeil nach oben. isPressed ist true bei Keydown, false bei Keyup.
+    // event.code z.B. "KeyW" für W oder "ArrowUp" für Pfeil nach oben.
+    // isPressed ist true bei Keydown, false bei Keyup.
     handleKey(event, isPressed) {
         switch (event.code) {
             case 'KeyW':
@@ -182,10 +205,19 @@ export default class InputManager{
                 break;
 
             case 'Enter':
+            case 'Space':
                 if (isPressed && !this.keys.submit) {
                     this.onSubmit();
                 }
                 this.keys.submit = isPressed;
+                break;
+
+            case 'KeyQ':
+                this.keys.clockwise = isPressed;
+                break;
+
+            case 'KeyE':
+                this.keys.counterClockwise = isPressed;
                 break;
         }
     }
@@ -264,13 +296,20 @@ export default class InputManager{
             return direction;
         }
 
-        if (gamepad.buttons[12]?.pressed) this.keys.up = true; // Up
+        if (gamepad.buttons[12]?.pressed) // DPad Up
+            this.keys.up = true; // Up
         else this.keys.up = false;
-        if (gamepad.buttons[13]?.pressed) this.keys.down = true; // Down
+
+        if (gamepad.buttons[13]?.pressed) // DPad Down
+            this.keys.down = true; // Down
         else this.keys.down = false;
-        if (gamepad.buttons[14]?.pressed) this.keys.left = true; // Left
+
+        if (gamepad.buttons[14]?.pressed) // DPad Left
+            this.keys.left = true; // Left
         else this.keys.left = false;
-        if (gamepad.buttons[15]?.pressed) this.keys.right = true; // Right
+
+        if (gamepad.buttons[15]?.pressed) // DPad Right
+            this.keys.right = true; // Right
         else this.keys.right = false;
 
         if (this.keys.up) direction.y += 1;
@@ -294,7 +333,9 @@ export default class InputManager{
     updateIndex(index){
         this.selectedTileOnHandIndex = index;
         this.gameplayManager.onHoverTileOnHand(index);
-        console.log(this.selectedTileOnHandIndex);
+        if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+            console.log(`Selected tile index: ${index}`);
+        }
     }
 
     /**
@@ -350,70 +391,108 @@ export default class InputManager{
         
         // Submitting
         const submitButton = gamepad.buttons[0]; // Xbox A / PlayStation Cross
-        const isPressed = submitButton?.pressed === true;
+        const isSubmitButtonPressed = submitButton?.pressed === true;
 
-        if (isPressed && !this.gamepadSubmitWasPressed) {
+        if (isSubmitButtonPressed && !this.gamepadSubmitWasPressed) {
             this.onSubmit();
         }
 
-        this.gamepadSubmitWasPressed = isPressed;
+        this.gamepadSubmitWasPressed = isSubmitButtonPressed;
 
-        // LB/RB
-        const shoulderLeftButton = gamepad.buttons[4]; // Xbox LB / PlayStation L1
-        const shoulderRightButton = gamepad.buttons[5]; // Xbox RB / PlayStation R1
+
+        // Trigger-Buttons für Rotation oder Index-Wechsel je nach round state
         const triggerLeftButton = gamepad.buttons[6]; // Xbox LT / PlayStation L2
         const triggerRightButton = gamepad.buttons[7]; // Xbox RT / PlayStation R2
-        const isShoulderLeftPressed = shoulderLeftButton?.pressed === true;
-        const isShoulderRightPressed = shoulderRightButton?.pressed === true;
         const isTriggerLeftPressed = triggerLeftButton?.pressed === true;
         const isTriggerRightPressed = triggerRightButton?.pressed === true;
 
-        if (isShoulderLeftPressed && !this.gamepadShoulderLeftWasPressed
-          || isTriggerLeftPressed && !this.gamepadTriggerLeftWasPressed
-        ){
-            this.gameplayManager.rotatePreviewTile(false); // counter-clockwise
-        }
+        // Key Down = In diesem Frame gedrückt
+        const triggerLeftIsKeyDown = isTriggerLeftPressed && !this.gamepadTriggerLeftWasPressed;
+        const triggerRightIsKeyDown = isTriggerRightPressed && !this.gamepadTriggerRightWasPressed;
 
-        if (isShoulderRightPressed && !this.gamepadShoulderRightWasPressed
-          || isTriggerRightPressed && !this.gamepadTriggerRightWasPressed){
-            this.gameplayManager.rotatePreviewTile(true); // clockwise
-        }
-
-        this.gamepadShoulderLeftWasPressed = isShoulderLeftPressed;
-        this.gamepadShoulderRightWasPressed = isShoulderRightPressed;
         this.gamepadTriggerLeftWasPressed = isTriggerLeftPressed;
         this.gamepadTriggerRightWasPressed = isTriggerRightPressed;
+        
+        const roundState = this.gameplayManager.getCurrentRoundState();
+
+        // Beim Tile auswählen:
+        // Durchschalten des Hand-Indexes
+        if (roundState === RoundState.CHOOSE_TILE){
+            if (triggerLeftIsKeyDown && !this.gamepadTriggerRightWasPressed // Links wird gedrückt und rechts nicht
+                || triggerRightIsKeyDown && !this.gamepadTriggerLeftWasPressed // Rechts wird gedrückt und links nicht
+            ){
+                const indexDirection = triggerLeftIsKeyDown ? 1 : -1; // Entscheide Richtung je nachdem, ob es der linke Trigger war
+                const newIndex = (4 + this.selectedTileOnHandIndex + indexDirection) % 4; // +4, damit wir nicht in den negativen Bereich geraten
+                this.updateIndex(newIndex);
+            }
+        }
+
+        // Beim Tile platzieren:
+        // Rotation des Vorschau-Tiles
+        if (roundState === RoundState.PLACE_TILE){
+            if (triggerLeftIsKeyDown && !this.gamepadTriggerRightWasPressed){
+                this.gameplayManager.rotatePreviewTile(false); // counter-clockwise
+            }
+            if (triggerRightIsKeyDown && !this.gamepadTriggerLeftWasPressed){
+                this.gameplayManager.rotatePreviewTile(true); // clockwise
+            }
+        }
+
+        // NOCH NICHT IMPLEMENTIERT:
+        // Camera control with shoulder buttons
+        const shoulderLeftButton = gamepad.buttons[4]; // Xbox LB / PlayStation L1
+        const shoulderRightButton = gamepad.buttons[5]; // Xbox RB / PlayStation R1
+        const isShoulderLeftPressed = shoulderLeftButton?.pressed === true;
+        const isShoulderRightPressed = shoulderRightButton?.pressed === true;
+        
+        if (isShoulderLeftPressed != isShoulderRightPressed){ // XOR mit "!==" weil BEIDE Tasten => KEINE Rotation
+            // Add logic for orbiting camera
+        }
+
     }
 
     updateGamepadTriggerHoldingState(deltaTime){
+        // Bekomme Gamepad Input
         const gamepad = this.getGamepad();
-        if (!gamepad) {
+
+        // Keyboard Rotationstasten (Q/E)
+        const isHoldingQ = this.keys.counterClockwise;
+        const isHoldingE = this.keys.clockwise;
+        const isHoldingOneRotateKey = isHoldingQ !== isHoldingE; // XOR mit "!==" weil BEIDE Tasten => KEINE Rotation
+
+        // Gamepad Trigger Buttons
+        const isHoldingLeft = this.gamePadTrigger;
+        const isHoldingRight = this.gamepadTriggerRightWasPressed;
+        const isHoldingOneTrigger = gamepad && isHoldingLeft !== isHoldingRight; // XOR mit "!==" weil BEIDE Tasten => KEINE Rotation
+
+        const wantsClockwise = isHoldingRight || this.keys.clockwise;
+        const wantsCounterClockwise = isHoldingLeft || this.keys.counterClockwise;
+        const hasValidDirectionInput = wantsClockwise !== wantsCounterClockwise; // XOR mit "!==" weil BEIDE Tasten => KEINE Rotation
+        
+        if (!this.isHoldingTrigger && hasValidDirectionInput){
+            this.isHoldingTrigger = true;
+        }
+
+        // Wenn weder Trigger noch Keyboard Rotationstasten gehalten werden, aber noch im holding Zustand sind, resetten
+        if (this.isHoldingTrigger && !isHoldingOneTrigger && !isHoldingOneRotateKey){
             this.isHoldingTrigger = false;
+            this.timer_TriggerHoldDelay = this.triggerHoldDelay;
+            this.timer_TriggerInterval = 0;
             return;
         }
 
-        const isHoldingAnyTrigger = this.gamepadShoulderLeftWasPressed
-            || this.gamepadShoulderRightWasPressed
-            || this.gamepadTriggerLeftWasPressed
-            || this.gamepadTriggerRightWasPressed;
-
-        if (isHoldingAnyTrigger !== this.isHoldingTrigger){
-            this.isHoldingTrigger = isHoldingAnyTrigger;
-            this.timer_TriggerHoldDelay = this.triggerHoldDelay;
-            this.timer_TriggerInterval = 0;
+        if (this.timer_TriggerHoldDelay > 0){
+            this.timer_TriggerHoldDelay -= deltaTime;
+            return;
+        }
+        if (this.timer_TriggerInterval > 0){
+            this.timer_TriggerInterval -= deltaTime;
+            return;
         }
 
-        if (this.isHoldingTrigger){
-            if (this.timer_TriggerHoldDelay > 0){
-                this.timer_TriggerHoldDelay -= deltaTime;
-                return;
-            }
-            if (this.timer_TriggerInterval > 0){
-                this.timer_TriggerInterval -= deltaTime;
-                return;
-            }
+        if (hasValidDirectionInput){
             this.timer_TriggerInterval = this.triggerHoldInterval;
-
+            
             if (this.gamepadShoulderLeftWasPressed || this.gamepadTriggerLeftWasPressed){
                 this.gameplayManager.rotatePreviewTile(false); // counter-clockwise
             }
