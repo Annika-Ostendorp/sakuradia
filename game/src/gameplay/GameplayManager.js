@@ -215,7 +215,7 @@ export default class GameplayManager{
         this.handPanel.update(handPairs, this.selectedHandIndex);
     }
 
-    updatePreviewTilePosition(newHexCoord){
+    updatePreviewTilePosition(newHexCoord, isMicroMovement = false) {
         // Sicherheitsprüfungen: nichts machen, wenn kein HexCoord oder kein Model vorhanden.
         if (!newHexCoord) {
             console.error("updatePreviewTilePosition called with null newHexCoord");
@@ -236,6 +236,7 @@ export default class GameplayManager{
         // Falls geladener Rückgabewert ein einzelnes Objekt mit `position`
         if (this.previewTileModel.position) {
             this.previewTileModel.position.set(worldPos.x, worldPos.y, worldPos.z);
+            this.game.gridManager.refreshBlueprints(newHexCoord, isMicroMovement);
             return;
         }
 
@@ -247,6 +248,7 @@ export default class GameplayManager{
             if (this.previewTileModel.secondaryHalf && this.previewTileModel.secondaryHalf.position) {
                 this.previewTileModel.secondaryHalf.position.set(worldPos.x, worldPos.y, worldPos.z);
             }
+            this.game.gridManager.refreshBlueprints(newHexCoord, isMicroMovement);
             return;
         }
 

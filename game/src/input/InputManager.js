@@ -127,7 +127,6 @@ export default class InputManager{
         const isUsingDPad = this.getGamepadDPadDirection().lengthSq() > 0;
         const isMicroMovement = !isUsingStick && isUsingDPad;
         
-        if (isUsingDPad) console.info("Using DPad for movement");
         const cameraRelativeDir = this.getCameraRelativeDirection(movementDir);
 
         const targetPosition = gridManager.getHexCoordInWorldDirection(
@@ -145,7 +144,7 @@ export default class InputManager{
             return;
         }
 
-        this.gameplayManager.updatePreviewTilePosition(targetPosition);
+        this.gameplayManager.updatePreviewTilePosition(targetPosition, isMicroMovement);
     }
 
     // For later implementation
