@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import RoundState from "../data/RoundState.js";
 import GridManager from "../gameplay/GameplayManager.js";
 import DebugConfig from "../debug/DebugConfig.js";
+import DebugRayDrawer from "/src/debug/DebugRayDrawer.js";
 
 /**
  * Verantwortlich für die Erfassung und Verarbeitung von Benutzereingaben (Tastatur und Gamepad).
@@ -171,6 +172,30 @@ export default class InputManager{
             cameraRelativeDir,
             isMicroMovement
         );
+
+        // Debugging
+        if (DebugConfig.enabled && DebugConfig.doDrawRays){
+            let id = (Math.random()).toString();
+            const maxAttempts = 10; // Vermeide potentiell unendliche Schleife
+            let attempts = 0;
+            do{
+                id = (Math.random()).toString();
+                attempts++;
+            } while (DebugRayDrawer.hasRay(id) && attempts < maxAttempts);
+
+            const originCoord = this.gameplayManager.previewTileHexCoord;
+            const origin = originCoord.hexToWorld(originCoord, 1);
+            origin.y = 1;
+            const debugTarget = new THREE.Vector3(targetPosition.x, 1, targetPosition.z);
+            debugTarget.y = 1;
+            DebugRayDrawer.clear(this.scene);
+            DebugRayDrawer.drawRayTo(
+                this.scene,
+                id, // Unique ID
+                origin,
+                debugTarget,
+            );
+        }
 
         if (!targetPosition) {
             console.info("No targetPosition found in handlePlaceTile");

@@ -6,6 +6,7 @@ export default class DebugConfig {
     static doShowCoordinateText = true;
     static doLogInputs = false;
     static doShowAxes = true;
+    static doDrawRays = true;
 
     static logGameplayInfo(message) {
         if (this.enabled && this.doLogGameplayInfo) {
