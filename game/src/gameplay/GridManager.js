@@ -329,9 +329,9 @@ export default class GridManager {
 
     async paintCoordinates() {
         this.coordGrid = new Map();
-
-        for (let column = -this.gridSize; column <= this.gridSize; column++) {
-            for (let row = -this.gridSize; row <= this.gridSize; row++) {
+        const size = 10;
+        for (let column = -size; column <= size; column++) {
+            for (let row = -size; row <= size; row++) {
                 const hexCoord = new HexCoord(column, row);
 
                 const pos = hexCoord.hexToWorld(hexCoord, this.hexSize);
