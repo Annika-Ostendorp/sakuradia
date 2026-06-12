@@ -18,12 +18,12 @@ export default class GameplayManager{
         this.gameLength = this.gameConfig.rounds; // Rounds to be played until game end
         this.game = new Game(this.scene);
         this.roundState = RoundState.CHOOSE_TILE; // Initial round state
-        // Index des aktuell in der UI markierten Hand-Paares
-        this.selectedHandIndex = 0;
-        this.previewTileModel = null;
-        this.previewTileModelPromise = null;
-        this.previewTileHexCoord = null;
-        this.previewTileRotation = 0;
+        
+        this.selectedHandIndex = 0; // Index des aktuell in der UI markierten Hand-Paares
+        this.previewTileModel = null; // Referenz zum model, welches nur im preview angezeigt wird
+        this.previewTileModelPromise = null; // Promise, das auf die Fertigstellung des Ladens des preview-Modells wartet
+        this.previewTileHexCoord = null; // HexCoord, an der das preview-Modell aktuell positioniert ist oder positioniert werden soll
+        this.previewTileRotation = 0; // Rotation des preview-Modells in 60°-Schritten (Index 0-5)
 
         // Hand-Panel UI: Callback aktualisiert die Auswahl und synchronisiert das UI
         this.handPanel = createHandPanel({
