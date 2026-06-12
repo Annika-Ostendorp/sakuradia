@@ -4,7 +4,8 @@ import ModelLoader from "../utils/ModelLoader.js";
 import ColorUtils from "../utils/ColorUtils.js";
 import * as THREE from "three";
 import TextSpawner from "../rendering//TextSpawner.js";
-import DebugConfig from "../DebugConfig.js";
+import DebugConfig from "/src/debug/DebugConfig.js";
+import DebugRayDrawer from "/src/debug/DebugRayDrawer.js";
 
 /**
  * Verantwortlich für das Speichern und Verwalten des hexagonalen Spielfelds
@@ -253,65 +254,102 @@ export default class GridManager {
         //this.paintBlueprints(emptyNeighborCandidates);
         return emptyNeighborCandidates;
     }
+    
+
+    // Chronologische Abfolge bei der Suche nach dem bestmöglichen HexCoord in Richtung eines Welt-Vektors
+
 
     /**
-     * Gibt das nächste freie Feld in die 2D Vektor Richtung an
+     * 
+     * @param {HexCoord} hexCoord Aktuelle Position
+     * @param {THREE.Vector2} direction Relative Richtung des Input-Vektors zur Kamera
      * @returns {HexCoord | null}
      */
-    getHexCoordInWorldDirection(hexCoord, direction, onlyDirectNeighbours = false){
-        // Alle freien Randfelder des aktuellen Spielfelds als Kandidaten nutzen,
-        // damit die Bewegung auch weiter entfernte, intuitive Ziele erreichen kann.
-        const candidates = onlyDirectNeighbours ?
-            this.getUnoccupiedNeighbours(hexCoord) : 
-            this.getAllEmptyHexCoordsWithNeighbour();
+    getHexCoordInWorldDirection(hexCoord, direction, onlyDirectNeighbours = false) {
+        if (onlyDirectNeighbours) {
+            return this.getDirectNeighbourInWorldDirection(hexCoord, direction);
+        }
 
-        if (candidates.length === 0) return null;
-        this.paintBlueprints(candidates);
+        const hexagonalSearchResult = this.tryGetHexagonalPosition(hexCoord, direction, 10);
+        if (hexagonalSearchResult) {
+            return hexagonalSearchResult;
+        }
+        console.log("No hexagonal movement found, trying direct neighbour search as fallback.");
+        return this.getDirectNeighbourInWorldDirection(hexCoord, direction);
+    }
+
+    /**
+     * Gibt das freie benachbarte Feld an, welche Richtung am ehesten dem Input entspricht (Skalarprodukt)
+     * @returns {HexCoord | null}
+     */
+    getDirectNeighbourInWorldDirection(hexCoord, direction){
+        const neighbours = this.getUnoccupiedNeighbours(hexCoord);
+
+        if (neighbours.length === 0) return null;
+
+        this.tryPaintBlueprints(neighbours);
 
         // Referenz-Weltposition des Start-Hex
         const originPos = hexCoord.hexToWorld(hexCoord, this.hexSize);
 
-        // Mappe Eingabe-Richtung (x, y) auf Welt-Richtung (x, z)
-        const dirWorld = { x: direction.x, z: direction.y };
-        const dirLength = Math.hypot(dirWorld.x, dirWorld.z);
-        if (dirLength === 0) return null;
-        dirWorld.x /= dirLength;
-        dirWorld.z /= dirLength;
+        const dirNormalized = new THREE.Vector2(direction.x, direction.y).normalize();
 
-        // Wähle den Kandidaten mit der besten Richtungsübereinstimmung.
-        // Tie-breaker: bei gleicher Richtung gewinnt das nähere Feld.
-        let bestAlignment = -Number.POSITIVE_INFINITY;
-        let bestDistance = Number.POSITIVE_INFINITY;
-        let targetCoord = null;
+        if (dirNormalized.lengthSq() === 0) {
+            return null;
+        }
 
-        for (const candidate of candidates) {
-            const candPos = candidate.hexToWorld(candidate, this.hexSize);
-            const dx = candPos.x - originPos.x;
-            const dz = candPos.z - originPos.z;
-            const distance = Math.hypot(dx, dz);
-            if (distance === 0) {
-                continue;
-            }
+        let bestNeighbour = null;
+        let bestSimilarity = -1;
+        let bestVector = new THREE.Vector2();
+        for (const neighbour of neighbours){
+            const neighbourPos = neighbour.hexToWorld(neighbour, this.hexSize);
 
-            const alignment = (dx * dirWorld.x + dz * dirWorld.z) / distance;
-            if (alignment <= 0) continue; // nur vorwärts
+            const neighbourDir = new THREE.Vector2(
+                neighbourPos.x - originPos.x,
+                neighbourPos.z - originPos.z
+            ).normalize();
 
-            if (alignment > bestAlignment || (alignment === bestAlignment && distance < bestDistance)) {
-                bestAlignment = alignment;
-                bestDistance = distance;
-                targetCoord = candidate;
+            const similarity = this.getDirectionSimilarity(dirNormalized, neighbourDir);
+            if (similarity > bestSimilarity){
+                bestSimilarity = similarity;
+                bestNeighbour = neighbour;
+                bestVector = neighbourDir;
             }
         }
 
-        return targetCoord;
+        return bestNeighbour;
     }
+
+    /**
+     * 
+     * @param {HexCoord} hexCoord 
+     * @param {THREE.Vector2} direction 
+     * @returns {HexCoord | null}
+     */
+    tryGetHexagonalPosition(hexCoord, direction, maxDistance = 10) {
+        let current = hexCoord;
+        const hexDirection = this.getHexagonalMovementForDirection(direction);
+        for (let i = 0; i < maxDistance; i++) {
+            current = new HexCoord(
+                current.column + hexDirection.column,
+                current.row + hexDirection.row
+            );
+
+            if (!this.isOccupied(current) && this.hasOccupiedNeighbour(current)) {
+                return current;
+            }
+        }
+
+        return null;
+    }
+
 
     /**
     // Spawne Three js cubes an den positionen
      * @param {HexCoord} hexCoord
      */
     // Parameter hexCoords: HexCoord Array
-    paintBlueprints(hexCoords, color = 0x84BDFF, clearExisting = true){
+    tryPaintBlueprints(hexCoords, color = 0x84BDFF, clearExisting = true){
         if (!DebugConfig.enabled || !DebugConfig.doShowBlueprints) {
             return;
         }
@@ -353,7 +391,7 @@ export default class GridManager {
         this.clearBlueprints();
 
         if (candidates && candidates.length > 0) {
-            this.paintBlueprints(candidates);
+            this.tryPaintBlueprints(candidates);
         }
     }
 
@@ -415,5 +453,23 @@ export default class GridManager {
         hexTile.rotation.y = Math.PI / 6;
 
         return hexTile;
+    }
+
+    getDirectionSimilarity(a, b) {
+        if (a.lengthSq() === 0 || b.lengthSq() === 0) {
+            return 0;
+        }
+
+        // Return Skalarprodukt der normalisierten Vektoren als Ähnlichkeitsmaß (1 = gleiche Richtung, 0 = 90°, -1 = entgegengesetzt)
+        return a.clone().normalize().dot(b.clone().normalize());
+    }
+
+    getHexagonalMovementForDirection(direction){
+        const angle = Math.atan2(direction.y, direction.x);
+
+        // Unterteilung des Kreises in 6 Sektoren für die Hex-Richtung
+        const sector = Math.round(angle / (Math.PI / 3));
+        const directions = HexCoord.Directions;
+        return directions[(sector + 6) % 6]; // +6 um negative Indizes zu vermeiden
     }
 }
