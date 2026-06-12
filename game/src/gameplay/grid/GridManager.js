@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import HexCoord from "/src/utils/HexCoord.js";
 import { TileData } from "../Tile.js";
+import AnimalManager from "../AnimalManager.js";
 import DebugConfig from "/src/debug/DebugConfig.js";
 import DebugRayDrawer from "/src/debug/DebugRayDrawer.js";
 import DebugTextInWorld from "/src/debug/DebugTextInWorld.js";
@@ -52,10 +53,10 @@ export default class GridManager {
    */
   constructor(scene) {
     this.scene = scene;
-    this.blueprints = []; // Liste von Debug-Hex-Modellen, die mögliche Platzierungen anzeigen
-    this.animalDebugLabels = []; // Liste von Text-Meshes, die Debug-Informationen über Tiere auf den Tiles anzeigen
+    this.blueprints = []; // Liste der aktuell platzierten Blueprint-Modelle (für Debugging)
 
     this.debugTextInWorld = new DebugTextInWorld();
+    this.animalManager = new AnimalManager(this.debugTextInWorld);
 
     this.paintCoordinates();
   }
@@ -130,7 +131,6 @@ export default class GridManager {
   }
 
   /**
-   * Wichtige Methode:
    * Setzt ein Tier auf das Tile an der angegebenen Hex-Koordinate, wenn die Platzierungsanforderungen erfüllt sind.
    * @param {THREE.Vector3} hexCoord Die Koordinaten des Hex-Tiles
    * @param {Animal} animal Das Tier, das gesetzt werden soll
