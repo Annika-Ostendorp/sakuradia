@@ -25,6 +25,8 @@ import {
   getHexagonalMovementForDirection as getHexagonalMovementForDirectionUtil,
 } from "./gridQueryService.js";
 
+import { createHexTile, spawnTile } from "/src/rendering/tileRenderer.js";
+
 /**
  * Verantwortlich für das Speichern und Verwalten des hexagonalen Spielfelds.
  * Verwaltet eine Map von `HexCoord` -> `Tile` und managed
@@ -149,42 +151,7 @@ export default class GridManager {
         this.setCoordinateTextColor(hexCoord, 0xffffff); // White für besetzte Felder
       }
     }
-    return await this.spawnTile(hexCoord, tile);
-  }
-
-  /**
-   * Instanziiert das 3D-Modell für ein Tile an der angegebenen Hex-Koordinate.
-   * Hinweis: Diese Methode kümmert sich ausschließlich um das Erstellen und Positionieren des 3D-Modells.
-   * Sie wird von `setTile` aufgerufen, nachdem die Logik aktualisiert wurde.
-   * @param {HexCoord} hexCoord Die Hex-Koordinate, an der das Tile platziert werden soll.
-   * @param {Tile} tile Das Tile-Objekt, das die Informationen über das zu spawnende Modell enthält.
-   * @returns {Promise<THREE.Object3D | null>} Das instanziierte 3D-Modell oder null bei Fehlern.
-   */
-  async spawnTile(hexCoord, tile) {
-    if (!hexCoord || typeof hexCoord.hexToWorld !== "function") {
-      throw new Error("spawnTile expects a HexCoord instance");
-    }
-
-    tile.rotation = tile.rotation || 0;
-
-    // Konvertiere HexCoord in Welt-Position für das 3D-Modell.
-    const worldPos = hexCoord.hexToWorld(hexCoord, this.getHexSize());
-
-    try {
-      const model = await this.modelLoader.getModelForTile(tile);
-
-      model.position.set(worldPos.x, worldPos.y, worldPos.z);
-      model.rotation.y = tile.rotation * (Math.PI / 3);
-
-      if (this.scene) {
-        this.scene.add(model);
-      }
-
-      return model;
-    } catch (error) {
-      console.error("Fehler beim Laden von Tile-Modell:", error);
-      return null;
-    }
+    return await spawnTile(this.scene, hexCoord, tile, this.getHexSize());
   }
 
   /**
@@ -307,7 +274,7 @@ export default class GridManager {
 
     for (const hexCoord of hexCoords) {
       const worldPos = hexCoord.hexToWorld(hexCoord, this.getHexSize());
-      const hexTile = this.createHexTile(
+      const hexTile = createHexTile(
         this.getHexSize() * 0.8, // etwas kleiner als die regulären Tiles
         0.05,
         color,
@@ -410,42 +377,6 @@ export default class GridManager {
     if (textObject.material) {
       textObject.material.color.set(color);
     }
-  }
-
-  /**
-   * Erstellt ein neues primitives Hex-Tile.
-   * Wird beispielsweise für die Blueprint-Modelle verwendet.
-   * @param {number} radius Der Radius des Hexagons (Abstand von der Mitte zu einer Ecke). Standard ist getHexSize()=1 harmoniert.
-   * @param {number} height Die Höhe des Hex-Tiles.
-   * @param {number} color Die Farbe des Hex-Tiles als Hexadezimalwert (z.B. 0x44aa44 für Grün).
-   * @param {number} opacity Die Opazität des Hex-Tiles (0 = transparent, 1 = undurchsichtig).
-   * @returns
-   */
-  createHexTile(
-    radius = this.getHexSize(),
-    height = 0.15,
-    color = 0x44aa44,
-    opacity = 1,
-  ) {
-    const geometry = new THREE.CylinderGeometry(
-      radius, // radiusTop
-      radius, // radiusBottom
-      height, // height
-      6, // radialSegments = Hexagon
-    );
-
-    const material = new THREE.MeshStandardMaterial({
-      color: color,
-      transparent: opacity < 1,
-      opacity: opacity,
-    });
-
-    const hexTile = new THREE.Mesh(geometry, material);
-
-    // Optional: besser für flache Hex-Grids ausrichten
-    hexTile.rotation.y = Math.PI / 6;
-
-    return hexTile;
   }
 
   /**
