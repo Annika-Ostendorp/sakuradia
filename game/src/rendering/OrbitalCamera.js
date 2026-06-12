@@ -11,7 +11,6 @@ export function createGameCamera() {
 		1000
 	);
 
-	camera.position.set(6, 5, 8);
 	return camera;
 }
 
@@ -65,4 +64,36 @@ export function updateOrbitControlsWithRightStick(controls, deltaTime, invertPan
 
 	controls.rotateLeft(rightX * rotationSpeed * deltaTime * (invertPan ? -1 : 1));
 	controls.rotateUp(rightY * rotationSpeed * deltaTime * (invertTilt ? -1 : 1));
+}
+
+export function moveOrbitCameraHorizontal(camera, controls, moveSpeed) {
+	// No movement if no input
+	if (moveSpeed === 0) {
+		return;
+	}
+
+    const forward = new THREE.Vector3();
+
+    camera.getWorldDirection(forward);
+
+    // Ignore vertical camera tilt.
+    forward.y = 0;
+
+    if (forward.lengthSq() === 0) {
+        return;
+    }
+
+    forward.normalize();
+
+    const right = new THREE.Vector3();
+
+    // Camera right direction on XZ plane.
+    right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+    const moveDirection = moveSpeed > 0 ? right : right.multiplyScalar(-1);
+
+    const distance = Math.abs(moveSpeed);
+
+    camera.position.addScaledVector(moveDirection, distance);
+    controls.target.addScaledVector(moveDirection, distance);
 }

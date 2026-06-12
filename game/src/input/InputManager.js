@@ -35,9 +35,12 @@ export default class InputManager{
         // Süd-Button des Gamepads (Xbox A / PlayStation Cross) wird als Submit-Button verwendet
         this.gamepadSubmitWasPressed = false;
 
-        // Shoulder sind für Kamera-Rotation zuständig
-        this.gamepadShoulderLeftWasPressed = false; // Wird aktuell nicht benutzt
-        this.gamepadShoulderRightWasPressed = false; // Wird aktuell nicht benutzt
+        // West-Button als reset position button
+        this.requestCameraReset = false; // Flag, um zu GameScene zu signalisieren, dass die Kamera zurückgesetzt werden soll
+
+        // Shoulder sind für seitliche Kamera-Bewegung zuständig
+        this.gamepadShoulderValue = 0;
+        this.cameraMoveSpeed = 0.05;
 
         // Trigger sind für Rotation der Tiles oder durchschalten des Hand-Indexes zuständig, je nach round state
         this.gamepadTriggerLeftWasPressed = false;
@@ -77,6 +80,18 @@ export default class InputManager{
 
     getInvertTilt() {
         return this.invertTilt;
+    }
+
+    getShoulderInput(){
+        return this.gamepadShoulderValue;
+    }
+
+    doResetCamera(){
+        if (this.requestCameraReset){
+            this.requestCameraReset = false; // Reset Flag
+            return true;
+        }
+        return false;
     }
 
     // Wird vom GameplayManager aufgerufen
@@ -221,6 +236,11 @@ export default class InputManager{
                 this.tryRotate(true); // clockwise
                 this.keys.clockwise = isPressed;
                 break;
+
+            case 'KeyR':
+                if (isPressed){
+                    this.requestCameraReset = true;
+                }
         }
     }
 
@@ -401,6 +421,12 @@ export default class InputManager{
 
         this.gamepadSubmitWasPressed = isSubmitButtonPressed;
 
+        // Resetting Camera Position
+        const resetCameraButton = gamepad.buttons[2]; // Xbox X / PlayStation Square
+        const isResetCameraButtonPressed = resetCameraButton?.pressed === true;
+        if (isResetCameraButtonPressed){
+            this.requestCameraReset = true;
+        }
 
         // Trigger-Buttons für Rotation oder Index-Wechsel je nach round state
         const triggerLeftButton = gamepad.buttons[6]; // Xbox LT / PlayStation L2
@@ -440,16 +466,15 @@ export default class InputManager{
             }
         }
 
-        // NOCH NICHT IMPLEMENTIERT:
-        // Camera control with shoulder buttons
+        // Sideways camera control with shoulder buttons
         const shoulderLeftButton = gamepad.buttons[4]; // Xbox LB / PlayStation L1
         const shoulderRightButton = gamepad.buttons[5]; // Xbox RB / PlayStation R1
         const isShoulderLeftPressed = shoulderLeftButton?.pressed === true;
         const isShoulderRightPressed = shoulderRightButton?.pressed === true;
         
-        if (isShoulderLeftPressed != isShoulderRightPressed){ // XOR mit "!==" weil BEIDE Tasten => KEINE Rotation
-            // Add logic for orbiting camera
-        }
+        this.gamepadShoulderValue = 0;
+        if (isShoulderLeftPressed) this.gamepadShoulderValue -= this.cameraMoveSpeed;
+        if (isShoulderRightPressed) this.gamepadShoulderValue += this.cameraMoveSpeed;
 
     }
 

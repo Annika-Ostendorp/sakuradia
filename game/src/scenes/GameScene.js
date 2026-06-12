@@ -3,7 +3,8 @@ import '../styles/global.css';
 import {
 	createGameCamera,
 	createGameOrbitControls,
-	updateOrbitControlsWithRightStick
+	updateOrbitControlsWithRightStick,
+    moveOrbitCameraHorizontal
 } from '../rendering/OrbitalCamera.js';
 import GameplayManager from '../gameplay/GameplayManager.js';
 import InputManager from '../input/InputManager.js';
@@ -47,12 +48,7 @@ export default class GameScene {
             antialias: true,
         });
 
-        this.camera = createGameCamera();
-        this.controls = createGameOrbitControls(this.camera, this.renderer.domElement);
-
-        // Kamera-Startposition: Blick von oben auf das Zentrum
-        this.camera.position.set(0, 15, 0);
-        this.camera.lookAt(0, 0, 0);
+        this.setupCamera();
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -86,6 +82,20 @@ export default class GameScene {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    setupCamera(){
+        this.camera = createGameCamera();
+        this.controls = createGameOrbitControls(this.camera, this.renderer.domElement);
+
+        this.camera.position.set(0, 15, 0);
+        this.camera.lookAt(0, 0, 0);
+    }
+
+    // Resets position and rotation of the camera to default values
+    resetCamera(){
+        this.scene.remove(this.camera);
+        this.setupCamera();
+    }
+
     // Render-Loop
     animate() {
         requestAnimationFrame(this.animate);
@@ -100,6 +110,16 @@ export default class GameScene {
             this.inputManager.getInvertPan(),
             this.inputManager.getInvertTilt()
         );
+
+        moveOrbitCameraHorizontal(
+            this.camera,
+            this.controls,
+            this.inputManager.getShoulderInput()
+        );
+
+        if (this.inputManager.doResetCamera()) {
+            this.resetCamera();
+        }
 
         this.controls.update();
 
