@@ -113,7 +113,7 @@ export default class GridManager {
                 console.log(`Grid contents: ${hexCoordStr.join(', ')} => ${tileInfo.join(', ')}`);
             }
             if (DebugConfig.doShowBlueprints) this.clearBlueprints();
-            if (DebugConfig.doShowCoordinateText) this.setCoordinateTextColor(hexCoord, 0xffffff); // White für besetzte Felder
+            if (DebugConfig.doShowCoordinateText && hexCoord) this.setCoordinateTextColor(hexCoord, 0xffffff); // White für besetzte Felder
         }
         return await this.spawnTile(hexCoord, tile);
     }
@@ -292,15 +292,18 @@ export default class GridManager {
      */
     getHexCoordInWorldDirection(hexCoord, direction, onlyDirectNeighbours = false) {
         if (onlyDirectNeighbours) {
-            return this.getDirectNeighbourInWorldDirection(hexCoord, direction);
+            const directNeighbours = this.getDirectNeighbourInWorldDirection(hexCoord, direction);
+            return directNeighbours;
         }
 
         const hexagonalSearchResult = this.tryGetHexagonalPosition(hexCoord, direction, 10);
         if (hexagonalSearchResult) {
             return hexagonalSearchResult;
         }
+
         console.log("No hexagonal movement found, trying direct neighbour search as fallback.");
-        return this.getDirectNeighbourInWorldDirection(hexCoord, direction);
+        const directNeighbours = this.getDirectNeighbourInWorldDirection(hexCoord, direction);
+        return directNeighbours;
     }
 
     /**
@@ -311,8 +314,6 @@ export default class GridManager {
         const neighbours = this.getUnoccupiedNeighbours(hexCoord);
 
         if (neighbours.length === 0) return null;
-
-        this.tryPaintBlueprints(neighbours);
 
         // Referenz-Weltposition des Start-Hex
         const originPos = hexCoord.hexToWorld(hexCoord, this.hexSize);
@@ -352,8 +353,26 @@ export default class GridManager {
      * @returns {HexCoord | null}
      */
     tryGetHexagonalPosition(hexCoord, direction, maxDistance = 10) {
-        let current = hexCoord;
         const hexDirection = this.getHexagonalMovementForDirection(direction);
+
+        if (!hexDirection) {
+            return null;
+        }
+
+        return this.tryGetHexagonalPositionInHexDirection(
+            hexCoord,
+            hexDirection,
+            maxDistance
+        );
+    }
+
+    tryGetHexagonalPositionInHexDirection(hexCoord, hexDirection, maxDistance = 10) {
+        if (!hexCoord || !hexDirection) {
+            return null;
+        }
+
+        let current = hexCoord;
+
         for (let i = 0; i < maxDistance; i++) {
             current = new HexCoord(
                 current.column + hexDirection.column,
@@ -368,6 +387,28 @@ export default class GridManager {
         return null;
     }
 
+    /**
+    // Returned array mit allen freien HexCoords in die 6 Richtungen, die von diesem hexCoord ausgehend erreichbar sind (max. 10 Schritte weit) und mindestens einen besetzten Nachbarn haben.
+     * @param {HexCoord} hexCoord - Ausgangsposition
+     * @returns {HexCoord[]} Alle freien HexCoords.
+     */
+    getFirstUnoccupiedHexInEachDirection(hexCoord) {
+        const results = [];
+
+        for (const hexDirection of HexCoord.Directions) {
+            const result = this.tryGetHexagonalPositionInHexDirection(
+                hexCoord,
+                hexDirection,
+                10
+            );
+
+            if (result) {
+                results.push(result);
+            }
+        }
+
+        return results;
+    }
 
     /**
     // Spawne Three js cubes an den positionen
@@ -386,11 +427,11 @@ export default class GridManager {
             const worldPos = hexCoord.hexToWorld(hexCoord, this.hexSize);
             const hexTile = this.createHexTile(
                 this.hexSize * 0.95, // etwas kleiner als die regulären Tiles
-                0.1,
+                0.25,
                 color,
-                1
+                0.34
             );
-            hexTile.position.set(worldPos.x, worldPos.y - 0.25, worldPos.z);
+            hexTile.position.set(worldPos.x, worldPos.y, worldPos.z);
             hexTile.rotation.y = Math.PI / 3; // Gleiche Ausrichtung wie reguläre Tiles
             this.blueprints.push(hexTile);
             if (this.scene) {
@@ -411,7 +452,7 @@ export default class GridManager {
     refreshBlueprints(hexCoord, onlyDirectNeighbours = false) {
         const candidates = onlyDirectNeighbours
             ? this.getUnoccupiedNeighbours(hexCoord)
-            : this.getAllEmptyHexCoordsWithNeighbour();
+            : this.getFirstUnoccupiedHexInEachDirection(hexCoord);
 
         this.clearBlueprints();
 
@@ -498,13 +539,22 @@ export default class GridManager {
         return a.clone().normalize().dot(b.clone().normalize());
     }
 
-    getHexagonalMovementForDirection(direction){
+    getHexagonalMovementForDirection(direction) {
+        if (
+            !direction ||
+            typeof direction.x !== "number" ||
+            typeof direction.y !== "number"
+        ) {
+            console.warn("getHexagonalMovementForDirection expected Vector2-like direction:", direction);
+            return null;
+        }
+
         const angle = Math.atan2(direction.y, direction.x);
 
-        // Unterteilung des Kreises in 6 Sektoren für die Hex-Richtung
         const sector = Math.round(angle / (Math.PI / 3));
         const directions = HexCoord.Directions;
-        return directions[(sector + 6) % 6]; // +6 um negative Indizes zu vermeiden
+
+        return directions[(sector + 6) % 6];
     }
 
     setAnimal(hexCoord, animal, overrideAnimalRequirements = false){
