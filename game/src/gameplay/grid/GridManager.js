@@ -1,14 +1,14 @@
-import HexCoord from "../../utils/HexCoord.js";
+import HexCoord from "/src/utils/HexCoord.js";
 import { TileData } from "../Tile.js";
-import ModelLoader from "../../utils/ModelLoader.js";
+import DebugConfig from "/src/debug/DebugConfig.js";
+import DebugRayDrawer from "/src/debug/DebugRayDrawer.js";
+import DebugTextInWorld from "/src/debug/DebugTextInWorld.js";
+import TextSpawner from "/src/rendering/TextSpawner.js";
 import {
   getColorForLandscape,
   applyColorToModel,
-} from "../../utils/colorUtils.js";
+} from "/src/utils/colorUtils.js";
 import * as THREE from "three";
-import TextSpawner from "../../rendering/TextSpawner.js";
-import DebugConfig from "/src/debug/DebugConfig.js";
-import DebugRayDrawer from "/src/debug/DebugRayDrawer.js";
 
 import {
   getRandomEmptyHexCoord as getRandomEmptyHexCoordUtil,
@@ -46,10 +46,6 @@ export default class GridManager {
   #grid = new Map();
   #hexSize = 1; // Größe einer Zelle im Weltkoordinatensystem (Skalierungsfaktor)
 
-  /** Map von HexCoord (Objekt-Referenz) auf Text-Mesh-Objekte.
-   * @type {Map<HexCoord, THREE.MeshStandardMaterial>} */
-  #coordGrid = new Map(); // Für Debugging: HexCoord -> Text-Mesh
-
   /**
    * Konstruktor
    * @param {THREE.Scene} scene Die 3D-Szene, zu der u.a. Modelle hinzugefügt werden.
@@ -59,8 +55,7 @@ export default class GridManager {
     this.blueprints = []; // Liste von Debug-Hex-Modellen, die mögliche Platzierungen anzeigen
     this.animalDebugLabels = []; // Liste von Text-Meshes, die Debug-Informationen über Tiere auf den Tiles anzeigen
 
-    this.getColorForLandscape = getColorForLandscape;
-    this.applyColorToModel = applyColorToModel;
+    this.debugTextInWorld = new DebugTextInWorld();
 
     this.paintCoordinates();
   }
@@ -95,9 +90,7 @@ export default class GridManager {
    */
   getTileAt(hexCoord) {
     for (const [placedHexCoord, tile] of this.getGrid().entries()) {
-      if (placedHexCoord.equals(hexCoord)) {
-        return tile;
-      }
+      if (placedHexCoord.equals(hexCoord)) return tile;
     }
     return undefined;
   }
@@ -112,7 +105,7 @@ export default class GridManager {
   }
 
   /**
-   * Eine der wichtigsten Methoden:
+   * Wichtige Methode:
    * Platziert ein Tile an der angegebenen Hex-Koordinate, rotiert es entsprechend und fügt es der Szene hinzu.
    * Diese Methode aktualisiert sowohl die interne Logik (Grid-Map) als auch die visuelle Darstellung (3D-Modell in der Szene).
    * Sie ist zentral für das Gameplay, da sie die Platzierung von Tiles steuert.
@@ -127,29 +120,17 @@ export default class GridManager {
     if (setToGrid) {
       this.#grid.set(hexCoord, tile);
       this.clearBlueprints();
-
-      if (DebugConfig.enabled && DebugConfig.doLogGrid) {
-        const [hexCoordStr, tileInfo] = [];
-        for (const [key, value] of this.getGrid().entries()) {
-          hexCoordStr.push(key.toString());
-          tileInfo.push(
-            `Tile(Landscape: ${value.primaryLandscape}, Rotation: ${value.rotation})`,
-          );
-        }
-        console.log(
-          `Grid contents: ${hexCoordStr.join(", ")} => ${tileInfo.join(", ")}`,
-        );
-      }
+      this.debugLogGrid();
 
       if (DebugConfig.enabled && DebugConfig.doShowCoordinateText && hexCoord) {
-        this.setCoordinateTextColor(hexCoord, 0xffffff); // White für besetzte Felder
+        this.trySetCoordinateTextColor(hexCoord, 0xffffff); // White für besetzte Felder
       }
     }
     return await spawnTile(this.scene, hexCoord, tile, this.getHexSize());
   }
 
   /**
-   * Sehr wichtige Methode:
+   * Wichtige Methode:
    * Setzt ein Tier auf das Tile an der angegebenen Hex-Koordinate, wenn die Platzierungsanforderungen erfüllt sind.
    * @param {THREE.Vector3} hexCoord Die Koordinaten des Hex-Tiles
    * @param {Animal} animal Das Tier, das gesetzt werden soll
@@ -184,36 +165,66 @@ export default class GridManager {
   }
 
   /// --- Grid-Query-Methoden (Wrapper um gridQueryService) ---
+
+  /**
+   * Gibt eine zufällige freie Hex-Koordinate zurück, die an mindestens ein besetztes Feld angrenzt.
+   * @see getRandomEmptyHexCoordUtil
+   */
   getRandomEmptyHexCoord() {
-    return getRandomEmptyHexCoordUtil(this);
+    return getRandomEmptyHexCoordUtil(this); // <-- Hovern zeigt ganze Signatur
   }
 
+  /**
+   * Gibt für hexCoord alle benachbarten besetzten Hex-Koordinaten zurück.
+   * @see getOccupiedNeighboursUtil
+   */
   getOccupiedNeighbours(hexCoord) {
-    return getOccupiedNeighboursUtil(this, hexCoord);
+    return getOccupiedNeighboursUtil(this, hexCoord); // <-- Hovern zeigt ganze Signatur
   }
 
+  /**
+   * Gibt alle freien Nachbarn zurück.
+   * @see getUnoccupiedNeighboursUtil
+   */
   getUnoccupiedNeighbours(hexCoord) {
-    return getUnoccupiedNeighboursUtil(this, hexCoord);
+    return getUnoccupiedNeighboursUtil(this, hexCoord); // <-- Hovern zeigt ganze Signatur
   }
 
+  /**
+   * Gibt einen zufälligen freien Nachbarn zurück.
+   * @see getRandomUnoccupiedNeighbourUtil
+   */
   getRandomUnoccupiedNeighbour(hexCoord) {
-    return getRandomUnoccupiedNeighbourUtil(this, hexCoord);
+    return getRandomUnoccupiedNeighbourUtil(this, hexCoord); // <-- Hovern zeigt ganze Signatur
   }
 
+  /**
+   * Prüft, ob das angegebene HexCoord mindestens einen besetzten Nachbarn hat.
+   * @see hasOccupiedNeighbourUtil
+   */
   hasOccupiedNeighbour(hexCoord) {
-    return hasOccupiedNeighbourUtil(this, hexCoord);
+    return hasOccupiedNeighbourUtil(this, hexCoord); // <-- Hovern zeigt ganze Signatur
   }
 
+  /**
+   * Gibt alle leeren Hex-Koordinaten zurück, die mindestens einen besetzten Nachbarn haben.
+   * @see getAllEmptyHexCoordsWithNeighbourUtil
+   */
   getAllEmptyHexCoordsWithNeighbour() {
-    return getAllEmptyHexCoordsWithNeighbourUtil(this);
+    return getAllEmptyHexCoordsWithNeighbourUtil(this); // <-- Hovern zeigt ganze Signatur
   }
 
+  /**
+   * Gibt die Hex-Koordinate zurück, die in der angegebenen Welt-Richtung von der Ausgangs-Hex-Koordinate aus liegt.
+   * @see getHexCoordInWorldDirectionUtil
+   */
   getHexCoordInWorldDirection(
     hexCoord,
     direction,
     onlyDirectNeighbours = false,
   ) {
     return getHexCoordInWorldDirectionUtil(
+      // <-- Hovern zeigt ganze Signatur
       this,
       hexCoord,
       direction,
@@ -221,24 +232,41 @@ export default class GridManager {
     );
   }
 
+  /**
+   * Gibt die direkt benachbarte Hex-Koordinate zurück, die am besten in der angegebenen Welt-Richtung von der Ausgangs-Hex-Koordinate aus liegt.
+   * @see getDirectNeighbourInWorldDirectionUtil
+   */
   getDirectNeighbourInWorldDirection(hexCoord, direction) {
-    return getDirectNeighbourInWorldDirectionUtil(this, hexCoord, direction);
+    return getDirectNeighbourInWorldDirectionUtil(this, hexCoord, direction); // <-- Hovern zeigt ganze Signatur
   }
 
+  /**
+   * Versucht, eine freie Hex-Koordinate in der angegebenen Richtung zu finden, indem entlang der 6 Hauptachsen des Hex-Grids gesucht wird.
+   * @see tryGetHexagonalPositionUtil
+   */
   tryGetHexagonalPosition(hexCoord, direction, maxDistance = 10) {
-    return tryGetHexagonalPositionUtil(this, hexCoord, direction, maxDistance);
+    return tryGetHexagonalPositionUtil(this, hexCoord, direction, maxDistance); // <-- Hovern zeigt ganze Signatur
   }
 
+  /**
+   * Gibt jede erste freie Hex-Koordinate zurück, die in den sechs hexagonalen Richtungen von der Ausgangs-Hex-Koordinate aus liegt.
+   * @see getFirstUnoccupiedHexInEachDirectionUtil
+   */
   getFirstUnoccupiedHexInEachDirection(hexCoord) {
-    return getFirstUnoccupiedHexInEachDirectionUtil(this, hexCoord);
+    return getFirstUnoccupiedHexInEachDirectionUtil(this, hexCoord); // <-- Hovern zeigt ganze Signatur
   }
 
+  /**
+   * Gibt die erste freie Hex-Koordinate zurück, die in der angegebenen hexagonalen Richtung von der Ausgangs-Hex-Koordinate aus liegt.
+   * @see tryGetHexagonalPositionInHexDirectionUtil
+   */
   tryGetHexagonalPositionInHexDirection(
     hexCoord,
     hexDirection,
     maxDistance = 10,
   ) {
     return tryGetHexagonalPositionInHexDirectionUtil(
+      // <-- Hovern zeigt ganze Signatur
       this,
       hexCoord,
       hexDirection,
@@ -246,8 +274,12 @@ export default class GridManager {
     );
   }
 
+  /**
+   * Gibt die Hexagonal-Bewegungsrichtung zurück, die der angegebenen Welt-Richtung am nächsten kommt.
+   * @see getHexagonalMovementForDirectionUtil
+   */
   getHexagonalMovementForDirection(direction) {
-    return getHexagonalMovementForDirectionUtil(direction);
+    return getHexagonalMovementForDirectionUtil(direction); // <-- Hovern zeigt ganze Signatur
   }
 
   /**
@@ -322,55 +354,11 @@ export default class GridManager {
    * Sie ist nützlich, um die Logik der Hex-Koordinaten und ihre Umrechnung in Weltpositionen zu veranschaulichen.
    */
   async paintCoordinates() {
-    if (!DebugConfig.enabled || !DebugConfig.doShowCoordinateText) {
-      return;
-    }
-
-    this.coordGrid = new Map();
-    const size = 10;
-    for (let column = -size; column <= size; column++) {
-      for (let row = -size; row <= size; row++) {
-        const hexCoord = new HexCoord(column, row);
-
-        const pos = hexCoord.hexToWorld(hexCoord, this.getHexSize());
-        pos.y = 0.2;
-
-        const textMesh = await TextSpawner.spawn(
-          this.scene,
-          pos,
-          hexCoord.hashCode(),
-          0.3,
-          0xff0000,
-        );
-
-        const key = hexCoord.hashCode();
-
-        this.coordGrid.set(key, textMesh);
-      }
-    }
+    return this.debugTextInWorld.paintCoordinates(this, this.scene);
   }
 
-  /**
-   * Ändert die Farbe des Text-Meshes, das die Koordinaten einer Hex-Koordinate anzeigt.
-   * @param {HexCoord} hexCoord Key der Hex-Koordinate in this.coordGrid, deren Textfarbe geändert werden soll
-   * @param {number} color Die neue Farbe
-   * @returns {boolean} True, wenn die Farbe erfolgreich geändert wurde, sonst false
-   */
-  setCoordinateTextColor(hexCoord, color) {
-    const key = hexCoord.hashCode();
-    const textObject = this.coordGrid.get(key);
-
-    if (!textObject) return;
-
-    if (textObject.textMesh) {
-      textObject.textMesh.material.color.set(color);
-      return;
-    }
-
-    // Fallback für ältere TextMesh-Objekte, die direkt als Mesh gespeichert wurden
-    if (textObject.material) {
-      textObject.material.color.set(color);
-    }
+  trySetCoordinateTextColor(hexCoord, color) {
+    this.debugTextInWorld.trySetCoordinateTextColorUtil(hexCoord, color);
   }
 
   /**
@@ -424,5 +412,20 @@ export default class GridManager {
     }
 
     this.animalDebugLabels = [];
+  }
+
+  debugLogGrid() {
+    if (DebugConfig.enabled && DebugConfig.doLogGrid) {
+      const [hexCoordStr, tileInfo] = [];
+      for (const [key, value] of this.getGrid().entries()) {
+        hexCoordStr.push(key.toString());
+        tileInfo.push(
+          `Tile(Landscape: ${value.primaryLandscape}, Rotation: ${value.rotation})`,
+        );
+      }
+      console.log(
+        `Grid contents: ${hexCoordStr.join(", ")} => ${tileInfo.join(", ")}`,
+      );
+    }
   }
 }

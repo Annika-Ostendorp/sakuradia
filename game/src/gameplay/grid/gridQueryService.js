@@ -80,7 +80,7 @@ export function getUnoccupiedNeighbours(gridManager, hexCoord) {
 
 /**
  * Gibt eine Hex-Koordinate eines zufälligen freien Nachbarn zurück, der an das angegebene HexCoord angrenzt.
- * Aktuell wird davon ausgegangen, dass das angegebene HexCoord mindestens einen freien Nachbarn hat, der an ein besetztes Feld angrenzt.
+ * Aktuell wird davon ausgegangen, dass es keine Situation mit weniger als einem freien Nachbarn gibt.
  * Es gibt keine Garantie, dass dies immer der Fall ist, daher gibt die Methode `null` zurück, wenn keine gültigen Nachbarn gefunden werden.
  * @param {GridManager} gridManager - Die Instanz des Grid-Managers
  * @param {HexCoord} hexCoord Hex-Koordinate, für die ein freier Nachbar gesucht werden soll
@@ -204,7 +204,7 @@ export function getHexCoordInWorldDirection(
 }
 
 /**
- * Prüft nur die direkt benachbarten Hexes und berechnet, welcher von ihnen am besten in die angegebene Richtung zeigt.
+ * Gibt die direkt benachbarte Hex-Koordinate zurück, die am besten in der angegebenen Welt-Richtung von der Ausgangs-Hex-Koordinate aus liegt.
  * @param {GridManager} gridManager - Die Instanz des Grid-Managers
  * @param {HexCoord} hexCoord Ausgangs-Hex-Koordinate, von der aus die Suche gestartet wird
  * @param {THREE.Vector2} direction Richtung im Weltkoordinatensystem, in die die Suche gehen soll. Wird relativ zum Kamerawinkel interpretiert
