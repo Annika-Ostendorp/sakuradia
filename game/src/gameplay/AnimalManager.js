@@ -3,7 +3,9 @@ import DebugConfig from "/src/debug/DebugConfig.js";
 import DebugTextInWorld from "/src/debug/DebugTextInWorld.js";
 
 export default class AnimalManager {
-    constructor(debugTextInWorld) {
+    constructor(scene, gridManager, debugTextInWorld) {
+        this.scene = scene;
+        this.gridManager = gridManager;
         this.debugTextInWorld = debugTextInWorld;
     }
 
@@ -22,7 +24,7 @@ export default class AnimalManager {
         if (overrideAnimalRequirements) {
           tile.occupiedBy = animal;
           if (DebugConfig.enabled && DebugConfig.doInWorldDebugInfo) {
-            this.debugTextInWorld.showAnimalDebugLabels();
+            this.debugTextInWorld.showAnimalDebugLabels(this.scene, this.gridManager);
           }
           return true;
         }
@@ -30,13 +32,13 @@ export default class AnimalManager {
         if (tile.animalIsAllowed(animal)) {
           tile.occupiedBy = animal;
           if (DebugConfig.enabled && DebugConfig.doInWorldDebugInfo) {
-            this.debugTextInWorld.showAnimalDebugLabels();
+            this.debugTextInWorld.showAnimalDebugLabels(this.scene, this.gridManager);
           }
           return true;
         }
     
         if (DebugConfig.enabled && DebugConfig.doInWorldDebugInfo) {
-          this.debugTextInWorld.showAnimalDebugLabels();
+          this.debugTextInWorld.showAnimalDebugLabels(this.scene, this.gridManager);
         }
         return false;
       }

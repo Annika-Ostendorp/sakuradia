@@ -56,7 +56,7 @@ export default class GridManager {
     this.blueprints = []; // Liste der aktuell platzierten Blueprint-Modelle (für Debugging)
 
     this.debugTextInWorld = new DebugTextInWorld();
-    this.animalManager = new AnimalManager(this.debugTextInWorld);
+    this.animalManager = new AnimalManager(this.scene, this, this.debugTextInWorld);
 
     this.paintCoordinates();
   }
@@ -138,30 +138,7 @@ export default class GridManager {
    * @returns {boolean} true, wenn das Tier erfolgreich gesetzt wurde, sonst false
    */
   setAnimal(hexCoord, animal, overrideAnimalRequirements = false) {
-    const tile = this.getTileAt(hexCoord);
-    if (!tile) return;
-
-    // Override für Score Testing (Jedes Tier kann auf jedes Tile gesetzt werden)
-    if (overrideAnimalRequirements) {
-      tile.occupiedBy = animal;
-      if (DebugConfig.enabled && DebugConfig.doInWorldDebugInfo) {
-        this.showAnimalDebugLabels();
-      }
-      return true;
-    }
-
-    if (tile.animalIsAllowed(animal)) {
-      tile.occupiedBy = animal;
-      if (DebugConfig.enabled && DebugConfig.doInWorldDebugInfo) {
-        this.showAnimalDebugLabels();
-      }
-      return true;
-    }
-
-    if (DebugConfig.enabled && DebugConfig.doInWorldDebugInfo) {
-      this.showAnimalDebugLabels();
-    }
-    return false;
+    this.animalManager.setAnimal(this, hexCoord, animal, overrideAnimalRequirements);
   }
 
   /// --- Grid-Query-Methoden (Wrapper um gridQueryService) ---
