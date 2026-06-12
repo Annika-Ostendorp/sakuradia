@@ -62,7 +62,7 @@ export default class GameplayManager{
         this.selectedHandIndex = index;
     }
 
-    onSubmitted(){
+    async onSubmitted(){
         const previousState = this.getCurrentRoundState();
 
         // Je nach State
@@ -76,7 +76,6 @@ export default class GameplayManager{
                 // Spawn preview tile (without updating the grid)
                 this.previewTileHexCoord = this.getRandomEmptyHexCord();
                 this.previewTileRotation = this.getRandomRotation();
-                // setTile returns a Promise; keep promise separate from the resolved model
                 this.previewTileModel = null;
                 this.previewTileModelPromise = this.placePreviewTile(
                     this.previewTileHexCoord,
@@ -125,7 +124,7 @@ export default class GameplayManager{
                         removeModelFromScene(model);
                     }).catch(() => {});
                 }
-                this.placeTile(
+                await this.placeTile(
                     this.previewTileHexCoord,
                     this.game.tilesOnHand[this.selectedHandIndex],
                     this.previewTileRotation
@@ -181,15 +180,15 @@ export default class GameplayManager{
     // Platziert ein Tile an einer zufälligen, leeren Nachbar-Position mit zufälliger Rotation.
     // Hinweis: Rotation ist ein Index (0-5) für 60° Schritte.
     // Returnt das model
-    placePreviewTile(hexCoord, tileData, rotation = 0, setToGrid = false){        
-        return this.game.gridManager.setTile(hexCoord, tileData, rotation, setToGrid);
+    async placePreviewTile(hexCoord, tileData, rotation = 0, setToGrid = false){        
+        return await this.game.gridManager.setTile(hexCoord, tileData, rotation, setToGrid);
     }
 
     // Platziert ein Tile an einer zufälligen, leeren Nachbar-Position mit zufälliger Rotation
     // und fügt es dem Grid hinzu
     // Returnt das model
-    placeTile(hexCoord, tileData, rotation){
-        return this.game.gridManager.setTile(hexCoord, tileData, rotation);
+    async placeTile(hexCoord, tileData, rotation){
+        return await this.game.gridManager.setTile(hexCoord, tileData, rotation);
     }
 
     getRandomEmptyHexCord(){

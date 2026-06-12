@@ -3,6 +3,7 @@ import { TileData } from "./Tile.js";
 import ModelLoader from "../utils/ModelLoader.js";
 import ColorUtils from "../utils/ColorUtils.js";
 import * as THREE from "three";
+import TextSpawner from "../rendering//TextSpawner.js";
 
 /**
  * Verantwortlich für das Speichern und Verwalten des hexagonalen Spielfelds
@@ -27,7 +28,7 @@ export default class GridManager {
         /** Grösse des logischen Spielfelds in Zellen pro Achse (für spätere Grenzen). */
         this.gridSize = 20;
         /** Grösse einer Zelle im Weltkoordinatensystem (Skalierungsfaktor). */
-        this.cellSize = 1;
+        this.hexSize = 1;
         this.blueprints = [];
 
         /**
@@ -40,10 +41,17 @@ export default class GridManager {
         this.grid = new Map();
         this.modelLoader = new ModelLoader();
         this.colorUtils = new ColorUtils();
+
+        /**
+         * Map von HexCoord (Objekt-Referenz) auf Text-Mesh-Objekte.
+         * @type {Map<HexCoord, THREE.MeshStandardMaterial>}
+         */
+        this.coordGrid = new Map(); // Für Debugging: HexCoord -> Text-Mesh
+        this.paintCoordinates();
     }
 
     /**
-        * Gibt das Tile zur angegebenen Hex-Koordinate zurück.
+     * Gibt das Tile zur angegebenen Hex-Koordinate zurück.
      * @param {HexCoord} hexCoord
      * @returns {Tile | undefined}
      */
@@ -62,7 +70,6 @@ export default class GridManager {
                 return tile;
             }
         }
-
         return undefined;
     }
 
@@ -81,22 +88,17 @@ export default class GridManager {
      * @param {Tile} tile
      * @param {number} rotation - Optionaler Rotationswert für das Tile (0-5).
      */
-    setTile(hexCoord, tile, rotation = 0, setToGrid = true) {
+    async setTile(hexCoord, tile, rotation = 0, setToGrid = true) {
         tile.rotation = rotation;
         if (setToGrid){
             this.grid.set(hexCoord, tile);
             this.clearBlueprints();
+            this.setCoordinateTextColor(hexCoord, 0xffffff); // White für besetzte Felder
         }
-        else{
-            let surroundingOccupiedTiles = this.getOccupiedNeighbours(hexCoord);
-            let surroundingUnoccupiedTiles = this.getUnoccupiedNeighbours(hexCoord);
-            this.paintBlueprints(surroundingUnoccupiedTiles, 0x00ff00, true);
-            this.paintBlueprints(surroundingOccupiedTiles, 0xff0000, false);
-        }
-        return this.spawnTile(hexCoord, tile);
+        return await this.spawnTile(hexCoord, tile);
     }
 
-    spawnTile(hexCoord, tile) {
+    async spawnTile(hexCoord, tile) {
         // Validierung: Sicherstellen, dass ein HexCoord-Objekt über die
         // benötigten Methoden (z.B. hexToWorld) verfügt. Andernfalls sollte
         // der Aufrufer die Daten vorbereiten.
@@ -104,14 +106,11 @@ export default class GridManager {
             throw new Error("spawnTile expects a HexCoord instance");
         }
 
-        // Wir speichern das Tile erneut in der Map, falls setTile nicht
-        // vorher aufgerufen wurde. Rotation defaultet auf 0.
         let hexObj = hexCoord;
         tile.rotation = tile.rotation || 0;
-        this.grid.set(hexObj, tile);
 
         // Konvertiere HexCoord in Welt-Position für das 3D-Modell.
-        let worldPos = hexObj.hexToWorld(hexCoord);
+        let worldPos = hexObj.hexToWorld(hexCoord, this.hexSize);
 
         // Keystones werden als ein einzelnes Modell geladen (statt zwei Hälften).
         // Das ermöglicht besondere Modelle/Assets für zentrale Kacheln.
@@ -210,7 +209,10 @@ export default class GridManager {
      */
     getUnoccupiedNeighbours(hexCoord){
         const emptyNeighbours = [];
-        for (const neighbour of hexCoord.getNeighbors()){
+        const neighbours = hexCoord.getNeighbors();
+        let surroundingUnoccupiedTiles = neighbours;
+        this.paintBlueprints(surroundingOccupiedTiles, 0xff0000, true);
+        for (const neighbour of neighbours){
             if (!this.isOccupied(neighbour) && // Wenn Nachbar frei ist
                 this.hasOccupiedNeighbour(neighbour)){ // Und mindestens einen platzierten Nachbarn hat
                 emptyNeighbours.push(neighbour);
@@ -225,7 +227,8 @@ export default class GridManager {
      */
     getOccupiedNeighbours(hexCoord){
         const occupiedNeighbours = [];
-        for (const neighbour of hexCoord.getNeighbors()){
+        const neighbours = hexCoord.getNeighbors();
+        for (const neighbour of neighbours){
             if (this.isOccupied(neighbour)){
                 occupiedNeighbours.push(neighbour);
             }
@@ -295,13 +298,14 @@ export default class GridManager {
      * @returns {HexCoord | null}
      */
     getHexCoordInWorldDirection(hexCoord, direction){
-        // Nur direkt benachbarte, leere Nachbarn als Kandidaten verwenden
-        let candidates = this.getAllEmptyHexCoordsWithNeighbour();
-        if (!candidates || candidates.length === 0) return null;
-        //this.paintBlueprints(neighborCandidates, 0x00ff00);
+        // Alle freien Randfelder des aktuellen Spielfelds als Kandidaten nutzen,
+        // damit die Bewegung auch weiter entfernte, intuitive Ziele erreichen kann.
+        const candidates = this.getAllEmptyHexCoordsWithNeighbour();
+        if (candidates.length === 0) return null;
+        this.paintBlueprints(candidates, 0x00ff00);
 
         // Referenz-Weltposition des Start-Hex
-        const originPos = hexCoord.hexToWorld(hexCoord);
+        const originPos = hexCoord.hexToWorld(hexCoord, this.hexSize);
 
         // Mappe Eingabe-Richtung (x, y) auf Welt-Richtung (x, z)
         const dirWorld = { x: direction.x, z: direction.y };
@@ -310,22 +314,27 @@ export default class GridManager {
         dirWorld.x /= dirLength;
         dirWorld.z /= dirLength;
 
-        // Wähle den benachbarten Kandidaten, dessen Projektion auf die Richtung am größten ist
-        let bestScore = -Number.POSITIVE_INFINITY;
+        // Wähle den Kandidaten mit der besten Richtungsübereinstimmung.
+        // Tie-breaker: bei gleicher Richtung gewinnt das nähere Feld.
+        let bestAlignment = -Number.POSITIVE_INFINITY;
+        let bestDistance = Number.POSITIVE_INFINITY;
         let targetCoord = null;
 
         for (const candidate of candidates) {
-            const candPos = candidate.hexToWorld(candidate);
+            const candPos = candidate.hexToWorld(candidate, this.hexSize);
             const dx = candPos.x - originPos.x;
             const dz = candPos.z - originPos.z;
+            const distance = Math.hypot(dx, dz);
+            if (distance === 0) {
+                continue;
+            }
 
-            // Projektion (dot product) — je größer desto näher an gewünschter Richtung
-            const projection = dx * dirWorld.x + dz * dirWorld.z;
+            const alignment = (dx * dirWorld.x + dz * dirWorld.z) / distance;
+            if (alignment <= 0) continue; // nur vorwärts
 
-            if (projection <= 0) continue; // nur vorwärts
-
-            if (projection > bestScore) {
-                bestScore = projection;
+            if (alignment > bestAlignment || (alignment === bestAlignment && distance < bestDistance)) {
+                bestAlignment = alignment;
+                bestDistance = distance;
                 targetCoord = candidate;
             }
         }
@@ -353,7 +362,7 @@ export default class GridManager {
         }
 
         for (const hexCoord of hexCoords){
-            const worldPos = hexCoord.hexToWorld(hexCoord);
+            const worldPos = hexCoord.hexToWorld(hexCoord, this.hexSize);
             const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
             const material = new THREE.MeshBasicMaterial({ color: color, opacity: 0.5, transparent: true });
             const cube = new THREE.Mesh(geometry, material);
@@ -363,6 +372,40 @@ export default class GridManager {
                 this.scene.add(cube);
             }
         }
+    }
+
+    async paintCoordinates() {
+        this.coordGrid = new Map();
+
+        for (let column = -this.gridSize; column <= this.gridSize; column++) {
+            for (let row = -this.gridSize; row <= this.gridSize; row++) {
+                const hexCoord = new HexCoord(column, row);
+
+                const pos = hexCoord.hexToWorld(hexCoord, this.hexSize);
+                pos.y = 0.2;
+
+                const textMesh = await TextSpawner.spawn(
+                    this.scene,
+                    pos,
+                    hexCoord.hashCode(),
+                    0.3,
+                    0xff0000
+                );
+
+                const key = hexCoord.hashCode();
+
+                this.coordGrid.set(key, textMesh);
+            }
+        }
+    }
+
+    setCoordinateTextColor(hexCoord, color) {
+        const key = hexCoord.hashCode();
+        const textMesh = this.coordGrid.get(key);
+
+        if (!textMesh) return;
+
+        textMesh.material.color.set(color);
     }
 }
 
