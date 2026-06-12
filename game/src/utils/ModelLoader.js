@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { Landscape } from "../data/Landscape.js";
-import ColorUtils from "./ColorUtils.js";
+import { getColorForLandscape, applyColorToModel } from "./colorUtils.js";
 
 /**
  * `ModelLoader`
@@ -20,7 +20,8 @@ export default class ModelLoader {
         this.gltfLoader = new GLTFLoader();
         this.modelCache = new Map(); // Cache für geladene Modelle.
         this.library = library; // Wird durch den GameplayManager übergeben.
-        this.colorUtils = new ColorUtils();
+        this.getColorForLandscape = getColorForLandscape;
+        this.applyColorToModel = applyColorToModel;
     }
     
     /**
@@ -90,30 +91,6 @@ export default class ModelLoader {
 
         return container;
     };
-
-    /**
-     * Geht durch die Model-Hierarchie und setzt die Materialfarbe aller Meshes.
-     * Klont Materialien zuerst, um Seiteneffekte auf gecachte Instanzen zu vermeiden.
-     */
-
-    applyColorToModel(model, color) {
-        model.traverse((child) => {
-            if (child.isMesh) {
-                child.material = Array.isArray(child.material)
-                    ? child.material.map((material) => material.clone())
-                    : child.material.clone();
-                child.material.color.set(color);
-            }
-        });
-    }
-
-    /**
-     * Delegiert die Farbsuche an `ColorUtils` und gibt ein Hex-Farbstring oder
-     * ein `THREE.Color` zurück. Erwartet einen Wert aus `Landscape`.
-     */
-    getColorForLandscape(landscape) {
-        return this.colorUtils.getColorForLandscape(landscape);
-    }
 
     /**
      * Liefert den Dateinamen des Modells für eine gegebene Kachel zurück.
