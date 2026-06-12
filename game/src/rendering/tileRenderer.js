@@ -5,7 +5,7 @@ const modelLoader = new ModelLoader();
 
 /**
  * Instanziiert das 3D-Modell für ein Tile an der angegebenen Hex-Koordinate.
- * Hinweis: Diese Methode kümmert sich ausschließlich um das Erstellen und Positionieren des 3D-Modells.
+ * Diese Methode kümmert sich ausschließlich um das Erstellen und Positionieren des 3D-Modells.
  * Sie wird von `setTile` aufgerufen, nachdem die Logik aktualisiert wurde.
  * @param {HexCoord} hexCoord Die Hex-Koordinate, an der das Tile platziert werden soll.
  * @param {Tile} tile Das Tile-Objekt, das die Informationen über das zu spawnende Modell enthält.

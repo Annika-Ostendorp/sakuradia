@@ -40,18 +40,14 @@ import { createHexTile, spawnTile } from "/src/rendering/tileRenderer.js";
  *   `HexCoord`-Objekt auf, um Konsistenz zwischen Logik- und Render-Koordinaten zu gewährleisten.
  */
 export default class GridManager {
-  /**
-   * Map von HexCoord auf Tile-Objekte.
+  /**  Map von HexCoord auf Tile-Objekte.
    * Für koordinatenbasierte Abfragen muss `getTileAt` verwendet werden.
-   * @type {Map<HexCoord, Tile>}
-   */
+   * @type {Map<HexCoord, Tile>} */
   #grid = new Map();
   #hexSize = 1; // Größe einer Zelle im Weltkoordinatensystem (Skalierungsfaktor)
 
-  /**
-   * Map von HexCoord (Objekt-Referenz) auf Text-Mesh-Objekte.
-   * @type {Map<HexCoord, THREE.MeshStandardMaterial>}
-   */
+  /** Map von HexCoord (Objekt-Referenz) auf Text-Mesh-Objekte.
+   * @type {Map<HexCoord, THREE.MeshStandardMaterial>} */
   #coordGrid = new Map(); // Für Debugging: HexCoord -> Text-Mesh
 
   /**
@@ -60,11 +56,9 @@ export default class GridManager {
    */
   constructor(scene) {
     this.scene = scene;
-    this.gridSize = 20; // Größe des logischen Spielfelds in Zellen pro Achse
     this.blueprints = []; // Liste von Debug-Hex-Modellen, die mögliche Platzierungen anzeigen
     this.animalDebugLabels = []; // Liste von Text-Meshes, die Debug-Informationen über Tiere auf den Tiles anzeigen
 
-    this.modelLoader = new ModelLoader(); // Verantwortlich für das Laden von 3D-Modellen
     this.getColorForLandscape = getColorForLandscape;
     this.applyColorToModel = applyColorToModel;
 
@@ -72,14 +66,14 @@ export default class GridManager {
   }
 
   /**
-   * @returns {Map<HexCoord, Tile>} Gibt das Grid dieses GridManagers zurück.
+   * @returns {Map<HexCoord, Tile>} Gibt das Grid des GridManagers zurück.
    */
   getGrid() {
     return this.#grid;
   }
 
   /**
-   * @returns Gibt die Größe der Hex-Felder zurück.
+   * @returns Gibt die Größe der Hex-Felder im Grid zurück.
    */
   getHexSize() {
     return this.#hexSize;
@@ -95,7 +89,7 @@ export default class GridManager {
 
   /**
    * Gibt das Tile zur angegebenen Hex-Koordinate zurück.
-   * Hinweis: Da die Map `HexCoord`-Objekte als Schlüssel verwendet, muss die Suche über die `equals`-Methode der HexCoord erfolgen, um das richtige Tile zu finden.
+   * Da die Map `HexCoord`-Objekte als Schlüssel verwendet, muss die Suche über die `equals`-Methode der HexCoord erfolgen, um das richtige Tile zu finden.
    * @param {HexCoord} hexCoord Die Hex-Koordinate, für die das Tile abgefragt werden soll.
    * @returns {Tile | undefined} Das Tile-Objekt an der angegebenen Hex-Koordinate oder undefined, wenn kein Tile vorhanden ist.
    */
@@ -120,7 +114,7 @@ export default class GridManager {
   /**
    * Eine der wichtigsten Methoden:
    * Platziert ein Tile an der angegebenen Hex-Koordinate, rotiert es entsprechend und fügt es der Szene hinzu.
-   * Hinweis: Diese Methode aktualisiert sowohl die interne Logik (Grid-Map) als auch die visuelle Darstellung (3D-Modell in der Szene).
+   * Diese Methode aktualisiert sowohl die interne Logik (Grid-Map) als auch die visuelle Darstellung (3D-Modell in der Szene).
    * Sie ist zentral für das Gameplay, da sie die Platzierung von Tiles steuert.
    * @param {HexCoord} hexCoord Die Hex-Koordinate, an der das Tile platziert werden soll.
    * @param {Tile} tile Das Tile-Objekt, das platziert werden soll.

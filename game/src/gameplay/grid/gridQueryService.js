@@ -25,7 +25,7 @@ export function getRandomEmptyHexCoord(gridManager) {
 
 /**
  * Gibt alle besetzten Hex-Nachbarn für ein HexCoord zurück.
- * Hinweis: Diese Methode wird verwendet, um sicherzustellen, dass neue Tiles nur neben bestehenden Tiles platziert werden können, was eine zusammenhängende Spielfläche gewährleistet.
+ * Diese Methode wird verwendet, um sicherzustellen, dass neue Tiles nur neben bestehenden Tiles platziert werden können, was eine zusammenhängende Spielfläche gewährleistet.
  * @param {GridManager} gridManager - Die Instanz des Grid-Managers
  * @param {HexCoord} hexCoord Hex-Koordinate, für die besetzte Nachbarn gesucht werden sollen
  * @returns {HexCoord[]} Liste aller benachbarten Hex-Koordinaten, die im Grid besetzt sind.
@@ -51,7 +51,7 @@ export function getOccupiedNeighbours(gridManager, hexCoord) {
 
 /**
  * Gibt alle leeren Hex-Nachbarn für ein HexCoord zurück.
- * Hinweis: Diese Methode wird verwendet, um mögliche Platzierungsoptionen für neue Tiles zu ermitteln.
+ * Diese Methode wird verwendet, um mögliche Platzierungsoptionen für neue Tiles zu ermitteln.
  * @param {GridManager} gridManager - Die Instanz des Grid-Managers
  * @param {HexCoord} hexCoord Hex-Koordinate, für die leere Nachbarn gesucht werden sollen
  * @returns {HexCoord[]} Liste aller benachbarten Hex-Koordinaten, die im Grid nicht besetzt sind, aber mindestens einen besetzten Nachbarn haben (also gültige Platzierungsoptionen).
@@ -80,7 +80,7 @@ export function getUnoccupiedNeighbours(gridManager, hexCoord) {
 
 /**
  * Gibt eine Hex-Koordinate eines zufälligen freien Nachbarn zurück, der an das angegebene HexCoord angrenzt.
- * Hinweis: Aktuell wird davon ausgegangen, dass das angegebene HexCoord mindestens einen freien Nachbarn hat, der an ein besetztes Feld angrenzt.
+ * Aktuell wird davon ausgegangen, dass das angegebene HexCoord mindestens einen freien Nachbarn hat, der an ein besetztes Feld angrenzt.
  * Es gibt keine Garantie, dass dies immer der Fall ist, daher gibt die Methode `null` zurück, wenn keine gültigen Nachbarn gefunden werden.
  * @param {GridManager} gridManager - Die Instanz des Grid-Managers
  * @param {HexCoord} hexCoord Hex-Koordinate, für die ein freier Nachbar gesucht werden soll
@@ -372,7 +372,7 @@ export function getHexagonalMovementForDirection(direction) {
 
 /**
  * Berechnet die Ähnlichkeit zwischen zwei Richtungen.
- * Hinweis: Diese Methode wird verwendet, um zu bestimmen, welcher Nachbar am besten in die gewünschte Richtung zeigt, indem das Skalarprodukt der normalisierten Vektoren berechnet wird.
+ * Diese Methode wird verwendet, um zu bestimmen, welcher Nachbar am besten in die gewünschte Richtung zeigt, indem das Skalarprodukt der normalisierten Vektoren berechnet wird.
  * @param {THREE.Vector3} a Der erste Richtungsvektor
  * @param {THREE.Vector3} b Der zweite Richtungsvektor
  * @returns {number} Ähnlichkeitsmaß zwischen -1 und 1. 1 bedeutet gleiche Richtung, 0 bedeutet 90° zueinander, -1 bedeutet entgegengesetzt.
