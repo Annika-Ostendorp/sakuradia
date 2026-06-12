@@ -379,25 +379,24 @@ export default class GridManager {
     }
 
     createHexTile(radius = 1, height = 0.15, color = 0x44aa44, opacity = 1) {
-    const geometry = new THREE.CylinderGeometry(
-        radius,     // radiusTop
-        radius,     // radiusBottom
-        height,     // height
-        6           // radialSegments = Hexagon
-    );
+        const geometry = new THREE.CylinderGeometry(
+            radius,     // radiusTop
+            radius,     // radiusBottom
+            height,     // height
+            6           // radialSegments = Hexagon
+        );
 
-    const material = new THREE.MeshStandardMaterial({
-        color: color,
-        transparent: opacity < 1,
-        opacity: opacity
-    });
+        const material = new THREE.MeshStandardMaterial({
+            color: color,
+            transparent: opacity < 1,
+            opacity: opacity
+        });
 
-    const hexTile = new THREE.Mesh(geometry, material);
+        const hexTile = new THREE.Mesh(geometry, material);
 
-    // Optional: besser für flache Hex-Grids ausrichten
-    hexTile.rotation.y = Math.PI / 6;
+        // Optional: besser für flache Hex-Grids ausrichten
+        hexTile.rotation.y = Math.PI / 6;
 
-    return hexTile;
+        return hexTile;
+    }
 }
-}
-
