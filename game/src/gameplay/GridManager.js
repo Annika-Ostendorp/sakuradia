@@ -52,6 +52,14 @@ export default class GridManager {
         this.paintCoordinates();
     }
 
+    getGrid(){
+        return this.grid;
+    }
+
+    getOccupiedHexCoords(){
+        return Array.from(this.grid.keys()); // Alle HexCoords im Grid sind occupied
+    }
+
     /**
      * Gibt das Tile zur angegebenen Hex-Koordinate zurück.
      * @param {HexCoord} hexCoord
@@ -184,6 +192,23 @@ export default class GridManager {
     }
 
     /**
+     * Gibt die HexCoord eines zufälligen leeren benachbarten Hex-Feldes zurück.
+     * Akuell herrscht die Annahme, dass dieses Hex-Feld mindestens einen freien Nachbarn hat.
+     * @param {HexCoord} hexCoord - Bekomme zufälligen freien Nachbarn von diesem HexCoord
+     * @returns {HexCoord}
+     */
+    getRandomUnoccupiedNeighbour(hexCoord){
+        const emptyNeighbours = this.getUnoccupiedNeighbours(hexCoord);
+        if (emptyNeighbours.length === 0) {
+            return null;
+        }
+        const randomIndex = Math.floor(Math.random() * emptyNeighbours.length);
+        return emptyNeighbours[randomIndex];
+    }
+
+
+
+    /**
      * Gibt alle besetzten Hex-Nachbarn für ein HexCoord zurück.
      * @returns {HexCoord[]}
      */
@@ -256,9 +281,8 @@ export default class GridManager {
     }
     
 
-    // Chronologische Abfolge bei der Suche nach dem bestmöglichen HexCoord in Richtung eines Welt-Vektors
-
-
+    // Chronologische Abfolge bei der Suche nach dem
+    // bestmöglichen HexCoord in Richtung eines Welt-Vektors
     /**
      * 
      * @param {HexCoord} hexCoord Aktuelle Position
@@ -471,5 +495,23 @@ export default class GridManager {
         const sector = Math.round(angle / (Math.PI / 3));
         const directions = HexCoord.Directions;
         return directions[(sector + 6) % 6]; // +6 um negative Indizes zu vermeiden
+    }
+
+    setAnimal(hexCoord, animal, overrideAnimalRequirements = false){
+        const tile = this.getTileAt(hexCoord);
+        if (!tile) return;
+
+        // Override für Score Testing (Jedes Tier kann auf jedes Tile gesetzt werden)
+        if (overrideAnimalRequirements){
+            tile.occupiedBy = animal;
+            return true;
+        }
+
+        if (tile.animalIsAllowed(animal)){
+            tile.occupiedBy = animal;
+            return true;
+        }
+
+        return false;
     }
 }

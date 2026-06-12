@@ -46,6 +46,10 @@ export default class Tile {
     rotateCounterClockwise() {
         this.rotation = (this.rotation + 5) % 6; // -60° (oder +300°)
     }
+
+    animalIsAllowed(animal){
+        return this.tileData.animalIsAllowed(animal);
+    }
 }
 
 /**
@@ -67,6 +71,10 @@ export class TileData {
 
     get isKeystone(){
         return this.secondaryLandscape === Landscape.UNDEFINED;
+    }
+
+    animalIsAllowed(animal) {
+        return this.animals.includes(animal);
     }
 }
 

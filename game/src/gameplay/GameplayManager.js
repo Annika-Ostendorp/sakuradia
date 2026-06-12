@@ -3,6 +3,7 @@ import Game from "./Game.js";
 import { createHandPanel } from "../ui/components/createHandPanel.js";
 import HexCoord from "../utils/HexCoord.js";
 import DebugConfig from "../debug/DebugConfig.js";
+import { Animal } from "../data/Animal.js";
 
 /**
  * Vermittelt zwischen Low-Level-Game-Logik (`Game`) und der UI/Interaktion.
@@ -25,6 +26,7 @@ export default class GameplayManager{
         this.previewTileModelPromise = null; // Promise, das auf die Fertigstellung des Ladens des preview-Modells wartet
         this.previewTileHexCoord = null; // HexCoord, an der das preview-Modell aktuell positioniert ist oder positioniert werden soll
         this.previewTileRotation = 0; // Rotation des preview-Modells in 60°-Schritten (Index 0-5)
+        this.latestPlacedTileHexCoord = null; // HexCoord, an der das zuletzt platzierte Tile liegt (nach Bestätigung)
 
         // Hand-Panel UI: Callback aktualisiert die Auswahl und synchronisiert das UI
         this.handPanel = createHandPanel({
@@ -75,7 +77,8 @@ export default class GameplayManager{
             case RoundState.CHOOSE_TILE:
                 console.log("Submitting chosen tile at index", this.selectedHandIndex);
                 // Spawn preview tile (without updating the grid)
-                this.previewTileHexCoord = this.getRandomEmptyHexCord();
+                const previousHexCoord = this.latestPlacedTileHexCoord === null ? new HexCoord(0, 0) : this.latestPlacedTileHexCoord;
+                this.previewTileHexCoord = this.getRandomUnoccupiedNeighbour(previousHexCoord);
                 this.previewTileRotation = this.getRandomRotation();
                 this.previewTileModel = null;
                 this.previewTileModelPromise = this.placePreviewTile(
@@ -131,6 +134,12 @@ export default class GameplayManager{
                     this.previewTileRotation
                 );
 
+                this.latestPlacedTileHexCoord = this.previewTileHexCoord;
+
+                // FÜR TESTING: Platziere Tier auf dem soeben platzierten Tile
+                const animal = this.game.animalsOnHand[this.selectedHandIndex];
+                this.game.gridManager.setAnimal(this.latestPlacedTileHexCoord, animal, true);
+
                 // Entferne das gespielte Paar aus der Hand
                 this.game.removePairFromHand(this.selectedHandIndex);
 
@@ -175,6 +184,18 @@ export default class GameplayManager{
 
     // Erhöht die Rundenzahl und setzt GAME_OVER, wenn das Spielende erreicht ist.
     onTurnEnd() {
+        if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo){
+            const occupiedHexCoords = this.game.gridManager.getOccupiedHexCoords();
+            let gridContent = "Current grid state:\n";
+            occupiedHexCoords.forEach(hexCoord => {
+                const tile = this.game.gridManager.getTileAt(hexCoord);
+                gridContent += `
+                    Hex (${hexCoord.column}, ${hexCoord.row}): 
+                    ${tile && tile.occupiedBy !== Animal.NONE ? "Occupied by: " + tile.occupiedBy : "Unoccupied"}`;
+            });
+            console.log(gridContent);
+        }
+
         this.currentTurn++;
         if (this.currentTurn > this.gameLength) {
             console.log("Game Over");
@@ -198,8 +219,8 @@ export default class GameplayManager{
         return await this.game.gridManager.setTile(hexCoord, tileData, rotation);
     }
 
-    getRandomEmptyHexCord(){
-        return this.game.gridManager.getRandomEmptyHexCoord();
+    getRandomUnoccupiedNeighbour(hexCoord){
+        return this.game.gridManager.getRandomUnoccupiedNeighbour(hexCoord);
     }
 
     getRandomRotation(){
