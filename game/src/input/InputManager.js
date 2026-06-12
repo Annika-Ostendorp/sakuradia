@@ -26,7 +26,8 @@ export default class InputManager{
             right: false,
             submit: false,
             clockwise: false,
-            counterClockwise: false
+            counterClockwise: false,
+            undoTurn: false
         };
 
         // Kamera-Einstellungen für Controller
@@ -36,8 +37,11 @@ export default class InputManager{
         // Süd-Button des Gamepads (Xbox A / PlayStation Cross) wird als Submit-Button verwendet
         this.gamepadSubmitWasPressed = false;
 
-        // West-Button als reset position button
+        // West-Button des Gamepads (Xbox X / PlayStation Square) wird als reset-position button
         this.requestCameraReset = false; // Flag, um zu GameScene zu signalisieren, dass die Kamera zurückgesetzt werden soll
+
+        // Ost-Button des Gamepads (Xbox B / PlayStation Circle) wird als Undo-Button verwendet
+        this.undoTurnWasPressed = false;
 
         // Shoulder sind für seitliche Kamera-Bewegung zuständig
         this.gamepadShoulderValue = 0;
@@ -116,6 +120,11 @@ export default class InputManager{
                 break;
 
             case RoundState.PLACE_TILE:
+                if (this.undoTurnWasPressed){
+                    this.undoTurnWasPressed = false;
+                    this.gameplayManager.undoTileChoice();
+                    return;
+                }
                 this.handlePlaceTile(inputDir); // Dynamische Bewegung durch Hex-Grid
                 break;
 
@@ -266,6 +275,13 @@ export default class InputManager{
                 if (isPressed){
                     this.requestCameraReset = true;
                 }
+                break;
+            
+            case 'KeyB':
+                if (isPressed){
+                    this.undoTurnWasPressed = true;
+                }
+                break;
         }
     }
 
@@ -439,11 +455,9 @@ export default class InputManager{
         // Submitting
         const submitButton = gamepad.buttons[0]; // Xbox A / PlayStation Cross
         const isSubmitButtonPressed = submitButton?.pressed === true;
-
         if (isSubmitButtonPressed && !this.gamepadSubmitWasPressed) {
             this.onSubmit();
         }
-
         this.gamepadSubmitWasPressed = isSubmitButtonPressed;
 
         // Resetting Camera Position
@@ -452,6 +466,14 @@ export default class InputManager{
         if (isResetCameraButtonPressed){
             this.requestCameraReset = true;
         }
+
+        // Undo turn
+        const undoButton = gamepad.buttons[1]; // East  = B
+        const isUndoButtonPressed = undoButton?.pressed === true;
+        if (!this.undoTurnWasPressed && isUndoButtonPressed){
+            this.undoTurnWasPressed = true;
+        }
+        // Logic executed in update() because we only want to trigger undo in the correct round state (RoundState.PLACE_TILE)
 
         // Trigger-Buttons für Rotation oder Index-Wechsel je nach round state
         const triggerLeftButton = gamepad.buttons[6]; // Xbox LT / PlayStation L2

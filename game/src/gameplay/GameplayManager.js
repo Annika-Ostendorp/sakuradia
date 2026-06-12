@@ -22,11 +22,13 @@ export default class GameplayManager{
         this.roundState = RoundState.CHOOSE_TILE; // Initial round state
         
         this.selectedHandIndex = 0; // Index des aktuell in der UI markierten Hand-Paares
+        this.latestPlacedTileHexCoord = null; // HexCoord, an der das zuletzt platzierte Tile liegt (nach Bestätigung)
+
+        // Preview Parameter
         this.previewTileModel = null; // Referenz zum model, welches nur im preview angezeigt wird
         this.previewTileModelPromise = null; // Promise, das auf die Fertigstellung des Ladens des preview-Modells wartet
         this.previewTileHexCoord = null; // HexCoord, an der das preview-Modell aktuell positioniert ist oder positioniert werden soll
         this.previewTileRotation = 0; // Rotation des preview-Modells in 60°-Schritten (Index 0-5)
-        this.latestPlacedTileHexCoord = null; // HexCoord, an der das zuletzt platzierte Tile liegt (nach Bestätigung)
 
         // Hand-Panel UI: Callback aktualisiert die Auswahl und synchronisiert das UI
         this.handPanel = createHandPanel({
@@ -108,26 +110,7 @@ export default class GameplayManager{
                 break;
 
             case RoundState.PLACE_TILE:
-                // Delete preview model (handle resolved or pending promise)
-                const removeModelFromScene = (m) => {
-                    if (!m) return;
-                    // Einzelnes Objekt mit position
-                    if (m.position) {
-                        this.scene.remove(m);
-                        return;
-                    }
-                    // Objekt mit halves
-                    if (m.primaryHalf) this.scene.remove(m.primaryHalf);
-                    if (m.secondaryHalf) this.scene.remove(m.secondaryHalf);
-                };
-
-                if (this.previewTileModel) {
-                    removeModelFromScene(this.previewTileModel);
-                } else if (this.previewTileModelPromise) {
-                    this.previewTileModelPromise.then((model) => {
-                        removeModelFromScene(model);
-                    }).catch(() => {});
-                }
+                // Place tile permanently on the grid at the preview position
                 await this.placeTile(
                     this.previewTileHexCoord,
                     this.game.tilesOnHand[this.selectedHandIndex],
@@ -142,6 +125,9 @@ export default class GameplayManager{
 
                 // Entferne das gespielte Paar aus der Hand
                 this.game.removePairFromHand(this.selectedHandIndex);
+
+                // Delete preview model (handle resolved or pending promise)
+                this.clearPreviewTile();
 
                 // Aktulisiere state, UI und ziehe ein neues Paar nach
                 this.roundState = RoundState.DRAW;
@@ -260,23 +246,23 @@ export default class GameplayManager{
         // Falls geladener Rückgabewert ein einzelnes Objekt mit `position`
         if (this.previewTileModel.position) {
             this.previewTileModel.position.set(worldPos.x, worldPos.y, worldPos.z);
-            this.game.gridManager.refreshBlueprints(newHexCoord, isMicroMovement);
-            return;
+  
         }
 
         // Falls Rückgabe ein Objekt mit zwei Hälften
-        if (this.previewTileModel.primaryHalf || this.previewTileModel.secondaryHalf) {
+        else if (this.previewTileModel.primaryHalf || this.previewTileModel.secondaryHalf) {
             if (this.previewTileModel.primaryHalf && this.previewTileModel.primaryHalf.position) {
                 this.previewTileModel.primaryHalf.position.set(worldPos.x, worldPos.y, worldPos.z);
             }
             if (this.previewTileModel.secondaryHalf && this.previewTileModel.secondaryHalf.position) {
                 this.previewTileModel.secondaryHalf.position.set(worldPos.x, worldPos.y, worldPos.z);
             }
-            this.game.gridManager.refreshBlueprints(newHexCoord, isMicroMovement);
-            return;
+        }
+        else{
+            console.error("updatePreviewTilePosition: previewTileModel shape unknown, cannot set position");
         }
 
-        console.error("updatePreviewTilePosition: previewTileModel shape unknown, cannot set position");
+        this.game.gridManager.refreshBlueprints(newHexCoord, isMicroMovement);
     }
 
     /**
@@ -303,5 +289,37 @@ export default class GameplayManager{
                 this.previewTileModel.secondaryHalf.rotation.y = angle;
             }
         }
+    }
+
+    clearPreviewTile(){
+        this.previewTileHexCoord = null;
+        this.previewTileRotation = 0;
+        const removeModelFromScene = (model) => {
+            if (!model) return;
+
+            // Keystone
+            if (model.position) {
+                this.scene.remove(model);
+                return;
+            }
+
+            // Doppel-Landschaft
+            if (model.primaryHalf) this.scene.remove(model.primaryHalf);
+            if (model.secondaryHalf) this.scene.remove(model.secondaryHalf);
+        };
+
+        if (this.previewTileModel) {
+            removeModelFromScene(this.previewTileModel);
+        } else if (this.previewTileModelPromise) {
+            this.previewTileModelPromise.then((model) => {
+                removeModelFromScene(model);
+            }).catch(() => {});
+        }
+    }
+
+    undoTileChoice(){
+        // Clear preview data
+        this.clearPreviewTile();
+        this.roundState = RoundState.CHOOSE_TILE;
     }
 }
