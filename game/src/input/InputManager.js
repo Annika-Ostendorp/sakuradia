@@ -213,11 +213,13 @@ export default class InputManager{
                 break;
 
             case 'KeyQ':
-                this.keys.clockwise = isPressed;
+                this.tryRotate(false); // counter-clockwise
+                this.keys.counterClockwise = isPressed;
                 break;
 
             case 'KeyE':
-                this.keys.counterClockwise = isPressed;
+                this.tryRotate(true); // clockwise
+                this.keys.clockwise = isPressed;
                 break;
         }
     }
@@ -475,7 +477,7 @@ export default class InputManager{
         const wantsClockwise = isHoldingRight || this.keys.clockwise;
         const wantsCounterClockwise = isHoldingLeft || this.keys.counterClockwise;
         const hasValidDirectionInput = wantsClockwise !== wantsCounterClockwise; // XOR mit "!==" weil BEIDE Tasten => KEINE Rotation
-        
+
         // Wenn ein Trigger oder eine Rotationstaste gehalten wird,
         // wir aber noch nicht im Hold Zustand sind, starte Hold Timer
         if (!this.isHoldingTrigger && hasValidDirectionInput){
@@ -497,10 +499,10 @@ export default class InputManager{
         // Wiederholungslogik für gehaltene Tasten (Hold-Interval)
         if (hasValidDirectionInput){
             this.timer_TriggerInterval = this.triggerHoldInterval;
-            if (this.gamepadTriggerLeftWasPressed){
+            if (wantsCounterClockwise){
                 this.gameplayManager.rotatePreviewTile(false); // counter-clockwise
             }
-            if (this.gamepadTriggerRightWasPressed){
+            if (wantsClockwise){
                 this.gameplayManager.rotatePreviewTile(true); // clockwise
             }
         }
@@ -555,5 +557,16 @@ export default class InputManager{
 
         // Return as 2D world direction: x/z
         return new THREE.Vector2(worldDirection.x, worldDirection.z);
+    }
+
+    tryRotate(clockwise){
+        if (this.keys.clockwise
+            || this.keys.counterClockwise
+            || this.gamepadTriggerLeftWasPressed
+            || this.gamepadTriggerRightWasPressed
+        ){
+            return; // Wenn bereits eine Rotationstaste gedrückt ist, ignoriere weitere Rotationseingaben bei KeyDown
+        }
+        this.gameplayManager.rotatePreviewTile(clockwise);
     }
 }
