@@ -7,12 +7,12 @@ export default class HexCoord {
 
     // Nachbar-Richtungen für ein pointy-top Hex-Gitter in axialen Koordinaten.
     static Directions = [
-        new HexCoord(1, 0),
-        new HexCoord(1, -1),
-        new HexCoord(0, -1),
-        new HexCoord(-1, 0),
-        new HexCoord(-1, 1),
-        new HexCoord(0, 1)
+        new HexCoord(1, 0), // Rechts
+        new HexCoord(1, -1), // Rechts Unten
+        new HexCoord(0, -1), // Links Unten 
+        new HexCoord(-1, 0), // Links
+        new HexCoord(-1, 1), // Links Oben
+        new HexCoord(0, 1) // Rechts Oben
     ];
 
     // Gibt die Hex-Koordinaten des Nachbarfelds in der angegebenen Richtung zurück.
