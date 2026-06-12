@@ -18,7 +18,7 @@
 #menu-root::before {
   background:
     linear-gradient(180deg, rgba(39, 29, 42, 0.18) 0%, rgba(39, 29, 42, 0.48) 100%),
-    url('/public/assets/images/SakuradiaBG.png') center center / cover no-repeat;
+    url('/assets/images/SakuradiaBG.png') center center / cover no-repeat;
   opacity: 0.94;
 }
 
