@@ -32,6 +32,7 @@ export default class GridManager {
         /** Grösse einer Zelle im Weltkoordinatensystem (Skalierungsfaktor). */
         this.hexSize = 1;
         this.blueprints = [];
+        this.animalDebugLabels = [];
 
         /**
          * Map von HexCoord (Objekt-Referenz) auf Tile-Objekte.
@@ -450,11 +451,20 @@ export default class GridManager {
 
     setCoordinateTextColor(hexCoord, color) {
         const key = hexCoord.hashCode();
-        const textMesh = this.coordGrid.get(key);
+        const textObject = this.coordGrid.get(key);
 
-        if (!textMesh) return;
+        if (!textObject) return;
 
-        textMesh.material.color.set(color);
+        // New format: { textMesh, shadowMesh }
+        if (textObject.textMesh) {
+            textObject.textMesh.material.color.set(color);
+            return;
+        }
+
+        // Old fallback: direct mesh
+        if (textObject.material) {
+            textObject.material.color.set(color);
+        }
     }
 
     createHexTile(radius = 1, height = 0.15, color = 0x44aa44, opacity = 1) {
@@ -504,14 +514,71 @@ export default class GridManager {
         // Override für Score Testing (Jedes Tier kann auf jedes Tile gesetzt werden)
         if (overrideAnimalRequirements){
             tile.occupiedBy = animal;
+            if (DebugConfig.enabled && DebugConfig.doInWorldDebugInfo) {
+                this.showAnimalDebugLabels();
+            }
             return true;
         }
 
         if (tile.animalIsAllowed(animal)){
             tile.occupiedBy = animal;
+            if (DebugConfig.enabled && DebugConfig.doInWorldDebugInfo) {
+                this.showAnimalDebugLabels();
+            }
             return true;
         }
 
+        if (DebugConfig.enabled && DebugConfig.doInWorldDebugInfo) {
+            this.showAnimalDebugLabels();
+        }
         return false;
+    }
+
+    clearAnimalDebugLabels() {
+        for (const label of this.animalDebugLabels) {
+            if (this.scene) {
+                this.scene.remove(label);
+            }
+
+            if (label.geometry) {
+                label.geometry.dispose();
+            }
+
+            if (label.material) {
+                label.material.dispose();
+            }
+        }
+
+        this.animalDebugLabels = [];
+    }
+
+    async showAnimalDebugLabels() {
+        this.clearAnimalDebugLabels();
+
+        for (const [hexCoord, tile] of this.grid.entries()) {
+            if (!tile || !tile.occupiedBy) {
+                continue;
+            }
+
+            const animalText = String(tile.occupiedBy);
+
+            const worldPos = hexCoord.hexToWorld(hexCoord, this.hexSize);
+
+            const labelPos = new THREE.Vector3(
+                worldPos.x,
+                0.15,
+                worldPos.z + 0.5
+            );
+
+            const label = await TextSpawner.spawnWithShadow(
+                this.scene,
+                labelPos,
+                animalText,
+                0.15,
+                0xffffff
+            );
+
+            this.animalDebugLabels.push(label);
+        }
     }
 }

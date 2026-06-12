@@ -66,6 +66,18 @@ export default class TextSpawner {
         return mesh;
     }
 
+    static destroyTextObject(scene, textObject) {
+        if (!textObject) return;
+
+        if (textObject.textMesh) {
+            this.destroy(scene, textObject.textMesh);
+        }
+
+        if (textObject.shadowMesh) {
+            this.destroy(scene, textObject.shadowMesh);
+        }
+    }
+
     static destroy(scene, mesh) {
         if (!mesh) return;
 
@@ -78,5 +90,42 @@ export default class TextSpawner {
         if (mesh.material) {
             mesh.material.dispose();
         }
+    }
+
+    static async spawnWithShadow(
+        scene,
+        position,
+        content,
+        size = 0.4,
+        color = 0xffffff,
+        shadowColor = 0x000000,
+        shadowOffset = { x: 0.04, y: -0.01, z: 0.04 }
+    ) {
+        const shadowPosition = {
+            x: position.x + shadowOffset.x,
+            y: position.y + shadowOffset.y,
+            z: position.z + shadowOffset.z
+        };
+
+        const shadowMesh = await this.spawn(
+            scene,
+            shadowPosition,
+            content,
+            size,
+            shadowColor
+        );
+
+        const textMesh = await this.spawn(
+            scene,
+            position,
+            content,
+            size,
+            color
+        );
+
+        return {
+            textMesh,
+            shadowMesh
+        };
     }
 }
