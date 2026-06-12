@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import HexCoord from "/src/utils/HexCoord.js";
 import { TileData } from "../Tile.js";
 import DebugConfig from "/src/debug/DebugConfig.js";
@@ -8,7 +9,6 @@ import {
   getColorForLandscape,
   applyColorToModel,
 } from "/src/utils/colorUtils.js";
-import * as THREE from "three";
 
 import {
   getRandomEmptyHexCoord as getRandomEmptyHexCoordUtil,
@@ -354,7 +354,7 @@ export default class GridManager {
    * Sie ist nützlich, um die Logik der Hex-Koordinaten und ihre Umrechnung in Weltpositionen zu veranschaulichen.
    */
   async paintCoordinates() {
-    return this.debugTextInWorld.paintCoordinates(this, this.scene);
+    return this.debugTextInWorld.paintCoordinates(this.scene, this.getHexSize());
   }
 
   trySetCoordinateTextColor(hexCoord, color) {
@@ -364,54 +364,9 @@ export default class GridManager {
   /**
    * Debug-Methode: Spawnt über jedem besetzten Tile ein Text-Mesh, das Informationen über das darauf befindliche Tier anzeigt.
    * Diese Methode wird aufgerufen, wenn Tiere auf Tiles gesetzt werden, um die Logik der Tierplatzierung zu veranschaulichen.
-   * Sie entfernt zuerst alle vorhandenen Debug-Labels, um sicherzustellen, dass keine veralteten Informationen in der Szene verbleiben, und erstellt dann neue Labels basierend auf dem aktuellen Zustand des Grids.
    */
   async showAnimalDebugLabels() {
-    this.clearAnimalDebugLabels();
-
-    for (const [hexCoord, tile] of this.getGrid().entries()) {
-      if (!tile || !tile.occupiedBy) {
-        continue;
-      }
-
-      const animalText = String(tile.occupiedBy);
-
-      const worldPos = hexCoord.hexToWorld(hexCoord, this.getHexSize());
-
-      const labelPos = new THREE.Vector3(worldPos.x, 0.15, worldPos.z + 0.5);
-
-      const label = await TextSpawner.spawnWithShadow(
-        this.scene,
-        labelPos,
-        animalText,
-        0.15,
-        0xffffff,
-      );
-
-      this.animalDebugLabels.push(label);
-    }
-  }
-
-  /**
-   * Entfernt alle Debug-Text-Meshes, die Informationen über Tiere auf den Tiles anzeigen, aus der Szene und leert die interne Liste.
-   * Diese Methode wird aufgerufen, bevor neue Debug-Labels erstellt werden, um sicherzustellen, dass keine veralteten Informationen in der Szene verbleiben.
-   */
-  clearAnimalDebugLabels() {
-    for (const label of this.animalDebugLabels) {
-      if (this.scene) {
-        this.scene.remove(label);
-      }
-
-      if (label.geometry) {
-        label.geometry.dispose();
-      }
-
-      if (label.material) {
-        label.material.dispose();
-      }
-    }
-
-    this.animalDebugLabels = [];
+    this.debugTextInWorld.showAnimalDebugLabels(this.scene, this); // Übergibt die Szene und den GridManager an die DebugTextInWorld-Instanz
   }
 
   debugLogGrid() {
