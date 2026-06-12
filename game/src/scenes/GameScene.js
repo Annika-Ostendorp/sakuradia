@@ -7,7 +7,7 @@ import {
 } from '../rendering/OrbitalCamera.js';
 import GameplayManager from '../gameplay/GameplayManager.js';
 import InputManager from '../input/InputManager.js';
-import DebugConfig from "../DebugConfig.js";
+import DebugConfig from "../debug/DebugConfig.js";
 
 /**
  * Baut die 3D-Szene auf und startet die Render-Schleife. Initialisiert Kamera,

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import RoundState from "../data/RoundState.js";
 import GridManager from "../gameplay/GameplayManager.js";
-import DebugConfig from "../DebugConfig.js";
+import DebugConfig from "../debug/DebugConfig.js";
 
 /**
  * Verantwortlich für die Erfassung und Verarbeitung von Benutzereingaben (Tastatur und Gamepad).

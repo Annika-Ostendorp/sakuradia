@@ -2,7 +2,7 @@ import RoundState from "../data/RoundState.js";
 import Game from "./Game.js";
 import { createHandPanel } from "../ui/components/createHandPanel.js";
 import HexCoord from "../utils/HexCoord.js";
-import DebugConfig from "../DebugConfig.js";
+import DebugConfig from "../debug/DebugConfig.js";
 
 /**
  * Vermittelt zwischen Low-Level-Game-Logik (`Game`) und der UI/Interaktion.
