@@ -1,6 +1,6 @@
 import Library from "../data/Library.js";
 import DeckLogic from "./DeckLogic.js";
-import GridManager from "./GridManager.js";
+import GridManager from "./grid/GridManager.js";
 import { TileData, StarterTileData } from "../gameplay/Tile.js";
 import HexCoord from "../utils/HexCoord.js";
 

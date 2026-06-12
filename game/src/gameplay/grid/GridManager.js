@@ -1,9 +1,9 @@
-import HexCoord from "../utils/HexCoord.js";
-import { TileData } from "./Tile.js";
-import ModelLoader from "../utils/ModelLoader.js";
-import ColorUtils from "../utils/ColorUtils.js";
+import HexCoord from "../../utils/HexCoord.js";
+import { TileData } from "../Tile.js";
+import ModelLoader from "../../utils/ModelLoader.js";
+import ColorUtils from "../../utils/ColorUtils.js";
 import * as THREE from "three";
-import TextSpawner from "../rendering//TextSpawner.js";
+import TextSpawner from "../../rendering/TextSpawner.js";
 import DebugConfig from "/src/debug/DebugConfig.js";
 import DebugRayDrawer from "/src/debug/DebugRayDrawer.js";
 
