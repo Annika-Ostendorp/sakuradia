@@ -18,6 +18,8 @@ export default class InputManager{
             submit: false
         };
 
+        this.gamepadSubmitWasPressed = false;
+
         // Hand-Logik
         this.selectedTileOnHandIndex = 0;
         this.selectedAnimalOnHandIndex = 0;
@@ -39,6 +41,8 @@ export default class InputManager{
 
     // Wird vom GameplayManager aufgerufen
     update(deltaTime) {
+        this.updateGamepadSubmit();
+
         // Lese Rundenstatus im GameplayManager
         const roundState = this.gameplayManager.getCurrentRoundState();
 
@@ -118,6 +122,10 @@ export default class InputManager{
         // Let GameplayManager reset state to RoundState.CHOOSE_TILE
     //}
 
+    getGamepad(){
+        const gamepads = navigator.getGamepads();
+        return gamepads[0];
+    }
     // Aktualisiert den Status der Tasten basierend auf Keydown/Keyup-Events.
     // event.code z.B. "KeyW" für W oder "ArrowUp" für Pfeil nach oben. isPressed ist true bei Keydown, false bei Keyup.
     handleKey(event, isPressed) {
@@ -188,8 +196,7 @@ export default class InputManager{
     getGamepadDirection() {
         const direction = new THREE.Vector2();
 
-        const gamepads = navigator.getGamepads();
-        const gamepad = gamepads[0];
+        const gamepad = this.getGamepad();
 
         if (!gamepad) {
             return direction;
@@ -267,5 +274,23 @@ export default class InputManager{
 
     onSubmit(){
         this.gameplayManager.onSubmitted();
+    }
+
+    updateGamepadSubmit() {
+        const gamepad = this.getGamepad();
+
+        if (!gamepad) {
+            this.gamepadSubmitWasPressed = false;
+            return;
+        }
+
+        const submitButton = gamepad.buttons[0]; // Xbox A / PlayStation Cross
+        const isPressed = submitButton?.pressed === true;
+
+        if (isPressed && !this.gamepadSubmitWasPressed) {
+            this.onSubmit();
+        }
+
+        this.gamepadSubmitWasPressed = isPressed;
     }
 }
