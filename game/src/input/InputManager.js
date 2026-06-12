@@ -122,12 +122,18 @@ export default class InputManager{
         }
         const game = this.gameplayManager.getGame();
         const gridManager = game.getGridManager();
+
+        const isUsingStick = this.getGamepadLeftStickDirection().lengthSq() > 0;
+        const isUsingDPad = this.getGamepadDPadDirection().lengthSq() > 0;
+        const isMicroMovement = !isUsingStick && isUsingDPad;
         
+        if (isUsingDPad) console.info("Using DPad for movement");
         const cameraRelativeDir = this.getCameraRelativeDirection(movementDir);
 
         const targetPosition = gridManager.getHexCoordInWorldDirection(
             previewHexCoord,
-            cameraRelativeDir
+            cameraRelativeDir,
+            isMicroMovement
         );
 
         if (!targetPosition) {
@@ -187,11 +193,13 @@ export default class InputManager{
 
     getInputDirection() {
         const keyboardDirection = this.getKeyboardDirection();
-        const gamepadDirection = this.getGamepadDirection();
+        const dpadDirection = this.getGamepadDPadDirection();
+        const stickDirection = this.getGamepadLeftStickDirection();
 
-        // Prefer gamepad input if the stick is being moved
-        if (gamepadDirection.lengthSq() > 0) {
-            this.moveDirection.copy(gamepadDirection);
+        if (stickDirection.lengthSq() > 0) {
+            this.moveDirection.copy(stickDirection);
+        } else if (dpadDirection.lengthSq() > 0) {
+            this.moveDirection.copy(dpadDirection);
         } else {
             this.moveDirection.copy(keyboardDirection);
         }
@@ -219,7 +227,7 @@ export default class InputManager{
     // Berechnet die Bewegungsrichtung basierend auf dem ersten angeschlossenen Gamepad.
     // Verwendet die linken Stick-Achsen (0 und 1) und wendet eine Deadzone an.
     // Gibt einen normalisierten 2D Vektor zurück.
-    getGamepadDirection() {
+    getGamepadLeftStickDirection() {
         const direction = new THREE.Vector2();
 
         const gamepad = this.getGamepad();
@@ -230,7 +238,7 @@ export default class InputManager{
 
         const deadzone = 0.55;
 
-        const x = gamepad.axes[0]; 
+        const x = gamepad.axes[0];
         const y = gamepad.axes[1];
 
         if (Math.abs(x) > deadzone) {
@@ -242,6 +250,36 @@ export default class InputManager{
         }
 
         if (direction.lengthSq() > 1) {
+            direction.normalize();
+        }
+
+        return direction;
+    }
+
+    getGamepadDPadDirection() {
+        const direction = new THREE.Vector2();
+
+        const gamepad = this.getGamepad();
+
+        if (!gamepad) {
+            return direction;
+        }
+
+        if (gamepad.buttons[12]?.pressed) this.keys.up = true; // Up
+        else this.keys.up = false;
+        if (gamepad.buttons[13]?.pressed) this.keys.down = true; // Down
+        else this.keys.down = false;
+        if (gamepad.buttons[14]?.pressed) this.keys.left = true; // Left
+        else this.keys.left = false;
+        if (gamepad.buttons[15]?.pressed) this.keys.right = true; // Right
+        else this.keys.right = false;
+
+        if (this.keys.up) direction.y += 1;
+        if (this.keys.down) direction.y -= 1;
+        if (this.keys.left) direction.x -= 1;
+        if (this.keys.right) direction.x += 1;
+
+        if (direction.lengthSq() > 0) {
             direction.normalize();
         }
 

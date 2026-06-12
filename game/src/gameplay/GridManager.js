@@ -163,8 +163,6 @@ export default class GridManager {
     getUnoccupiedNeighbours(hexCoord){
         const emptyNeighbours = [];
         const neighbours = hexCoord.getNeighbors();
-        let surroundingUnoccupiedTiles = neighbours;
-        this.paintBlueprints(surroundingOccupiedTiles, 0xff0000, true);
         for (const neighbour of neighbours){
             if (!this.isOccupied(neighbour) && // Wenn Nachbar frei ist
                 this.hasOccupiedNeighbour(neighbour)){ // Und mindestens einen platzierten Nachbarn hat
@@ -250,10 +248,13 @@ export default class GridManager {
      * Gibt das nächste freie Feld in die 2D Vektor Richtung an
      * @returns {HexCoord | null}
      */
-    getHexCoordInWorldDirection(hexCoord, direction){
+    getHexCoordInWorldDirection(hexCoord, direction, onlyDirectNeighbours = false){
         // Alle freien Randfelder des aktuellen Spielfelds als Kandidaten nutzen,
         // damit die Bewegung auch weiter entfernte, intuitive Ziele erreichen kann.
-        const candidates = this.getAllEmptyHexCoordsWithNeighbour();
+        const candidates = onlyDirectNeighbours ?
+            this.getUnoccupiedNeighbours(hexCoord) : 
+            this.getAllEmptyHexCoordsWithNeighbour();
+
         if (candidates.length === 0) return null;
         this.paintBlueprints(candidates, 0x00ff00);
 
@@ -293,6 +294,18 @@ export default class GridManager {
         }
 
         return targetCoord;
+    }
+
+    refreshBlueprints(hexCoord, onlyDirectNeighbours = false) {
+        const candidates = onlyDirectNeighbours
+            ? this.getUnoccupiedNeighbours(hexCoord)
+            : this.getAllEmptyHexCoordsWithNeighbour();
+
+        this.clearBlueprints();
+
+        if (candidates && candidates.length > 0) {
+            this.paintBlueprints(candidates, 0x00ff00);
+        }
     }
 
     clearBlueprints(){
