@@ -130,6 +130,10 @@ export default class GameplayManager{
                     this.previewTileRotation
                 );
 
+                // Entferne das gespielte Paar aus der Hand
+                this.game.removePairFromHand(this.selectedHandIndex);
+
+                // Aktulisiere state, UI und ziehe ein neues Paar nach
                 this.roundState = RoundState.DRAW;
                 this.onPairDrawn(this.game.deckLogic.getNextTile(), this.game.deckLogic.getNextAnimal());
                 this.onTurnEnd();
