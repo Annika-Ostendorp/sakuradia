@@ -90,8 +90,8 @@ export default class InputManager{
         if (inputDir == null){
             return;
         }
-        // Flip x direction
-        inputDir.x = -inputDir.x;
+        // Flip y direction
+        inputDir.y = -inputDir.y;
 
         const previewHexCoord = this.gameplayManager.previewTileHexCoord;
         if (previewHexCoord == null){
