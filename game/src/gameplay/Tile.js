@@ -50,6 +50,14 @@ export default class Tile {
     animalIsAllowed(animal){
         return this.tileData.animalIsAllowed(animal);
     }
+
+    hasLandscape(landscape) {
+        if (!this.tileData) {
+            console.error("Tile Data is undefined. Cannot check landscapes.");
+            return false;
+        }
+        return this.tileData.hasLandscape(landscape);
+    }
 }
 
 /**
@@ -75,6 +83,10 @@ export class TileData {
 
     animalIsAllowed(animal) {
         return this.animals.includes(animal);
+    }
+
+    hasLandscape(landscape) {
+        return this.primaryLandscape === landscape || this.secondaryLandscape === landscape;
     }
 }
 
