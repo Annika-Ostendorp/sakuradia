@@ -277,10 +277,7 @@ export default class GridManager {
    * Spawnt an jeder Hex-Koordinate ein Text-Mesh, das die Koordinatenwerte anzeigt.
    */
   async paintCoordinates() {
-    return this.debugTextInWorld.paintCoordinates(
-      this.scene,
-      this.hexSize,
-    );
+    return await this.debugTextInWorld.paintCoordinates(this.scene, this.hexSize);
   }
 
   /**
