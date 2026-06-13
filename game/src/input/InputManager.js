@@ -1,7 +1,6 @@
 import * as THREE from 'three';
-import RoundState from "../data/RoundState.js";
-import GridManager from "../gameplay/GameplayManager.js";
-import DebugConfig from "../debug/DebugConfig.js";
+import RoundState from "/src/data/RoundState.js";
+import DebugConfig from "/src/debug/DebugConfig.js";
 import DebugRayDrawer from "/src/debug/DebugRayDrawer.js";
 
 /**
@@ -41,7 +40,8 @@ export default class InputManager{
         this.requestCameraReset = false; // Flag, um zu GameScene zu signalisieren, dass die Kamera zurückgesetzt werden soll
 
         // Ost-Button des Gamepads (Xbox B / PlayStation Circle) wird als Undo-Button verwendet
-        this.undoTurnWasPressed = false;
+        this.gamepadUndoWasPressed = false;
+        this.undoTurnRequested = false;
 
         // Shoulder sind für seitliche Kamera-Bewegung zuständig
         this.gamepadShoulderValue = 0;
@@ -120,8 +120,8 @@ export default class InputManager{
                 break;
 
             case RoundState.PLACE_TILE:
-                if (this.undoTurnWasPressed){
-                    this.undoTurnWasPressed = false;
+                if (this.undoTurnRequested){
+                    this.undoTurnRequested = false;
                     this.gameplayManager.undoTileChoice();
                     return;
                 }
@@ -279,7 +279,7 @@ export default class InputManager{
             
             case 'KeyB':
                 if (isPressed){
-                    this.undoTurnWasPressed = true;
+                    this.undoTurnRequested = true;
                 }
                 break;
         }
@@ -468,11 +468,16 @@ export default class InputManager{
         }
 
         // Undo turn
-        const undoButton = gamepad.buttons[1]; // East  = B
+        const undoButton = gamepad.buttons[1]; // East = B
         const isUndoButtonPressed = undoButton?.pressed === true;
-        if (!this.undoTurnWasPressed && isUndoButtonPressed){
-            this.undoTurnWasPressed = true;
+        const undoButtonWasJustPressed =
+            isUndoButtonPressed && !this.gamepadUndoWasPressed;
+
+        if (undoButtonWasJustPressed) {
+            this.undoTurnRequested = true;
         }
+
+        this.gamepadUndoWasPressed = isUndoButtonPressed;
         // Logic executed in update() because we only want to trigger undo in the correct round state (RoundState.PLACE_TILE)
 
         // Trigger-Buttons für Rotation oder Index-Wechsel je nach round state

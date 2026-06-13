@@ -384,8 +384,9 @@ export default class GameplayManager {
   }
 
   undoTileChoice() {
-    // Clear preview data
-    this.clearPreviewTile();
-    this.roundState = RoundState.CHOOSE_TILE;
+    if (this.roundState === RoundState.PLACE_TILE) {
+      this.clearPreviewTile();
+      this.roundState = RoundState.CHOOSE_TILE;
+    }
   }
 }
