@@ -641,4 +641,8 @@ export default class InputManager{
         }
         this.gameplayManager.rotatePreviewTile(clockwise);
     }
+
+    updateCamera(camera){
+        this.camera = camera;
+    }
 }

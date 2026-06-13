@@ -94,6 +94,7 @@ export default class GameScene {
     resetCamera(){
         this.scene.remove(this.camera);
         this.setupCamera();
+        this.inputManager.updateCamera(this.camera);
     }
 
     // Render-Loop
