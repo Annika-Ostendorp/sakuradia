@@ -3,6 +3,7 @@ import '../styles/global.css';
 import { createGameCamera, createGameOrbitControls } from '../rendering/OrbitalCamera.js';
 import GameplayManager from '../gameplay/GameplayManager.js';
 import InputManager from '../input/InputManager.js';
+import { createRulesPopup } from '../ui/components/createRulesPopup.js';
 
 /**
  * Baut die 3D-Szene auf und startet die Render-Schleife. Initialisiert Kamera,
@@ -18,6 +19,9 @@ export default class GameScene {
         this.gameConfig = gameConfig;
         this.initialization();
 
+        this.rulesPopup = createRulesPopup();
+        this.appShell.append(this.rulesPopup.element);
+
         this.animate = this.animate.bind(this);
         this.animate();
 
@@ -27,7 +31,12 @@ export default class GameScene {
     }
 
     initialization() {
+        this.appShell = document.querySelector('#app-shell');
         this.canvas = document.querySelector('#game-canvas');
+
+        if (!this.appShell || !this.canvas) {
+            throw new Error('App shell is missing required DOM nodes.');
+        }
 
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x20242a);
