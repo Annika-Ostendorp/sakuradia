@@ -2,6 +2,7 @@
 // z.B. um gültige Platzierungen zu überprüfen.
 import * as THREE from "three";
 import HexCoord from "../../utils/HexCoord.js";
+import DebugConfig from "../../debug/DebugConfig.js";
 
 /**
  * Gibt eine zufällige leere Hex-Koordinate innerhalb des gültigen Spielfeldbereichs zurück.
@@ -192,9 +193,11 @@ export function getHexCoordInWorldDirection(
     return hexagonalSearchResult;
   }
 
-  console.log(
-    "No hexagonal movement found, trying direct neighbour search as fallback.",
-  );
+  if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+    console.log(
+      "Hexagonal search did not find a valid position. Falling back to direct neighbours.",
+    );
+  }
   const directNeighbours = getDirectNeighbourInWorldDirection(
     gridManager,
     hexCoord,

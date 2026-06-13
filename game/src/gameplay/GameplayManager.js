@@ -71,6 +71,9 @@ export default class GameplayManager {
   onHoverTileOnHand(index) {
     // Hover tile visually
     this.selectedHandIndex = index;
+
+    // Update hand panel
+    this.syncHandPanel();
   }
 
   async onSubmitted() {
@@ -83,7 +86,13 @@ export default class GameplayManager {
         break;
 
       case RoundState.CHOOSE_TILE:
-        console.log("Submitting chosen tile at index", this.selectedHandIndex);
+        if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+          console.log(
+            "Submitting chosen tile at index",
+            this.selectedHandIndex,
+          );
+        }
+
         // Spawn preview tile (without updating the grid)
         const previousHexCoord =
           this.latestPlacedTileHexCoord === null
@@ -157,7 +166,11 @@ export default class GameplayManager {
         console.warn("default case");
         break;
     }
-    console.log("Changed from " + previousState + " to " + this.roundState);
+    if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+      console.log(
+        `Submitted action for round state ${previousState}. New round state: ${this.roundState}`,
+      );
+    }
   }
 
   // Behandelt das Nachziehen eines Paares: Enqueue und UI-Logging.
