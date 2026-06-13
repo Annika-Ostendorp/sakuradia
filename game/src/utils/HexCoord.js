@@ -1,3 +1,11 @@
+// Debugging Tipps
+// console.info(newHexCoord.hashCode()) // Gibt die Koordinate mit validem hash zurück
+
+/**
+ * Definiert die HexCoord Klasse für axiale Koordinaten in einem hexagonalen Gitter.
+ * Bietet Methoden für Nachbarn, Addition, Gleichheit, Hashing, String-Darstellung,
+ * Distanzberechnung und Umrechnung zwischen Hex- und Weltkoordinaten.
+ */
 export default class HexCoord {
     constructor(column, row) {
         // Axiale Koordinaten des Hex-Gitters.
@@ -7,18 +15,18 @@ export default class HexCoord {
 
     // Nachbar-Richtungen für ein pointy-top Hex-Gitter in axialen Koordinaten.
     static Directions = [
-        new HexCoord(1, 0),
-        new HexCoord(1, -1),
-        new HexCoord(0, -1),
-        new HexCoord(-1, 0),
-        new HexCoord(-1, 1),
-        new HexCoord(0, 1)
+        new HexCoord(1, 0), // Rechts
+        new HexCoord(1, -1), // Rechts Unten
+        new HexCoord(0, -1), // Links Unten 
+        new HexCoord(-1, 0), // Links
+        new HexCoord(-1, 1), // Links Oben
+        new HexCoord(0, 1) // Rechts Oben
     ];
 
     // Gibt die Hex-Koordinaten des Nachbarfelds in der angegebenen Richtung zurück.
     neighbor(dir) {
         const direction = HexCoord.Directions[dir];
-        return new HexCoord(this.column + direction.column, this.row - direction.row);
+        return new HexCoord(this.column + direction.column, this.row + direction.row);
     }
 
     // Addiert zwei Hex-Koordinaten, z.B. für die Berechnung von Nachbarn.
@@ -28,7 +36,9 @@ export default class HexCoord {
 
     // Vergleicht diese Hex-Koordinate mit einer anderen auf Gleichheit.
     equals(other) {
-        if (!(other instanceof HexCoord)) return false;
+        if (!(other instanceof HexCoord)){
+            return false;
+        }
         return this.column === other.column && this.row === other.row;
     }
 
@@ -64,9 +74,9 @@ export default class HexCoord {
     }
 
     // Berechnet die Weltkoordinaten für die Mitte dieses Hex-Felds, basierend auf der hexSize.
-    hexToWorld(hexCoord) {
-        const x = Math.sqrt(3) * (hexCoord.column + hexCoord.row * 0.5);
-        const z = 1.5 * hexCoord.row;
+    hexToWorld(hexCoord, hexSize = 1) {
+        const x = Math.sqrt(3) * hexSize * (hexCoord.column + hexCoord.row * 0.5);
+        const z = -1.5 * hexSize * hexCoord.row;
 
         return { x, y: 0, z };
     }
@@ -77,13 +87,13 @@ export default class HexCoord {
         const column = (Math.sqrt(3) / 3 * pos.x - 1 / 3 * pos.z) / hexSize;
         const row = (2 / 3 * pos.z) / hexSize;
 
-        return HexCoord.hexRound(column, row, hexSize);
+        return HexCoord.hexRound(column, row);
     }
 
     /**
      * Rundet zunächst auf Cube-Koordinaten und korrigiert dann die größte Abweichung.
      */
-    static hexRound(column, row, hexSize = 1) {
+    static hexRound(column, row) {
         let x = column;
         let z = row;
         let y = -x - z;
@@ -103,6 +113,6 @@ export default class HexCoord {
         else
             rz = -rx - ry;
 
-        return new HexCoord(rx, rz, hexSize);
+        return new HexCoord(rx, rz);
     }
 }
