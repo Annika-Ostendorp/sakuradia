@@ -3,6 +3,8 @@
 const RoundState = Object.freeze({
   CHOOSE_TILE: "ChooseTile",
   PLACE_TILE: "PlaceTile",
+  CANNOT_PLACE_ANIMAL: "CannotPlaceAnimal",
+  PLACE_ANIMAL: "PlaceAnimal",
   DRAW: "Draw",
   GAME_OVER: "GameOver",
 });
