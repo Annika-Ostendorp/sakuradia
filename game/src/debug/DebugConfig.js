@@ -1,13 +1,13 @@
 export default class DebugConfig {
-  static enabled = false;
+  static enabled = true;
 
-  static doInWorldDebugInfo = true;
+  static doInWorldDebugInfo = false;
   static doLogGameplayInfo = true;
-  static doShowBlueprints = true;
-  static doShowCoordinateText = true;
-  static doLogInputs = true;
-  static doShowAxes = true;
-  static doDrawRays = true;
+  static doShowBlueprints = false;
+  static doShowCoordinateText = false;
+  static doLogInputs = false;
+  static doShowAxes = false;
+  static doDrawRays = false;
 
   static logGameplayInfo(message) {
     if (this.enabled && this.doLogGameplayInfo) {

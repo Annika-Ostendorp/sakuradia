@@ -2,11 +2,11 @@
 // Enums definieren eine feste Menge von benannten Werten, die in der gesamten Anwendung verwendet werden können.
 const Animal = Object.freeze({
   NONE: "None",
+  CRANE: "Crane",
+  JAPANMAKAK: "Japanmakak",
+  KOI: "Koi",
   PANDA: "Panda",
   SIKA: "Sika",
-  JAPANMAKAK: "Japanmakak",
-  CRANE: "Crane",
-  KOI: "Koi",
 });
 
 export { Animal };

@@ -4,6 +4,7 @@ import { createHandPanel } from "../ui/components/createHandPanel.js";
 import HexCoord from "../utils/HexCoord.js";
 import DebugConfig from "../debug/DebugConfig.js";
 import { Animal } from "../data/Animal.js";
+import { calculateScoreForGrid } from "./scoringSystem.js";
 
 /**
  * Vermittelt zwischen Low-Level-Game-Logik (`Game`) und der UI/Interaktion.
@@ -203,6 +204,8 @@ export default class GameplayManager {
   // Erhöht die Rundenzahl und setzt GAME_OVER, wenn das Spielende erreicht ist.
   onTurnEnd() {
     if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+
+      // Grid Content
       const occupiedHexCoords = this.game.gridManager.getOccupiedHexCoords();
       let gridContent = "Current grid state:\n";
       occupiedHexCoords.forEach((hexCoord) => {
@@ -212,6 +215,14 @@ export default class GameplayManager {
                     ${tile && tile.occupiedBy !== Animal.NONE ? "Occupied by: " + tile.occupiedBy : "Unoccupied"}`;
       });
       console.log(gridContent);
+
+      // Score Berechnung
+      const scoreResult = calculateScoreForGrid(
+        this.game.gridManager.grid,
+        "player1",
+        0,
+      );
+      console.log("Current score result:", scoreResult);
     }
 
     this.currentTurn++;

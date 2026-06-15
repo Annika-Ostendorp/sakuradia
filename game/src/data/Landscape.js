@@ -3,11 +3,11 @@
 
 const Landscape = Object.freeze({
   UNDEFINED: "Undefined",
-  MOUNTAIN: "Mountain",
   BAMBOOFOREST: "BambooForest",
-  WETLAND: "Wetland",
+  MOUNTAIN: "Mountain",
   POND: "Pond",
   SAKURA: "Sakura",
+  WETLAND: "Wetland",
 });
 
 export { Landscape };
