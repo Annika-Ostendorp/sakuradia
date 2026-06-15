@@ -32,52 +32,73 @@ export function calculateScoreForGrid(grid, playerId, remainingNatureTokens) {
     },
   };
 
-  scoreResult.totalScore += scoreResult.scores.landscapeScores.bambooforest =
-    calculateScoreFor_Landscape(grid, Landscape.BAMBOOFOREST);
+  // Landschaften
 
-  scoreResult.totalScore += scoreResult.scores.landscapeScores.mountain =
-    calculateScoreFor_Landscape(grid, Landscape.MOUNTAIN);
+  // Array der scores für jede Landschaft
+  const landscapeResult = calculateScoreForLandscapes(grid);
 
-  scoreResult.totalScore += scoreResult.scores.landscapeScores.pond =
-    calculateScoreFor_Landscape(grid, Landscape.POND);
+  // Bambooforest
+  scoreResult.scores.landscapeScores.bambooforest =
+    landscapeResult[Landscape.BAMBOOFOREST];
+  scoreResult.totalScore += scoreResult.scores.landscapeScores.bambooforest;
 
-  scoreResult.totalScore += scoreResult.scores.landscapeScores.sakura =
-    calculateScoreFor_Landscape(grid, Landscape.SAKURA);
+  // Mountain
+  scoreResult.scores.landscapeScores.mountain =
+    landscapeResult[Landscape.MOUNTAIN];
+  scoreResult.totalScore += scoreResult.scores.landscapeScores.mountain;
 
-  scoreResult.totalScore += scoreResult.scores.landscapeScores.wetland =
-    calculateScoreFor_Landscape(grid, Landscape.WETLAND);
+  // Pond
+  scoreResult.scores.landscapeScores.pond = landscapeResult[Landscape.POND];
+  scoreResult.totalScore += scoreResult.scores.landscapeScores.pond;
 
-  scoreResult.totalScore += scoreResult.scores.animalScores.crane =
-    calculateScoreFor_Crane(grid);
+  // Sakura
+  scoreResult.scores.landscapeScores.sakura = landscapeResult[Landscape.SAKURA];
+  scoreResult.totalScore += scoreResult.scores.landscapeScores.sakura;
 
-  scoreResult.totalScore += scoreResult.scores.animalScores.japanmakak =
-    calculateScoreFor_Japanmakak(grid);
+  // Wetland
+  scoreResult.scores.landscapeScores.wetland =
+    landscapeResult[Landscape.WETLAND];
+  scoreResult.totalScore += scoreResult.scores.landscapeScores.wetland;
 
-  scoreResult.totalScore += scoreResult.scores.animalScores.koi =
-    calculateScoreFor_Koi(grid);
+  // Tiere
 
-  scoreResult.totalScore += scoreResult.scores.animalScores.panda =
-    calculateScoreFor_Panda(grid);
+  // Crane
+  scoreResult.scores.animalScores.crane = calculateScoreFor_Crane(grid);
+  scoreResult.totalScore += scoreResult.scores.animalScores.crane;
 
-  scoreResult.totalScore += scoreResult.scores.animalScores.sika =
-    calculateScoreFor_Sika(grid);
+  // Japanmakak
+  scoreResult.scores.animalScores.japanmakak = calculateScoreFor_Japanmakak(grid);
+  scoreResult.totalScore += scoreResult.scores.animalScores.japanmakak;
+
+  // Koi
+  scoreResult.scores.animalScores.koi = calculateScoreFor_Koi(grid);
+  scoreResult.totalScore += scoreResult.scores.animalScores.koi;
+
+  // Panda
+  scoreResult.scores.animalScores.panda = calculateScoreFor_Panda(grid);
+  scoreResult.totalScore += scoreResult.scores.animalScores.panda;
+
+  // Sika
+  scoreResult.scores.animalScores.sika = calculateScoreFor_Sika(grid);
+  scoreResult.totalScore += scoreResult.scores.animalScores.sika;
 
   return scoreResult;
 }
 
 // Für jedes Element im Landscape Enum, berechne die Punkte für diese Landschaft und addiere sie zum Gesamtscore hinzu
 function calculateScoreForLandscapes(grid) {
-  let score = 0;
+  const landscapeScores = {};
 
   for (const landscape of Object.values(Landscape)) {
-    if (landscape !== Landscape.UNDEFINED) {
-      score += calculateScoreFor_Landscape(grid, landscape);
-    }
+    if (landscape === Landscape.UNDEFINED) continue;
+
+    landscapeScores[landscape] = calculateScoreFor_Landscape(grid, landscape);
   }
 
-  return score;
+  return landscapeScores;
 }
 
+// PLACEHOLDER: Gibt 1 Punkt pro Tile mit der Landschaft
 function calculateScoreFor_Landscape(grid, landscape) {
   let score = 0;
 
