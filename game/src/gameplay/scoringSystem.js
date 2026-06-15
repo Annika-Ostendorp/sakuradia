@@ -113,12 +113,50 @@ function calculateScoreFor_Landscape(grid, landscape) {
 }
 
 function calculateScoreFor_Crane(grid) {
-  let score = 0;
+  let craneCount = 0;
 
-  // Logic
+  // Bekomme Liste mit allen Kranichen
 
-  return score;
+
+  // Bekomme Liste mit allen Kranichen, die keinen Nachbarn haben
+
+
+  // Zähle, wie viele Kraniche in der Liste sind
+
+
+  // Berechne Punkte basierend auf der Anzahl der Kraniche ohne Nachbarn
+
+
+   // Gebe Punkte basierend auf der Anzahl der Kraniche ohne Nachbarn zurück
+  return getPointsForCraneCount(craneCount);
 }
+
+// Je nach Anzahl der Kraniche ohne Nachbarn gibt es unterschiedliche Punkte.
+// Diese Werte sind vom Basis-Spiel übernommen.
+function getPointsForCraneCount(count) {
+  if (count >= 8)
+    return 26; // Maximalpunktzahl für 8 oder mehr Kraniche ohne Nachbarn
+
+  switch (count) {
+    case 1:
+      return 2;
+    case 2:
+      return 5;
+    case 3:
+      return 8;
+    case 4:
+      return 11;
+    case 5:
+      return 14;
+    case 6:
+      return 18;
+    case 7:
+      return 22;
+    default:
+      return 0;
+  }
+}
+
 
 function calculateScoreFor_Japanmakak(grid) {
   let score = 0;
