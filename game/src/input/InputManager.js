@@ -43,6 +43,10 @@ export default class InputManager{
         this.gamepadUndoWasPressed = false;
         this.undoTurnRequested = false;
 
+        // Nord-Button des Gamepads (Xbox Y / PlayStation Triangle) wird als Skip-Turn-Button verwendet
+        this.gamepadSkipTurnWasPressed = false;
+        this.skipTurnRequested = false;
+
         // Shoulder sind für seitliche Kamera-Bewegung zuständig
         this.gamepadShoulderValue = 0;
         this.cameraMoveSpeed = 0.05;
@@ -120,13 +124,20 @@ export default class InputManager{
                 break;
 
             case RoundState.PLACE_TILE:
+                this.handlePlaceTile(inputDir); // Dynamische Bewegung durch Hex-Grid
+                break;
+
+            case RoundState.CANNOT_PLACE_ANIMAL:
                 if (this.undoTurnRequested){
                     this.undoTurnRequested = false;
                     this.gameplayManager.undoTileChoice();
                     return;
                 }
-                this.handlePlaceTile(inputDir); // Dynamische Bewegung durch Hex-Grid
-                break;
+
+                if (this.skipTurnRequested){
+                    this.skipTurnRequested = false;
+                    this.gameplayManager.skipTurn();
+                }
 
             default:
                 console.warn("default case");
@@ -467,6 +478,7 @@ export default class InputManager{
             this.requestCameraReset = true;
         }
 
+
         // Undo turn
         const undoButton = gamepad.buttons[1]; // East = B
         const isUndoButtonPressed = undoButton?.pressed === true;
@@ -478,7 +490,20 @@ export default class InputManager{
         }
 
         this.gamepadUndoWasPressed = isUndoButtonPressed;
-        // Logic executed in update() because we only want to trigger undo in the correct round state (RoundState.PLACE_TILE)
+
+
+        // Skip turn
+        const skipTurnButton = gamepad.buttons[3]; // North = Y
+        const isSkipTurnButtonPressed = skipTurnButton?.pressed === true;
+        const skipTurnButtonWasJustPressed =
+            isSkipTurnButtonPressed && !this.gamepadSkipTurnWasPressed;
+
+        if (skipTurnButtonWasJustPressed) {
+            this.skipTurnRequested = true;
+        }
+
+        this.gamepadSkipTurnWasPressed = isSkipTurnButtonPressed;
+
 
         // Trigger-Buttons für Rotation oder Index-Wechsel je nach round state
         const triggerLeftButton = gamepad.buttons[6]; // Xbox LT / PlayStation L2
