@@ -7,6 +7,7 @@ Koi, sowie Sika und finden sich als Verwalter von Bambuswäldern, Teichen und
 Kirschbaumwiesen wieder.
 
 ## Aktueller Stand
+- Der aktuelle Stand ist im main-branch einsehbar
 - Hauptmenü mit Rundenanzahl-Slider (1-20 Runden, Standard auf 85)
 - Tiles können mit Tastatur oder Controller ausgewählt, platziert und gedreht werden
 - Tiere werden (noch) automatisch auf ihren zugewiesenen Tile platziert
