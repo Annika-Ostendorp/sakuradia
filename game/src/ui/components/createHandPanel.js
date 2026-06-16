@@ -23,9 +23,23 @@ const LANDSCAPE_IMAGE_SCALES = Object.freeze({
   Sakura: 1.7,
 });
 
+const ANIMAL_IMAGES = Object.freeze({
+  Japanmakak: '/assets/images/animals/JapanmakakAvatar.png',
+  Panda: '/assets/images/animals/PandaAvatar.png',
+  Sika: '/assets/images/animals/SikaAvatar.png',
+});
+
 function toReadableLabel(value) {
   if (!value) {
     return '-';
+  }
+
+  const overrides = {
+    Crane: 'Kranich',
+  };
+
+  if (overrides[value]) {
+    return overrides[value];
   }
 
   return String(value)
@@ -43,6 +57,10 @@ function getLandscapeImagePath(landscape) {
 
 function getLandscapeImageScale(landscape) {
   return LANDSCAPE_IMAGE_SCALES[landscape] || LANDSCAPE_IMAGE_SCALES.default;
+}
+
+function getAnimalImagePath(animal) {
+  return ANIMAL_IMAGES[animal] || null;
 }
 
 function getAllowedAnimalsText(tileData) {
@@ -179,6 +197,7 @@ export function createHandPanel({ onSelectPair } = {}) {
         isKeystone: pair.tileData.isKeystone,
       });
       const drawnAnimalText = toReadableLabel(pair.animal);
+      const drawnAnimalImagePath = getAnimalImagePath(pair.animal);
       const allowedAnimalsText = getAllowedAnimalsText(pair.tileData);
 
       button.classList.toggle('hand-panel__pair--selected', index === selectedIndex);
@@ -186,7 +205,11 @@ export function createHandPanel({ onSelectPair } = {}) {
         <span class="hand-panel__pair-visual-row">
           ${tileVisualSvg}
           <span class="hand-panel__pair-divider" aria-hidden="true"></span>
-          <span class="hand-panel__drawn-animal" aria-label="Gezogenes Tier">Tier: ${drawnAnimalText}</span>
+          <span class="hand-panel__drawn-animal" aria-label="Gezogenes Tier">
+            ${drawnAnimalImagePath
+    ? `<img src="${drawnAnimalImagePath}" alt="${drawnAnimalText}" class="hand-panel__animal-avatar" />`
+    : drawnAnimalText}
+          </span>
         </span>
         <span class="hand-panel__pair-meta">Erlaubte Tiere: ${allowedAnimalsText}</span>
       `;
