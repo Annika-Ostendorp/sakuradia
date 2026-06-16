@@ -52,10 +52,12 @@ export default class GameplayManager {
     }
     appShell.append(this.handPanel.element);
 
-    DebugConfig.logGameplayInfo(
-      "Initializing GameplayManager with gameConfig:" +
-        JSON.stringify(this.gameConfig),
-    );
+    if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+      console.log(
+        "Initializing GameplayManager with gameConfig:" +
+          JSON.stringify(this.gameConfig),
+      );
+    }
 
     // Initiales Ziehen: 3 Paare in die Hand füllen
     for (let i = 0; i < 3; i++) {
@@ -201,15 +203,20 @@ export default class GameplayManager {
     this.game.enqueueAnimalToHand(animal);
 
     // Debug-Ausgabe: Zeige die aktuelle Hand mit Landschaften und Tieren.
-    if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+    if (DebugConfig.enabled && DebugConfig.doLogInfoThatIsShownInUI) {
+      console.groupCollapsed(
+        `Hand after drawing new pair (Turn ${this.currentTurn}):`,
+      );
       this.game.tilesOnHand.forEach((tile, index) => {
-        DebugConfig.logGameplayInfo(
+        console.log(
           `Pair ${index + 1}: ${tile.primaryLandscape}${tile.isKeystone ? "" : " & " + tile.secondaryLandscape} | ${this.game.getAnimalAtIndex(index)}`,
         );
+
+        console.info(`Current round: ${this.currentTurn}/${this.gameLength}.
+        \nTiles left in deck: ${this.game.deckLogic.deck.length}.
+        \nAnimals left in deck: ${this.game.deckLogic.animalDeck.length}.`);
       });
-      DebugConfig.logGameplayInfo(`Current round: ${this.currentTurn}/${this.gameLength}.
-                \nTiles left in deck: ${this.game.deckLogic.deck.length}.
-                \nAnimals left in deck: ${this.game.deckLogic.animalDeck.length}.`);
+      console.groupEnd();
     }
 
     this.syncHandPanel();
@@ -490,6 +497,10 @@ export default class GameplayManager {
 
     if (allowedPositions.length === 0) {
       this.roundState = RoundState.CANNOT_PLACE_ANIMAL;
+      this.getAnimalManager().showNoValidAnimalPlacementPossible(
+        this.previewTileHexCoord,
+      );
+
       console.log(
         `Es gibt keine erlaubten Positionen für die Platzierung des Tieres.
         Du kannst entweder die Tierplatzierung rückgängig machen (undo) oder die Platzierung überspringen (skip).
@@ -520,6 +531,7 @@ export default class GameplayManager {
   async undoTileChoice() {
     // Will only undo/be active when animal cannot be placed
     if (this.roundState === RoundState.CANNOT_PLACE_ANIMAL) {
+      this.getAnimalManager().hideNoValidAnimalPlacementPossible();
       await this.removePreviewTile();
       this.clearCurrentTurnTile();
       this.clearPreviewTile();
@@ -531,6 +543,8 @@ export default class GameplayManager {
   skipAnimalPlacement() {
     console.log("State before skipping animal placement:", this.roundState);
     if (this.roundState !== RoundState.CANNOT_PLACE_ANIMAL) return;
+
+    this.getAnimalManager().hideNoValidAnimalPlacementPossible();
     this.clearPreviewTile();
     this.clearPreviewAnimal();
 
@@ -541,16 +555,20 @@ export default class GameplayManager {
   }
 
   logGameplayInfo() {
+    console.info(`Current round: ${this.currentTurn}/${this.gameLength}`);
+
     // Grid Content
     const occupiedHexCoords = this.game.gridManager.getOccupiedHexCoords();
-    let gridContent = "Current grid state:\n";
+    let gridContent = "";
     occupiedHexCoords.forEach((hexCoord) => {
       const tile = this.game.gridManager.getTileAt(hexCoord);
       gridContent += `
                     Hex (${hexCoord.column}, ${hexCoord.row}): 
                     ${tile && tile.occupiedBy !== Animal.NONE ? "Occupied by: " + tile.occupiedBy : "Unoccupied"}`;
     });
+    console.groupCollapsed(`Grid contents ${occupiedHexCoords.length}`);
     console.log(gridContent);
+    console.groupEnd();
 
     // Score Berechnung
     const scoreResult = calculateScoreForGrid(
@@ -558,7 +576,7 @@ export default class GameplayManager {
       "player1",
       0,
     );
-    console.group("Current score result");
+    console.group(`Current score result`);
     console.log("playerId:", scoreResult.playerId);
     console.log("totalScore:", scoreResult.totalScore);
 

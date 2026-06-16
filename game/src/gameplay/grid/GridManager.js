@@ -150,10 +150,6 @@ export default class GridManager {
       }
     }
 
-    if (DebugConfig.enabled && DebugConfig.doLogGrid) {
-      this.debugLogGrid();
-    }
-
     return await spawnTile(this.scene, hexCoord, tile, this.hexSize);
   }
 
@@ -380,23 +376,5 @@ export default class GridManager {
    */
   async showAnimalDebugLabels() {
     return await this.debugTextInWorld.showAnimalDebugLabels(this.scene, this); // Übergibt die Szene und den GridManager an die DebugTextInWorld-Instanz
-  }
-
-  debugLogGrid() {
-    const entries = [];
-
-    for (const [key, tile] of this.grid.entries()) {
-      entries.push(
-        `TileAt${key.toString()}\n` +
-          `${tile.tileData.primaryLandscape}` +
-          `${tile.tileData.secondaryLandscape && tile.tileData.secondaryLandscape !== Landscape.UNDEFINED ? `, ${tile.tileData.secondaryLandscape}s` : ""}` +
-          `\nrotation: ${tile.rotation},\n` +
-          `animals: ${tile.tileData.animals ?? "no tileData"},\n` +
-          `occupiedBy: ${tile.occupiedBy}\n`,
-      );
-    }
-    console.groupCollapsed(`Grid contents (${entries.length}):\n\n`);
-    console.log(`${entries.join("\n")}`);
-    console.groupEnd();
   }
 }

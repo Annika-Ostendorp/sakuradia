@@ -83,4 +83,15 @@ export default class AnimalManager {
       animal,
     );
   }
+
+  async showNoValidAnimalPlacementPossible(hexCoord) {
+    await this.debugTextInWorld.showNoValidAnimalPlacementPossible(
+      this.scene,
+      this.gridManager,
+      hexCoord,
+    );
+  }
+  hideNoValidAnimalPlacementPossible() {
+    this.debugTextInWorld.hideNoValidAnimalPlacementPossible(this.scene);
+  }
 }

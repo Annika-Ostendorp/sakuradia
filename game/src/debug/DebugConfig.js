@@ -1,6 +1,7 @@
 export default class DebugConfig {
   static enabled = true;
 
+  static doLogInfoThatIsShownInUI = false;
   static doLogSmallInfo = false;
   static doInWorldDebugInfo = true;
   static doLogGameplayInfo = true;
@@ -12,10 +13,4 @@ export default class DebugConfig {
   static doShowAxes = false;
   static doDrawRays = false;
   static doShowTileChecks = false;
-
-  static logGameplayInfo(message) {
-    if (this.enabled && this.doLogGameplayInfo) {
-      console.log(message);
-    }
-  }
 }

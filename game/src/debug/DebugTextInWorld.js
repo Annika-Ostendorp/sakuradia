@@ -12,6 +12,7 @@ export default class DebugTextInWorld {
   #coordGridSize = 10;
 
   #animalDebugLabels = []; // Liste aller Text-Meshes, die Debug-Labels für Tiere darstellen
+  #animalInvalidLabel = null; // Speichert das Text-Mesh für die "INVALID"-Meldung bei ungültiger Tierplatzierung
 
   /**
    * Debug-Methode: Spawnt an jeder Hex-Koordinate ein Text-Mesh, das die Koordinatenwerte anzeigt.
@@ -77,6 +78,32 @@ export default class DebugTextInWorld {
     }
 
     return false;
+  }
+
+  async showNoValidAnimalPlacementPossible(scene, gridManager, hexCoord) {
+    this.hideNoValidAnimalPlacementPossible(scene);
+
+    const worldPos = hexCoord.hexToWorld(hexCoord, gridManager.hexSize);
+    const labelPos = new THREE.Vector3(worldPos.x, 0.3, worldPos.z+0.125);
+    const text = "INVALID";
+    const textColor = "#ff0000";
+    const textSize = 0.275;
+    const label = await TextSpawner.spawnWithShadow(
+      scene,
+      labelPos,
+      text,
+      textSize,
+      textColor,
+    );
+
+    this.#animalInvalidLabel = label; // Speichert das Text-Mesh für die "INVALID"-Meldung
+  }
+
+  hideNoValidAnimalPlacementPossible(scene) {
+    if (this.#animalInvalidLabel) {
+      TextSpawner.destroyTextObject(scene, this.#animalInvalidLabel);
+      this.#animalInvalidLabel = null;
+    }
   }
 
   /**

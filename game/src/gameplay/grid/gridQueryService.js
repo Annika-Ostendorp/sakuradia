@@ -196,7 +196,7 @@ export function getHexCoordInWorldDirection(
     return hexagonalSearchResult;
   }
 
-  if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+  if (DebugConfig.enabled && DebugConfig.doLogSmallInfo) {
     console.log(
       "Hexagonal search did not find a valid position. Falling back to direct neighbours.",
     );

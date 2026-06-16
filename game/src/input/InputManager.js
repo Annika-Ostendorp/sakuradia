@@ -266,7 +266,7 @@ export default class InputManager{
         );
 
         if (!targetPosition) {
-            if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo){
+            if (DebugConfig.enabled && DebugConfig.doLogSmallInfo){
                 console.info("No targetPosition found in handlePlaceAnimal");
             }
             return;
