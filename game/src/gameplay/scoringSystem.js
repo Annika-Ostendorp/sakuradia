@@ -135,11 +135,7 @@ function calculateScoreFor_Koi(grid) {
 }
 
 function calculateScoreFor_Panda(grid) {
-  let score = 0;
-
-  // Logic
-
-  return score;
+  return calculatePandaScore(grid);
 }
 
 function calculateScoreFor_Sika(grid) {

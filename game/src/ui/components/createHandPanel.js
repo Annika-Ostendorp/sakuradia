@@ -17,11 +17,15 @@ export function createHandPanel({ onSelectPair } = {}) {
 
   panel.innerHTML = `
     <h2 class="hand-panel__title">Hand</h2>
+    <p class="hand-panel__status" aria-live="polite">Runde 1 | Spieler 1</p>
+    <div class="hand-panel__scores" aria-label="Spielerübersicht"></div>
     <div class="hand-panel__list" role="list"></div>
   `;
 
+  const status = panel.querySelector('.hand-panel__status');
+  const scores = panel.querySelector('.hand-panel__scores');
   const list = panel.querySelector('.hand-panel__list');
-  if (!list) {
+  if (!status || !scores || !list) {
     throw new Error('Hand panel list could not be created.');
   }
 
@@ -66,8 +70,33 @@ export function createHandPanel({ onSelectPair } = {}) {
     }
   };
 
+  const updateStatus = ({
+    currentRound = 1,
+    totalRounds = 1,
+    currentPlayer = 1,
+    playerCount = 1,
+    scoresByPlayer = [],
+  } = {}) => {
+    status.textContent = `Runde ${currentRound}/${totalRounds} | Spieler ${currentPlayer}/${playerCount}`;
+
+    scores.textContent = '';
+    for (let index = 0; index < playerCount; index += 1) {
+      const score = Number(scoresByPlayer[index] ?? 0);
+      const scorePill = document.createElement('span');
+      scorePill.className = 'hand-panel__score-pill';
+
+      if (index + 1 === currentPlayer) {
+        scorePill.classList.add('hand-panel__score-pill--active');
+      }
+
+      scorePill.textContent = `S${index + 1}: ${score}`;
+      scores.append(scorePill);
+    }
+  };
+
   return {
     element: panel,
     update: render,
+    updateStatus,
   };
 }
