@@ -1,4 +1,4 @@
-import { Animal } from "src/data/Animal.js";
+import { Animal } from "/src/data/Animal.js";
 
 // Hauptfunktion: alle Koi finden, Koi-Gruppen bilden, jede Gruppe prüfen, Punkte zusammenzählen
 export function calculateKoiScore(grid) {
