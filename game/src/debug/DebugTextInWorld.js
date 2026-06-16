@@ -97,33 +97,54 @@ export default class DebugTextInWorld {
         continue;
       }
 
+      const animals = tile.tileData.animals || [];
       const isOccupiedByAnimal = tile.occupiedBy !== Animal.NONE;
-      const isAnimalPlacementPreview = overrideAnimal !== null;
+      const allowsAnimal = tile.animalIsAllowed(overrideAnimal);
+      const isDuringAnimalPlacementPreview = overrideAnimal !== null;
       const isHoveredTile =
         overrideHexCoord !== null && overrideHexCoord.equals(hexCoord);
 
+      let textColor = "#ffffff";
       let animalText = "";
-      let textSize = isHoveredTile || tile.animalIsAllowed(overrideAnimal) ? 0.15 : 0.08;
-      if (isOccupiedByAnimal){
-        textSize = 0.3;
-      }
-      const zOffset = (isOccupiedByAnimal || isAnimalPlacementPreview && isHoveredTile) ? 0 : 0.4;
+      let textSize = 0.15;
 
       // Occupied tiles always show the animal that occupies the tile.
       if (isOccupiedByAnimal) {
+        textSize = 0.17;
         animalText = `(${tile.occupiedBy})`;
+        textColor = "#ddff00";
       }
+
+      // Offset based on animal count
+      let zOffset = 0;
+      if (!isHoveredTile && !isOccupiedByAnimal && animals.length == 2)
+        zOffset = -0.15;
+      if (!isHoveredTile && !isOccupiedByAnimal && animals.length >= 3)
+        zOffset = -0.3;
 
       // During animal placement, show possible animals only on free tiles
       // that allow the currently selected animal.
-      else if (isAnimalPlacementPreview) {
-        animalText = isHoveredTile
-          ? `(Preview) ${overrideAnimal}`
-          : String(tile.tileData.animals);
+      if (isDuringAnimalPlacementPreview) {
+        if (isHoveredTile) {
+          animalText = `(Preview) ${overrideAnimal}`;
+          textColor = "#00ff6e";
+        } else if (!isOccupiedByAnimal) {
+          animalText = tile.tileData.animals.join("\n");
+          textColor = allowsAnimal ? "#0088ff" : "#ff0000";
+        }
       }
-      // Outside animal placement, show the possible animals for every free tile.
+
+      // Outside animal placement
+      // Show the possible animals for every free tile in white.
+      // Show occupied tiles in green
       else {
-        animalText = String(tile.tileData.animals);
+        if (!isOccupiedByAnimal) {
+          animalText = tile.tileData.animals.join("\n");
+          textColor = "#ffffff";
+        } else {
+          animalText = `(${tile.occupiedBy})`;
+          textColor = "#ddff00";
+        }
       }
 
       const worldPos = hexCoord.hexToWorld(hexCoord, gridManager.hexSize);
@@ -134,10 +155,10 @@ export default class DebugTextInWorld {
         labelPos,
         animalText,
         textSize,
-        0xffffff,
+        textColor,
       );
 
-      this.#animalDebugLabels.push(label);
+      this.#animalDebugLabels.push([hexCoord, label]);
     }
   }
 
@@ -146,10 +167,21 @@ export default class DebugTextInWorld {
    * Diese Methode wird aufgerufen, bevor neue Debug-Labels erstellt werden, um sicherzustellen, dass keine veralteten Informationen in der Szene verbleiben.
    */
   clearAnimalDebugLabels(scene) {
-    for (const label of this.#animalDebugLabels) {
+    for (const [hexCoord, label] of this.#animalDebugLabels) {
       TextSpawner.destroyTextObject(scene, label);
     }
 
     this.#animalDebugLabels = [];
+  }
+
+  changeColorOfAnimalDebugLabel(hexCoord, color = 0xffffff) {
+    for (const [labelHexCoord, label] of this.#animalDebugLabels) {
+      if (labelHexCoord.equals(hexCoord)) {
+        if (label.textMesh) {
+          label.textMesh.material.color.set(color);
+          return true;
+        }
+      }
+    }
   }
 }
