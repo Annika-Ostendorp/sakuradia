@@ -1,6 +1,7 @@
 import HexCoord from "/src/utils/HexCoord.js";
 import { Animal } from "/src/data/Animal.js";
 import { Landscape } from "/src/data/Landscape.js";
+import { calculateKoiScore } from "./calculations/calculateKoiScore.js";
 import { calculatePandaScore } from "./calculations/calculatePandaScore.js";
 
 /**
@@ -130,11 +131,7 @@ function calculateScoreFor_Japanmakak(grid) {
 }
 
 function calculateScoreFor_Koi(grid) {
-  let score = 0;
-
-  // Logic
-
-  return score;
+  return calculateKoiScore(grid);
 }
 
 function calculateScoreFor_Panda(grid) {
