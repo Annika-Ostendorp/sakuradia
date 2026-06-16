@@ -58,7 +58,7 @@ function getNeighborKoi(hexCoord, grid, set) {
         }
 
         // Tile an Nachbarposition suchen
-        const neighborTile = grid.getTileAt(neighbor);
+        const neighborTile = getTileFromGridAt(grid, neighbor);
 
         // Wenn dort Tile liegt und darauf Koi ist --> dieser Nachbar gehört zur selben Koi-Gruppe
         if (neighborTile !== undefined && neighborTile.occupiedBy === Animal.KOI) {
