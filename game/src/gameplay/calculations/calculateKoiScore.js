@@ -1,4 +1,4 @@
-import { Animal } from "../data/Animal.js";
+import { Animal } from "src/data/Animal.js";
 
 // Hauptfunktion: alle Koi finden, Koi-Gruppen bilden, jede Gruppe prüfen, Punkte zusammenzählen
 export function calculateKoiScore(grid) {
@@ -58,7 +58,7 @@ function getNeighborKoi(hexCoord, grid, set) {
         }
 
         // Tile an Nachbarposition suchen
-        const neighborTile = getTileFromGridAt(grid, neighbor);
+        const neighborTile = grid.getTileAt(neighbor);
 
         // Wenn dort Tile liegt und darauf Koi ist --> dieser Nachbar gehört zur selben Koi-Gruppe
         if (neighborTile !== undefined && neighborTile.occupiedBy === Animal.KOI) {
@@ -153,17 +153,3 @@ function setContainsCoord(set, hexCoord) {
     }
     return false;
 }
-
-
-// Tile an best. Koordinate geben
-function getTileFromGridAt(grid, hexCoord) {
-    // Map verwendet HexCoord-Objekte auch als Key --> nach Koordinate suchen mit gleichen Werten
-    for (const [placedHexCoord, tile] of grid.entries()) {
-        if (placedHexCoord.equals(hexCoord)) {
-            return tile;
-        }
-    }
-    return undefined; // wenn kein Tile an dieser Koordinate gefunden wurde
-}
-
-
