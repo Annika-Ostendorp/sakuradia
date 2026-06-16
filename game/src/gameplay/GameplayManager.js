@@ -590,7 +590,7 @@ export default class GameplayManager {
 
     // Score Berechnung
     const scoreResult = calculateScoreForGrid(
-      this.game.gridManager.grid,
+      this.game.gridManager,
       "player1",
       0,
     );

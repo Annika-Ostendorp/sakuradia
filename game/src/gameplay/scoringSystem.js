@@ -12,7 +12,7 @@ import { calculatePandaScore } from "./calculations/calculatePandaScore.js";
  * @returns {Object} Ein Objekt, das die Punktzahl für jede Landschaftsart und Tierart enthält. Die Struktur ist im Issue Punktesystem (Zaehlsystem)#25 beschrieben.
  */
 
-export function calculateScoreForGrid(grid, playerId, remainingNatureTokens) {
+export function calculateScoreForGrid(gridmanager, playerId, remainingNatureTokens) {
   const scoreResult = {
     playerId: playerId,
     totalScore: remainingNatureTokens,
@@ -37,7 +37,7 @@ export function calculateScoreForGrid(grid, playerId, remainingNatureTokens) {
   // Landschaften
 
   // Array der scores für jede Landschaft
-  const landscapeResult = calculateScoreForLandscapes(grid);
+  const landscapeResult = calculateScoreForLandscapes(gridmanager);
 
   // Bambooforest
   scoreResult.scores.landscapeScores.bambooforest =
@@ -65,47 +65,47 @@ export function calculateScoreForGrid(grid, playerId, remainingNatureTokens) {
   // Tiere
 
   // Crane
-  scoreResult.scores.animalScores.crane = calculateScoreFor_Crane(grid);
+  scoreResult.scores.animalScores.crane = calculateScoreFor_Crane(gridmanager);
   scoreResult.totalScore += scoreResult.scores.animalScores.crane;
 
   // Japanmakak
-  scoreResult.scores.animalScores.japanmakak = calculateScoreFor_Japanmakak(grid);
+  scoreResult.scores.animalScores.japanmakak = calculateScoreFor_Japanmakak(gridmanager);
   scoreResult.totalScore += scoreResult.scores.animalScores.japanmakak;
 
   // Koi
-  scoreResult.scores.animalScores.koi = calculateScoreFor_Koi(grid);
+  scoreResult.scores.animalScores.koi = calculateScoreFor_Koi(gridmanager);
   scoreResult.totalScore += scoreResult.scores.animalScores.koi;
 
   // Panda
-  scoreResult.scores.animalScores.panda = calculateScoreFor_Panda(grid);
+  scoreResult.scores.animalScores.panda = calculateScoreFor_Panda(gridmanager);
   scoreResult.totalScore += scoreResult.scores.animalScores.panda;
 
   // Sika
-  scoreResult.scores.animalScores.sika = calculateScoreFor_Sika(grid);
+  scoreResult.scores.animalScores.sika = calculateScoreFor_Sika(gridmanager);
   scoreResult.totalScore += scoreResult.scores.animalScores.sika;
 
   return scoreResult;
 }
 
 // Für jedes Element im Landscape Enum, berechne die Punkte für diese Landschaft und addiere sie zum Gesamtscore hinzu
-function calculateScoreForLandscapes(grid) {
+function calculateScoreForLandscapes(gridmanager) {
   const landscapeScores = {};
 
   for (const landscape of Object.values(Landscape)) {
     if (landscape === Landscape.UNDEFINED) continue;
 
-    landscapeScores[landscape] = calculateScoreFor_Landscape(grid, landscape);
+    landscapeScores[landscape] = calculateScoreFor_Landscape(gridmanager, landscape);
   }
 
   return landscapeScores;
 }
 
 // PLACEHOLDER: Gibt 1 Punkt pro Tile mit der Landschaft
-function calculateScoreFor_Landscape(grid, landscape) {
+function calculateScoreFor_Landscape(gridmanager, landscape) {
   let score = 0;
 
   // Erstmal simple Logik, erhalte 1 Punkt pro Tile mit der Landschaft
-  for (const [hexCoord, tile] of grid) {
+  for (const [hexCoord, tile] of gridmanager.grid.entries()) {
     if (tile.hasLandscape(landscape)) {
       score += 1;
     }
@@ -114,7 +114,7 @@ function calculateScoreFor_Landscape(grid, landscape) {
   return score;
 }
 
-function calculateScoreFor_Crane(grid) {
+function calculateScoreFor_Crane(gridmanager) {
   let score = 0;
 
   // Logic
@@ -122,7 +122,7 @@ function calculateScoreFor_Crane(grid) {
   return score;
 }
 
-function calculateScoreFor_Japanmakak(grid) {
+function calculateScoreFor_Japanmakak(gridmanager) {
   let score = 0;
 
   // Logic
@@ -130,15 +130,15 @@ function calculateScoreFor_Japanmakak(grid) {
   return score;
 }
 
-function calculateScoreFor_Koi(grid) {
-  return calculateKoiScore(grid);
+function calculateScoreFor_Koi(gridmanager) {
+  return calculateKoiScore(gridmanager);
 }
 
-function calculateScoreFor_Panda(grid) {
-  return calculatePandaScore(grid);
+function calculateScoreFor_Panda(gridmanager) {
+  return calculatePandaScore(gridmanager);
 }
 
-function calculateScoreFor_Sika(grid) {
+function calculateScoreFor_Sika(gridmanager) {
   let score = 0;
 
   // Logic

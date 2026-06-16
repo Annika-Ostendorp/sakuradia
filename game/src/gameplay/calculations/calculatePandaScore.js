@@ -1,14 +1,14 @@
 import { Animal } from "/src/data/Animal.js";
 
 // Hauptfunktion: alle Pandas finden, zusammenhängende Panda-Gruppen finden, jede Gruppe zählen, für jede Gruppe mit genau 3 Pandas 10 Punkte vergeben
-export function calculatePandaScore(grid) {
+export function calculatePandaScore(gridmanager) {
     let sum = 0; // für End-Ausgabe der insgesamt gesammelten Punkte für Panda-Gruppen
     // alle Koordinaten sammeln, auf denen Panda liegt
     
     const pandas = [];
     
     // über jedes Tile in grid gehen -> grid ist Map<HexCoord, Tile> mit key = HexCoord und value = Tile
-    for (const [hexCoord, tile] of grid.entries()) {
+    for (const [hexCoord, tile] of gridmanager.grid.entries()) {
         if (tile.occupiedBy === Animal.PANDA) { // falls Tile Animal Panda besitzt (occupiedBy), Hex-Koordinaten zu pandas Liste hinzufügen
             pandas.push(hexCoord);
         } 
@@ -31,7 +31,7 @@ export function calculatePandaScore(grid) {
         }
 
         // Wenn bestimmter Panda keine Panda-Nachbarn hat -> keine Dreiergruppe bilden
-        if (!hasPandaNeighbor(panda, grid)) {
+        if (!hasPandaNeighbor(panda, gridmanager)) {
             continue;
         }
 
@@ -39,7 +39,7 @@ export function calculatePandaScore(grid) {
         const set = new Set();
 
         // Rekursiv alle benachbarten Pandas finden
-        getNeighborPandas(panda, grid, set);
+        getNeighborPandas(panda, gridmanager, set);
 
         // Gruppe speichern
         sets.push(set);
@@ -58,7 +58,7 @@ return sum;
 
 
 // Rekursive Funktion: bei einem Panda starten und dann alle Pandas finden, die zu derselben Gruppe gehören (bis keine neuen Panda-Nachbarn mehr gefunden werden)
-function getNeighborPandas(hexCoord, grid, set) { 
+function getNeighborPandas(hexCoord, gridmanager, set) { 
 
     // Aktuelle Koordinate gehört zur aktuellen Panda-Gruppe
     set.add(hexCoord);
@@ -75,14 +75,14 @@ function getNeighborPandas(hexCoord, grid, set) {
         }
 
         // Tile suchen, dass an dieser Nachbar-Koordinate liegt
-        const neighborTile = getTileFromGridAt(grid, neighbor);
+        const neighborTile = gridmanager.getTileAt(neighbor);
 
         // wenn dort Tile liegt und darauf Panda ist, dann gehört Nachbar zur selben Panda-Gruppe
         if (neighborTile !== undefined && neighborTile.occupiedBy === Animal.PANDA) {
             set.add(neighbor);
 
             // dann von diesem Nachbar-Panda aus weiter suchen
-            getNeighborPandas(neighbor, grid, set);
+            getNeighborPandas(neighbor, gridmanager, set);
         }
     }
 }
@@ -90,12 +90,12 @@ function getNeighborPandas(hexCoord, grid, set) {
 
 // Hat Panda überhaupt einen Panda-Nachbarn?
 // falls z.B. alleine -> keine Gruppe möglich -> direkt überspringen -> dadurch Rekursion erst gar nicht starten
-function hasPandaNeighbor(hexCoord, grid) {
+function hasPandaNeighbor(hexCoord, gridmanager) {
     // 6 Nachbarfelder holen
     const neighbors = hexCoord.getNeighbors();
     for (const neighbor of neighbors) {
         // Tile an dieser Nachbarposition suchen wie vorhin
-        const neighborTile = getTileFromGridAt(grid, neighbor);
+        const neighborTile = gridmanager.getTileAt(neighbor);
         // falls dort Panda liegt --> gefundener Panda hat Panda-Nachbarn
         if (neighborTile !== undefined && neighborTile.occupiedBy === Animal.PANDA) {
             return true;
@@ -127,17 +127,4 @@ function setContainsCoord(set, hexCoord) {
         }
     }
     return false;
-}
-
-// Tile an bestimmter Koordinate finden
-function getTileFromGridAt(grid, hexCoord) {
-    // Map verwendet HexCoord-Objekte als Key
-    // Deshalb mit equals nach gleichen Koordinatenwerten suchen
-    for (const [placedHexCoord, tile] of grid.entries()) {
-        if (placedHexCoord.equals(hexCoord)) {
-            return tile;
-        }
-    }
-
-    return undefined;
 }

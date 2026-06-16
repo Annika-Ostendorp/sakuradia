@@ -1,14 +1,14 @@
 import { Animal } from "/src/data/Animal.js";
 
 // Hauptfunktion: alle Koi finden, Koi-Gruppen bilden, jede Gruppe prüfen, Punkte zusammenzählen
-export function calculateKoiScore(grid) {
+export function calculateKoiScore(gridmanager) {
     let sum = 0; // Endausgabe der insgesamt gesammelten Punkte für Koi-Reihen
 
     // Speichern von allen gefundenen zusammenhängenden Koi-Gruppen
     const sets = [];
 
     // Über jedes Tile im Grid gehen
-    for (const [hexCoord, tile] of grid.entries()) {
+    for (const [hexCoord, tile] of gridmanager.grid.entries()) {
 
         // Wenn auf diesem Tile kein Koi --> überspringen (continue)
         if (tile.occupiedBy !== Animal.KOI) {
@@ -24,7 +24,7 @@ export function calculateKoiScore(grid) {
         const set = new Set();
 
         // Rekursiv alle benachbarten Koi finden
-        getNeighborKoi(hexCoord, grid, set);
+        getNeighborKoi(hexCoord, gridmanager, set);
 
         // Gefundene Gruppe speichern
         sets.push(set);
@@ -33,7 +33,7 @@ export function calculateKoiScore(grid) {
     // jede gefundene Koi-Gruppe auswerten
     for (const set of sets) {
         // Koi-Gruppe zählt nur, wenn sie gültige Reihe ist
-        if (isValidKoiLine(set, grid)) {
+        if (isValidKoiLine(set, gridmanager)) {
             sum += getKoiPoints(set.size);
         }
     }
@@ -42,7 +42,7 @@ export function calculateKoiScore(grid) {
 
 
 // Alle Koi finden, die zu derselben Gruppe gehören -> solange bis keine neuen Koi mehr gefunden werden
-function getNeighborKoi(hexCoord, grid, set) {
+function getNeighborKoi(hexCoord, gridmanager, set) {
     // Aktuelle Koordinate gehört wieder zur aktuellen Koi-Gruppe
     set.add(hexCoord);
 
@@ -58,21 +58,21 @@ function getNeighborKoi(hexCoord, grid, set) {
         }
 
         // Tile an Nachbarposition suchen
-        const neighborTile = grid.getTileAt(neighbor);
+        const neighborTile = gridmanager.getTileAt(neighbor);
 
         // Wenn dort Tile liegt und darauf Koi ist --> dieser Nachbar gehört zur selben Koi-Gruppe
         if (neighborTile !== undefined && neighborTile.occupiedBy === Animal.KOI) {
             set.add(neighbor);
 
             // Von diesem Nachbar-Koi aus dann weiter suchen
-            getNeighborKoi(neighbor, grid, set);
+            getNeighborKoi(neighbor, gridmanager, set);
         }
     }
 }
 
 
 // Prüfen, ob Gruppe überhaupt gültige Koi-Reihe ist -> Form der Gruppe prüfen
-function isValidKoiLine(set, grid) {
+function isValidKoiLine(set, gridmanager) {
     // Eine Koi-Reihe ist gültig, wenn jeder Koi höchstens zwei andere Koi direkt als Nachbarn hat
     // Dadurch sind einfache Reihen erlaubt:
     // K - K - K
@@ -86,7 +86,7 @@ function isValidKoiLine(set, grid) {
         let koiNeighborCount = 0;
         const neighbors = koi.getNeighbors();
         for (const neighbor of neighbors) {
-            const neighborTile = getTileFromGridAt(grid, neighbor);
+            const neighborTile = gridmanager.getTileAt(neighbor);
 
             if (neighborTile !== undefined && neighborTile.occupiedBy === Animal.KOI) {
                 // nur Nachbarn zählen, die auch in derselben Koi-Gruppe sind
