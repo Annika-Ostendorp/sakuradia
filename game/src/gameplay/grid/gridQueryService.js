@@ -1,8 +1,9 @@
 // Diese Datei enthält Funktionen, die das aktuelle Spielfeld (Grid) abfragen,
 // z.B. um gültige Platzierungen zu überprüfen.
 import * as THREE from "three";
-import HexCoord from "../../utils/HexCoord.js";
-import DebugConfig from "../../debug/DebugConfig.js";
+import HexCoord from "/src/utils/HexCoord.js";
+import DebugConfig from "/src/debug/DebugConfig.js";
+import { Animal } from "/src/data/Animal.js";
 
 /**
  * Gibt eine zufällige leere Hex-Koordinate innerhalb des gültigen Spielfeldbereichs zurück.
@@ -173,6 +174,8 @@ export function getHexCoordInWorldDirection(
   hexCoord,
   direction,
   onlyDirectNeighbours = false,
+  isOccupied = false,
+  animalIsAllowed = Animal.NONE,
 ) {
   if (onlyDirectNeighbours) {
     const directNeighbours = getDirectNeighbourInWorldDirection(
@@ -202,6 +205,7 @@ export function getHexCoordInWorldDirection(
     gridManager,
     hexCoord,
     direction,
+    (isOccupied = false),
   );
   return directNeighbours;
 }
@@ -217,8 +221,11 @@ export function getDirectNeighbourInWorldDirection(
   gridManager,
   hexCoord,
   direction,
+  isOccupied = false,
 ) {
-  const neighbours = getUnoccupiedNeighbours(gridManager, hexCoord);
+  const neighbours = isOccupied
+    ? getOccupiedNeighbours(gridManager, hexCoord)
+    : getUnoccupiedNeighbours(gridManager, hexCoord);
 
   if (neighbours.length === 0) return null;
 
@@ -235,10 +242,7 @@ export function getDirectNeighbourInWorldDirection(
   let bestSimilarity = -1;
   let bestVector = new THREE.Vector2();
   for (const neighbour of neighbours) {
-    const neighbourPos = neighbour.hexToWorld(
-      neighbour,
-      gridManager.hexSize,
-    );
+    const neighbourPos = neighbour.hexToWorld(neighbour, gridManager.hexSize);
 
     const neighbourDir = new THREE.Vector2(
       neighbourPos.x - originPos.x,
@@ -386,4 +390,268 @@ function getDirectionSimilarity(a, b) {
   }
 
   return a.clone().normalize().dot(b.clone().normalize());
+}
+
+// Gibt die nächste erste Hex-Koordinate zurück, die von der Ausgangs-Hex-Koordinate
+// basierend auf dem maximalen Abstand zu finden ist.
+export function getFirstHexWithMaxDistance(
+  gridManager,
+  origin,
+  isPlaced = false,
+  occupiedBy = Animal.NONE,
+  maxDistance = 23,
+) {
+  for (let distance = 1; distance <= maxDistance; distance++) {
+    const hexAtDistance = getFirstHexAtDistance(
+      gridManager,
+      origin,
+      isPlaced,
+      occupiedBy,
+      distance,
+    );
+    if (hexAtDistance) {
+      return hexAtDistance;
+    }
+  }
+  return null;
+}
+
+/**
+ * Gibt das erste HexCoord zurück, das exakt `distance` Schritte vom Ursprung entfernt ist
+ * und dem occupied-Filter entspricht.
+ *
+ * @param {GridManager} gridManager - Die Instanz des Grid-Managers
+ * @param {HexCoord} origin - Ausgangs-Hex-Koordinate
+ * @param {number} distance - Abstand in Hex-Schritten
+ * @param {boolean} isPlaced - true = suche besetztes Feld, false = suche freies Feld
+ * @returns {HexCoord | null}
+ */
+function getFirstHexAtDistance(
+  gridManager,
+  origin,
+  isPlaced = false,
+  occupiedBy = Animal.NONE,
+  distance,
+) {
+  if (!gridManager || !origin || distance < 0) {
+    return null;
+  }
+
+  if (distance === 0) {
+    return gridManager.isOccupied(origin) === isPlaced ? origin : null;
+  }
+
+  // Start at one corner of the hex ring.
+  // Direction[4] is (-1, 1), so this moves `distance` steps to the upper-left corner.
+  let current = HexCoord.add(
+    origin,
+    scaleHexCoord(HexCoord.Directions[4], distance),
+  );
+
+  // Für jede Seite des Hex-Rings (6 Hauptachsen)
+  for (const direction of HexCoord.Directions) {
+    // Gehe genau `distance` Felder entlang dieser Seite:
+    for (let step = 0; step < distance; step++) {
+      // Checke ob das aktuelle HexCoord dem occupied-Filter entspricht. Wenn ja, gib es zurück.
+      const doesNotWantOccupancy =
+        isPlaced === false &&
+        gridManager.isOccupied(current) === false;
+      const wantsSpecificOccupancy =
+        isPlaced === true &&
+        gridManager.getTileAt(current)?.occupiedBy === occupiedBy;
+      if (doesNotWantOccupancy || wantsSpecificOccupancy) {
+        return current;
+      }
+
+      // Move one hex forward along the current side.
+      current = HexCoord.add(current, direction);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Multiplies a HexCoord direction by a factor.
+ *
+ * @param {HexCoord} hexCoord - Direction or coordinate to scale
+ * @param {number} factor - Multiplier
+ * @returns {HexCoord}
+ */
+function scaleHexCoord(hexCoord, factor) {
+  return new HexCoord(hexCoord.column * factor, hexCoord.row * factor);
+}
+
+/**
+ * Finds the most intuitive movement target for the preview tile.
+ *
+ * This looks at all valid tile placement positions and chooses the one that
+ * best matches the player's input direction.
+ *
+ * @param {GridManager} gridManager - The grid manager instance
+ * @param {HexCoord} currentHexCoord - Current preview tile position
+ * @param {THREE.Vector2} worldDirection - Camera-relative movement direction
+ * @returns {HexCoord | null}
+ */
+export function getPreviewAnimalMovementTarget(
+  gridManager,
+  currentHexCoord,
+  worldDirection,
+  animal,
+) {
+  const candidates = getUnoccupiedHexCoordsWithAllowedAnimal(
+    gridManager,
+    animal,
+  );
+  if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+    console.log(
+      `Found ${candidates.length} candidate hexes for animal ${animal}:`,
+      candidates,
+    );
+  }
+  const maxHexDistance = 25;
+  const minSimilarity = 0.2;
+
+  return getBestHexCoordInWorldDirectionFromCandidates(
+    gridManager,
+    currentHexCoord,
+    worldDirection,
+    candidates,
+    minSimilarity,
+    maxHexDistance,
+  );
+}
+
+/**
+ * Gibt eine Liste aller Hex-Koordinaten zurück, die derzeit nicht besetzt sind,
+ * aber das angegebene Tier erlauben.
+ * @param {GridManager} gridManager - Die Instanz des Grid-Managers
+ * @param {*} animal Das Tier, für das die erlaubten Hex-Koordinaten gefunden werden sollen
+ * @returns {HexCoord[]}
+ */
+function getUnoccupiedHexCoordsWithAllowedAnimal(gridManager, animal) {
+  const keys = Array.from(gridManager.grid.keys());
+
+  const allowedCoords = [];
+
+  for (const hexCoord of keys) {
+    const tile = gridManager.getTileAt(hexCoord);
+    if (
+      tile &&
+      tile.occupiedBy === Animal.NONE &&
+      tile.animalIsAllowed(animal)
+    ) {
+      allowedCoords.push(hexCoord);
+    }
+    if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+      console.log(
+        "For hexCoord",
+        hexCoord.toString(),
+        ": occupiedBy =",
+        tile.occupiedBy,
+        ", allowsAnimal =",
+        tile.animalIsAllowed(animal),
+        ". Adding to allowedCoords:",
+        tile.animalIsAllowed(animal) && tile.occupiedBy === Animal.NONE,
+      );
+    }
+  }
+  return allowedCoords;
+}
+
+/**
+ * Finds the most intuitive target HexCoord from a list of candidates,
+ * based on a world-space input direction.
+ *
+ * This does not walk along one hex axis. Instead, it ranks all valid candidates
+ * by how well they match the desired movement direction.
+ *
+ * @param {GridManager} gridManager - The grid manager instance
+ * @param {HexCoord} originHexCoord - Current preview position
+ * @param {THREE.Vector2} worldDirection - Camera-relative movement direction in world X/Z
+ * @param {HexCoord[]} candidates - Possible target hexes
+ * @param {number} minSimilarity - Minimum directional similarity. Higher = stricter.
+ * @param {number} maxHexDistance - Maximum allowed jump distance in hex steps
+ * @returns {HexCoord | null}
+ */
+function getBestHexCoordInWorldDirectionFromCandidates(
+  gridManager,
+  originHexCoord,
+  worldDirection,
+  candidates,
+  minSimilarity = 0.2,
+  maxHexDistance = 99,
+) {
+  if (!gridManager || !originHexCoord || !worldDirection || !candidates) {
+    console.error(
+      "getBestHexCoordInWorldDirectionFromCandidates received invalid arguments:",
+      { gridManager, originHexCoord, worldDirection, candidates },
+    );
+    return null;
+  }
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  if (worldDirection.lengthSq() === 0) {
+    console.error(
+      "getBestHexCoordInWorldDirectionFromCandidates received a zero-length world direction:",
+      { worldDirection },
+    );
+    return null;
+  }
+
+  const originWorld = originHexCoord.hexToWorld(
+    originHexCoord,
+    gridManager.hexSize,
+  );
+
+  let bestHexCoord = null;
+  let bestScore = -Infinity;
+
+  for (const candidate of candidates) {
+    if (!candidate || candidate.equals(originHexCoord)) {
+      continue;
+    }
+
+    const hexDistance = HexCoord.distance(originHexCoord, candidate);
+
+    if (hexDistance > maxHexDistance) {
+      continue;
+    }
+
+    const candidateWorld = candidate.hexToWorld(candidate, gridManager.hexSize);
+
+    const toCandidate = new THREE.Vector2(
+      candidateWorld.x - originWorld.x,
+      candidateWorld.z - originWorld.z,
+    );
+
+    if (toCandidate.lengthSq() === 0) {
+      continue;
+    }
+
+    const worldDistance = toCandidate.length();
+
+    toCandidate.normalize();
+
+    const similarity = worldDirection.dot(toCandidate);
+
+    // Ignore candidates that are too far away from the intended direction.
+    if (similarity < minSimilarity) {
+      continue;
+    }
+
+    // Main priority: direction match.
+    // Secondary priority: prefer closer fields.
+    const score = similarity * 1000 - hexDistance * 10 - worldDistance;
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestHexCoord = candidate;
+    }
+  }
+
+  return bestHexCoord;
 }
