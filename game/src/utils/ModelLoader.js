@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { Landscape } from "../data/Landscape.js";
+import { Landscape } from "/src/data/Landscape.js";
 import { getColorForLandscape, applyColorToModel } from "./colorUtils.js";
+import getModelPathForKeystone from "/src/utils/modelGetter.js";
 
 /**
  * `ModelLoader`
@@ -22,6 +23,29 @@ export default class ModelLoader {
         this.library = library; // Wird durch den GameplayManager übergeben.
         this.getColorForLandscape = getColorForLandscape;
         this.applyColorToModel = applyColorToModel;
+    }
+
+    loadKeystoneModel(landscape) {
+        const modelPath = getModelPathForKeystone(landscape);
+        return this.loadFullModel(modelPath);
+    }
+
+    loadFullModel(modelPath) {
+        if (this.modelCache.has(modelPath)) {
+            return Promise.resolve(this.modelCache.get(modelPath));
+        }
+        return new Promise((resolve, reject) => {
+            this.gltfLoader.load(
+                modelPath, 
+                (gltf) => {
+                    const result = { scene: gltf.scene };
+                    this.modelCache.set(modelPath, result);
+                    resolve(result);
+                },
+                undefined,
+                (error) => reject(error)
+            );
+        });
     }
     
     /**
