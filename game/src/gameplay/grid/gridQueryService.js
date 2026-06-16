@@ -502,7 +502,7 @@ export function getPreviewAnimalMovementTarget(
     gridManager,
     animal,
   );
-  if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+  if (DebugConfig.enabled && DebugConfig.doLogSmallInfo) {
     console.log(
       `Found ${candidates.length} candidate hexes for animal ${animal}:`,
       candidates,
@@ -541,18 +541,6 @@ function getUnoccupiedHexCoordsWithAllowedAnimal(gridManager, animal) {
       tile.animalIsAllowed(animal)
     ) {
       allowedCoords.push(hexCoord);
-    }
-    if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
-      console.log(
-        "For hexCoord",
-        hexCoord.toString(),
-        ": occupiedBy =",
-        tile.occupiedBy,
-        ", allowsAnimal =",
-        tile.animalIsAllowed(animal),
-        ". Adding to allowedCoords:",
-        tile.animalIsAllowed(animal) && tile.occupiedBy === Animal.NONE,
-      );
     }
   }
   return allowedCoords;

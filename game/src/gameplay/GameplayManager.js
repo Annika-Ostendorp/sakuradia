@@ -104,7 +104,7 @@ export default class GameplayManager {
         break;
 
       case RoundState.CHOOSE_TILE:
-        if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+        if (DebugConfig.enabled && DebugConfig.doLogSmallInfo) {
           console.log(
             "Submitting chosen tile at index",
             this.selectedHandIndex,
@@ -181,7 +181,7 @@ export default class GameplayManager {
         console.warn("default case");
         break;
     }
-    if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+    if (DebugConfig.enabled && DebugConfig.doLogSmallInfo) {
       console.log(
         `Submitted action for round state ${previousState}. New round state: ${this.roundState}`,
       );
@@ -228,7 +228,7 @@ export default class GameplayManager {
     this.syncHandPanel();
 
     if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
-      console.group("Animals in deck:");
+      console.groupCollapsed("Animals in deck:");
 
       const animalsInDeck = this.game.deckLogic.animalDeck;
       let animalCounts = {};
@@ -558,6 +558,13 @@ export default class GameplayManager {
       "player1",
       0,
     );
-    console.log("Current score result:", scoreResult);
+    console.group("Current score result");
+    console.log("playerId:", scoreResult.playerId);
+    console.log("totalScore:", scoreResult.totalScore);
+
+    console.group("scores");
+    console.log("landscapeScores:", scoreResult.scores.landscapeScores);
+    console.log("animalScores:", scoreResult.scores.animalScores);
+    console.groupEnd();
   }
 }

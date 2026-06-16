@@ -1,8 +1,9 @@
 export default class DebugConfig {
   static enabled = true;
 
+  static doLogSmallInfo = false;
   static doInWorldDebugInfo = true;
-  static doLogGameplayInfo = false;
+  static doLogGameplayInfo = true;
   static doShowBlueprints = false;
   static doLogGrid = true;
   static doLogCalculations = false;
