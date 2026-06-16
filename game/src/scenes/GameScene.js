@@ -1,8 +1,14 @@
 import * as THREE from 'three';
 import '../styles/global.css';
-import { createGameCamera, createGameOrbitControls } from '../rendering/OrbitalCamera.js';
+import {
+	createGameCamera,
+	createGameOrbitControls,
+	updateOrbitControlsWithRightStick,
+    moveOrbitCameraHorizontal
+} from '../rendering/OrbitalCamera.js';
 import GameplayManager from '../gameplay/GameplayManager.js';
 import InputManager from '../input/InputManager.js';
+import DebugConfig from "../debug/DebugConfig.js";
 import { createRulesPopup } from '../ui/components/createRulesPopup.js';
 import ruleImage01 from '../assets/images/rules/Sakura_RulePopup-01.jpg';
 import ruleImage02 from '../assets/images/rules/Sakura_RulePopup-02.jpg';
@@ -33,16 +39,21 @@ export default class GameScene {
     constructor(gameConfig) {
         this.gameConfig = gameConfig;
         this.initialization();
+        this.timer = new THREE.Timer();
+
+        this.gameplayManager = new GameplayManager(this.scene, this.gameConfig);
+        this.inputManager = new InputManager(
+            this.scene,
+            this.canvas,
+            this.gameplayManager,
+            this.camera
+        );
 
         this.rulesPopup = createRulesPopup({ pages: RULE_PAGES });
         this.appShell.append(this.rulesPopup.element);
 
         this.animate = this.animate.bind(this);
         this.animate();
-
-        // Gameplay- und Input-Manager erst nach Start der Render-Schleife.
-        this.gameplayManager = new GameplayManager(this.scene, this.gameConfig);
-        this.inputManager = new InputManager(this.scene, this.canvas, this.gameplayManager);
     }
 
     initialization() {
@@ -61,12 +72,7 @@ export default class GameScene {
             antialias: true,
         });
 
-        this.camera = createGameCamera();
-        this.controls = createGameOrbitControls(this.camera, this.renderer.domElement);
-
-        // Kamera-Startposition: Blick von oben auf das Zentrum
-        this.camera.position.set(0, 15, 0);
-        this.camera.lookAt(0, 0, 0);
+        this.setupCamera();
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -86,6 +92,12 @@ export default class GameScene {
         directionalLight.shadow.camera.top = 50;
         directionalLight.shadow.camera.bottom = -50;
         this.scene.add(directionalLight);
+
+        // Add axis helper
+        if (DebugConfig.enabled && DebugConfig.showAxes) {
+            const axesHelper = new THREE.AxesHelper(5);
+            this.scene.add(axesHelper);
+        }
     }
 
     handleResize() {
@@ -94,9 +106,49 @@ export default class GameScene {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    // Render-Loop: kept minimal — weitere Animationen/Updates können hier ergänzt werden.
+    setupCamera(){
+        this.camera = createGameCamera();
+        this.controls = createGameOrbitControls(this.camera, this.renderer.domElement);
+
+        this.camera.position.set(0, 15, 0);
+        this.camera.lookAt(0, 0, 0);
+    }
+
+    // Resets position and rotation of the camera to default values
+    resetCamera(){
+        this.scene.remove(this.camera);
+        this.setupCamera();
+        this.inputManager.updateCamera(this.camera);
+    }
+
+    // Render-Loop
     animate() {
         requestAnimationFrame(this.animate);
+
+        this.timer.update();
+        const deltaTime = this.timer.getDelta(); // Die Zeit seit dem letzten Frame
+        const elapsed = this.timer.getElapsed(); // Die Zeit seit Start des Timers
+
+	    updateOrbitControlsWithRightStick(
+            this.controls,
+            deltaTime,
+            this.inputManager.getInvertPan(),
+            this.inputManager.getInvertTilt()
+        );
+
+        moveOrbitCameraHorizontal(
+            this.camera,
+            this.controls,
+            this.inputManager.getShoulderInput()
+        );
+
+        if (this.inputManager.doResetCamera()) {
+            this.resetCamera();
+        }
+
+        this.controls.update();
+
+        this.inputManager.update(deltaTime);
 
         this.renderer.render(this.scene, this.camera);
     }
