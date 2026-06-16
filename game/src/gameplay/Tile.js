@@ -1,3 +1,4 @@
+import Animal from "../data/Animal.js";
 import { Landscape } from "../data/Landscape.js";
 import Animal from "../data/Animal.js";
 
@@ -6,13 +7,13 @@ import Animal from "../data/Animal.js";
  * - `tileData`: die statische Definition (`TileData`) der Landschaften/Tiere
  * - `rotation`: Index 0-5 für 60°-Schritte (darauf basieren Render-Rotationen)
  * - `hexCoord`: optional die Logik-Koordinate, auf der das Tile sitzt
- * - `occupied`: Hilfsflag, derzeit nicht breit genutzt aber vorhanden
+ * - `occupiedBy`: das Tier, das auf der Kachel sitzt (oder `Animal.NONE` wenn leer)
  */
 export default class Tile {
     constructor(tileData, rotation = 0, hexCoord = null) {
         this.hexCoord = hexCoord;
         this.tileData = tileData;
-        this.occupiedBy = Animal.NONE;
+        this.occupiedBy = Animal.NONE; // Standardmäßig kein Tier auf der Kachel
         this.rotation = rotation;
     }
 
@@ -46,6 +47,18 @@ export default class Tile {
     rotateCounterClockwise() {
         this.rotation = (this.rotation + 5) % 6; // -60° (oder +300°)
     }
+
+    animalIsAllowed(animal){
+        return this.tileData.animalIsAllowed(animal);
+    }
+
+    hasLandscape(landscape) {
+        if (!this.tileData) {
+            console.error("Tile Data is undefined. Cannot check landscapes.");
+            return false;
+        }
+        return this.tileData.hasLandscape(landscape);
+    }
 }
 
 /**
@@ -67,6 +80,14 @@ export class TileData {
 
     get isKeystone(){
         return this.secondaryLandscape === Landscape.UNDEFINED;
+    }
+
+    animalIsAllowed(animal) {
+        return this.animals.includes(animal);
+    }
+
+    hasLandscape(landscape) {
+        return this.primaryLandscape === landscape || this.secondaryLandscape === landscape;
     }
 }
 
