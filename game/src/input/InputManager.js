@@ -459,7 +459,7 @@ export default class InputManager{
     updateIndex(index){
         this.selectedTileOnHandIndex = index;
         this.gameplayManager.onHoverTileOnHand(index);
-        if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+        if (DebugConfig.enabled && DebugConfig.doLogSmallInfo) {
             console.log(`Selected tile index: ${index}`);
         }
     }
