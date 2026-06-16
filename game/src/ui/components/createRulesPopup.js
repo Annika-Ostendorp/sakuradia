@@ -5,7 +5,7 @@ export function createRulesPopup({ pages = [], onClose } = {}) {
   popupElement.className = 'rules-popup';
   popupElement.setAttribute('role', 'dialog');
   popupElement.setAttribute('aria-modal', 'true');
-  popupElement.setAttribute('aria-labelledby', 'rules-popup-title');
+  popupElement.setAttribute('aria-label', 'Spielregeln');
 
   const totalPages = Math.max(pages.length, 1);
 
@@ -13,7 +13,6 @@ export function createRulesPopup({ pages = [], onClose } = {}) {
     <div class="rules-popup__dialog">
       <header class="rules-popup__header">
         <p class="rules-popup__eyebrow">Spielregeln</p>
-        <h2 class="rules-popup__title" id="rules-popup-title">Regelübersicht</h2>
         <p class="rules-popup__counter">
           Seite <span class="rules-popup__counter-current">1</span>
           / <span class="rules-popup__counter-total">${totalPages}</span>
@@ -21,18 +20,11 @@ export function createRulesPopup({ pages = [], onClose } = {}) {
       </header>
 
       <div class="rules-popup__content">
-        <div class="rules-popup__page rules-popup__page--placeholder" aria-hidden="true">
-          <span class="rules-popup__page-label">Platz für JPG</span>
-          <span class="rules-popup__page-hint">Hier kannst du später deine Regelbilder einfügen.</span>
-        </div>
         <img class="rules-popup__image" alt="" hidden />
+        <button class="rules-popup__icon-button rules-popup__icon-button--close" type="button" data-action="close" aria-label="Schließen">×</button>
+        <button class="rules-popup__icon-button rules-popup__icon-button--prev" type="button" data-action="prev" aria-label="Zurück">‹</button>
+        <button class="rules-popup__icon-button rules-popup__icon-button--next" type="button" data-action="next" aria-label="Weiter">›</button>
       </div>
-
-      <footer class="rules-popup__actions">
-        <button class="rules-popup__button rules-popup__button--ghost" type="button" data-action="close">Schließen</button>
-        <button class="rules-popup__button rules-popup__button--secondary" type="button" data-action="prev">Zurück</button>
-        <button class="rules-popup__button rules-popup__button--primary" type="button" data-action="next">Weiter</button>
-      </footer>
     </div>
   `;
 
@@ -53,7 +45,7 @@ export function createRulesPopup({ pages = [], onClose } = {}) {
 
     counterCurrent.textContent = String(currentPage + 1);
     prevButton.disabled = currentPage === 0;
-    nextButton.textContent = currentPage === totalPages - 1 ? 'Fertig' : 'Weiter';
+    nextButton.disabled = currentPage >= totalPages - 1;
 
     if (page?.src) {
       imageElement.hidden = false;
@@ -83,10 +75,7 @@ export function createRulesPopup({ pages = [], onClose } = {}) {
     if (currentPage < totalPages - 1) {
       currentPage += 1;
       renderPage();
-      return;
     }
-
-    closePopup();
   });
 
   closeButton.addEventListener('click', closePopup);

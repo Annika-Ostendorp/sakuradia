@@ -4,6 +4,21 @@ import { createGameCamera, createGameOrbitControls } from '../rendering/OrbitalC
 import GameplayManager from '../gameplay/GameplayManager.js';
 import InputManager from '../input/InputManager.js';
 import { createRulesPopup } from '../ui/components/createRulesPopup.js';
+import ruleImage01 from '../assets/images/rules/Sakura_RulePopup-01.jpg';
+import ruleImage02 from '../assets/images/rules/Sakura_RulePopup-02.jpg';
+import ruleImage03 from '../assets/images/rules/Sakura_RulePopup-03.jpg';
+import ruleImage04 from '../assets/images/rules/Sakura_RulePopup-04.jpg';
+import ruleImage07 from '../assets/images/rules/Sakura_RulePopup-07.jpg';
+import ruleImage08 from '../assets/images/rules/Sakura_RulePopup-08.jpg';
+
+const RULE_PAGES = [
+    { src: ruleImage01, alt: 'Rules page 1' },
+    { src: ruleImage02, alt: 'Rules page 2' },
+    { src: ruleImage03, alt: 'Rules page 3' },
+    { src: ruleImage04, alt: 'Rules page 4' },
+    { src: ruleImage07, alt: 'Rules page 7' },
+    { src: ruleImage08, alt: 'Rules page 8' },
+];
 
 /**
  * Baut die 3D-Szene auf und startet die Render-Schleife. Initialisiert Kamera,
@@ -19,7 +34,7 @@ export default class GameScene {
         this.gameConfig = gameConfig;
         this.initialization();
 
-        this.rulesPopup = createRulesPopup();
+        this.rulesPopup = createRulesPopup({ pages: RULE_PAGES });
         this.appShell.append(this.rulesPopup.element);
 
         this.animate = this.animate.bind(this);
