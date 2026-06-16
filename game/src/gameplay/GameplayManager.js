@@ -19,11 +19,17 @@ export default class GameplayManager {
   constructor(scene, gameConfig) {
     this.scene = scene;
     this.gameConfig = gameConfig;
-    this.currentTurn = 1; // Current turn number
+    this.playerCount = Math.max(1, Number(this.gameConfig.playerCount || 1));
+    this.currentTurn = 1; // Absoluter Zugzähler über alle Spieler
+    this.currentRound = 1;
+    this.currentPlayer = 1;
+    this.playerScores = Array.from({ length: this.playerCount }, () => 0);
     this.gameLength = this.gameConfig.rounds; // Rounds to be played until game end
+    this.maxTurns = this.gameLength * this.playerCount;
     this.game = new Game(this.scene);
     this.roundState = RoundState.CHOOSE_TILE; // Initial round state
 
+    // Index des aktuell in der UI markierten Hand-Paares
     this.selectedHandIndex = 0; // Index des aktuell in der UI markierten Hand-Paares
     this.latestPlacedTileHexCoord = null; // HexCoord, an der das zuletzt platzierte Tile liegt (nach Bestätigung)
 
@@ -43,6 +49,7 @@ export default class GameplayManager {
       onSelectPair: (index) => {
         this.selectedHandIndex = index;
         this.syncHandPanel();
+        this.syncTurnStatus();
       },
     });
 
@@ -250,19 +257,30 @@ export default class GameplayManager {
 
       this.logGameplayInfo();
     }
-
     this.currentTurn++;
-    if (this.currentTurn > this.gameLength) {
-      DebugConfig.logGameplayInfo(
-        `Game over! Final turn ${this.currentTurn - 1} reached.`,
-      );
+    this.currentPlayer = ((this.currentTurn - 1) % this.playerCount) + 1;
+    this.currentRound = Math.ceil(this.currentTurn / this.playerCount);
 
-      // Aktulisiere state
+    if (this.currentRound > this.gameLength) {
+      console.log("Game Over");
       this.roundState = RoundState.GAME_OVER;
+      this.syncTurnStatus();
       return;
     }
-    // Aktulisiere state
+
+    this.syncTurnStatus();
+
     this.roundState = RoundState.CHOOSE_TILE;
+  }
+
+  syncTurnStatus() {
+    this.handPanel.updateStatus({
+      currentRound: Math.min(this.currentRound, this.gameLength),
+      totalRounds: this.gameLength,
+      currentPlayer: this.currentPlayer,
+      playerCount: this.playerCount,
+      scoresByPlayer: this.playerScores,
+    });
   }
 
   // Platziert ein Tile an einer zufälligen, leeren Nachbar-Position mit zufälliger Rotation.

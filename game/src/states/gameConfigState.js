@@ -1,18 +1,22 @@
 /**
- * Verwaltet die globale Spielkonfiguration (Anzahl Runden, Spielstatus usw.).
+ * Verwaltet die globale Spielkonfiguration (Anzahl Runden, Spielerzahl,
+ * Spielstatus usw.).
  * Diese Datei stellt Funktionen bereit, um die Konfiguration sicher zu lesen,
  * zu aktualisieren und zurückzusetzen sowie Grenzen für die Rundenzahl zu liefern.
  */
 const DEFAULT_GAME_CONFIG = Object.freeze({
   // Standardwert: Anzahl Runden im Spiel
-  rounds: 81,
+  rounds: 85,
+  playerCount: 1,
   // Flag ob das Spiel bereits gestartet wurde
   gameStarted: false,
 });
 
 // Minimale und maximale erlaubte Rundenzahl (Inclusive)
 const MIN_ROUNDS = 1;
-const MAX_ROUNDS = 81;
+const MAX_ROUNDS = 85;
+const MIN_PLAYERS = 1;
+const MAX_PLAYERS = 4;
 
 // Laufende (mutable) Spielkonfiguration, initialisiert mit den Standardwerten. Alle Funktionen in diesem Modul
 let gameConfig = { ...DEFAULT_GAME_CONFIG };
@@ -24,6 +28,14 @@ let gameConfig = { ...DEFAULT_GAME_CONFIG };
  */
 function normalizeRounds(rounds) {
   return Math.min(MAX_ROUNDS, Math.max(MIN_ROUNDS, Number(rounds)));
+}
+
+/**
+ * Stellt sicher, dass eine übergebene Spielerzahl in den erlaubten Bereich fällt
+ * und als Zahl konvertiert wird.
+ */
+function normalizePlayerCount(playerCount) {
+  return Math.min(MAX_PLAYERS, Math.max(MIN_PLAYERS, Number(playerCount)));
 }
 
 /**
@@ -47,6 +59,11 @@ export function updateGameConfig(nextConfig) {
   // Rundenzahl wird immer durch normalizeRounds geprüft/geklemmt
   if (nextConfig.rounds !== undefined) {
     normalizedConfig.rounds = normalizeRounds(nextConfig.rounds);
+  }
+
+  // Spieleranzahl wird immer durch normalizePlayerCount geprüft/geklemmt
+  if (nextConfig.playerCount !== undefined) {
+    normalizedConfig.playerCount = normalizePlayerCount(nextConfig.playerCount);
   }
 
   // Merge: bestehende Werte behalten, neue Werte überschreiben
@@ -82,5 +99,12 @@ export function getRoundLimits() {
   return {
     min: MIN_ROUNDS,
     max: MAX_ROUNDS,
+  };
+}
+
+export function getPlayerLimits() {
+  return {
+    min: MIN_PLAYERS,
+    max: MAX_PLAYERS,
   };
 }
