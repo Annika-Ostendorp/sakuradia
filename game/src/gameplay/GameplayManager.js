@@ -226,7 +226,21 @@ export default class GameplayManager {
       this.game.deckLogic.getNextAnimal(),
     );
     this.syncHandPanel();
+
     if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+      console.group("Animals in deck:");
+
+      const animalsInDeck = this.game.deckLogic.animalDeck;
+      let animalCounts = {};
+      animalsInDeck.forEach((animal) => {
+        animalCounts[animal] = (animalCounts[animal] || 0) + 1;
+      });
+      for (const [animal, count] of Object.entries(animalCounts)) {
+        console.log(`${animal}: ${count}`);
+      }
+
+      console.groupEnd();
+
       this.logGameplayInfo();
     }
 
@@ -520,6 +534,9 @@ export default class GameplayManager {
     this.clearPreviewTile();
     this.clearPreviewAnimal();
 
+    // Füge aktuelles Tier wieder dem Deck hinzu, da es nicht platziert wurde
+    const animal = this.game.getAnimalAtIndex(this.selectedHandIndex);
+    this.game.deckLogic.returnAnimalToDeck(animal);
     this.onTurnEnd();
   }
 
