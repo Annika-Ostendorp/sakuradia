@@ -130,4 +130,40 @@ function getKoiPoints(length) {
     return 26;
 }
 
+// Wurde Koi schon einer gefundenen Koi-Gruppe zugeordnet? --> falls z.B. best. Koi nochmal in Schleife auftauchen -> soll nicht nochmal diesselbe Gruppe erzeugen
+function setsContainCoord(sets, hexCoord) {
+    // sets ist Liste von Koi-Gruppen -> siehe oben
+    // prüfen, ob übergebene Koordinate in irgendeiner Gruppe schon vorkommt
+    for (const set of sets) {
+        if (setContainsCoord(set, hexCoord)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+// Ist Koordinate in best. Set schon enthalten? (da HexCoords Objekte sind und JavaScript ja normalerweise nur über Referenz von Objekten vergleicht)
+function setContainsCoord(set, hexCoord) {
+    // prüfen mit coord.equals(hexCoord) gegen Objekt-Referenz-Problematik -> nach gleichen Koordinatenwerten prüfen
+    for (const coord of set) {
+        if (coord.equals(hexCoord)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+// Tile an best. Koordinate geben
+function getTileFromGridAt(grid, hexCoord) {
+    // Map verwendet HexCoord-Objekte auch als Key --> nach Koordinate suchen mit gleichen Werten
+    for (const [placedHexCoord, tile] of grid.entries()) {
+        if (placedHexCoord.equals(hexCoord)) {
+            return tile;
+        }
+    }
+    return undefined; // wenn kein Tile an dieser Koordinate gefunden wurde
+}
+
 
