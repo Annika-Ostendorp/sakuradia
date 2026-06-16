@@ -153,3 +153,14 @@ function setContainsCoord(set, hexCoord) {
     }
     return false;
 }
+
+// Tile an best. Koordinate geben
+function getTileFromGridAt(grid, hexCoord) {
+    // Map verwendet HexCoord-Objekte auch als Key --> nach Koordinate suchen mit gleichen Werten
+    for (const [placedHexCoord, tile] of grid.entries()) {
+        if (placedHexCoord.equals(hexCoord)) {
+            return tile;
+        }
+    }
+    return undefined; // wenn kein Tile an dieser Koordinate gefunden wurde
+}
