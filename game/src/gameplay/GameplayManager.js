@@ -400,4 +400,25 @@ export default class GameplayManager {
       this.roundState = RoundState.CHOOSE_TILE;
     }
   }
+
+  logGameplayInfo() {
+    // Grid Content
+    const occupiedHexCoords = this.game.gridManager.getOccupiedHexCoords();
+    let gridContent = "Current grid state:\n";
+    occupiedHexCoords.forEach((hexCoord) => {
+      const tile = this.game.gridManager.getTileAt(hexCoord);
+      gridContent += `
+                    Hex (${hexCoord.column}, ${hexCoord.row}): 
+                    ${tile && tile.occupiedBy !== Animal.NONE ? "Occupied by: " + tile.occupiedBy : "Unoccupied"}`;
+    });
+    console.log(gridContent);
+
+    // Score Berechnung
+    const scoreResult = calculateScoreForGrid(
+      this.game.gridManager.grid,
+      "player1",
+      0,
+    );
+    console.log("Current score result:", scoreResult);
+  }
 }
