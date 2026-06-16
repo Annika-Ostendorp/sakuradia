@@ -33,7 +33,7 @@ export function calculateKoiScore(grid) {
     // jede gefundene Koi-Gruppe auswerten
     for (const set of sets) {
         // Koi-Gruppe zählt nur, wenn sie gültige Reihe ist
-        if (isValidKoiLine(set)) {
+        if (isValidKoiLine(set, grid)) {
             sum += getKoiPoints(set.size);
         }
     }
@@ -72,29 +72,64 @@ function getNeighborKoi(hexCoord, grid, set) {
 
 
 // Prüfen, ob Gruppe überhaupt gültige Koi-Reihe ist -> Form der Gruppe prüfen
-function isValidKoiLine(set) {
+function isValidKoiLine(set, grid) {
     // Eine Koi-Reihe ist gültig, wenn jeder Koi höchstens zwei andere Koi direkt als Nachbarn hat
     // Dadurch sind einfache Reihen erlaubt:
     // K - K - K
     // Auch ein Dreieck aus 3 Koi ist erlaubt, weil jeder Koi dort genau 2 Koi-Nachbarn hat
     // Verzweigungen sind nicht erlaubt, weil dann ein Koi 3 oder mehr Koi-Nachbarn hätte
+    
+    let koiWithOneNeighbor = 0;
+    let koiWithTwoNeighbors = 0;
+
     for (const koi of set) {
         let koiNeighborCount = 0;
         const neighbors = koi.getNeighbors();
         for (const neighbor of neighbors) {
+            const neighborTile = getTileFromGridAt(grid, neighbor);
 
-            // nur Nachbarn zählen, die auch in derselben Koi-Gruppe sind
-            if (setContainsCoord(set, neighbor)) {
+            if (neighborTile !== undefined && neighborTile.occupiedBy === Animal.KOI) {
+                // nur Nachbarn zählen, die auch in derselben Koi-Gruppe sind
+                if (!setContainsCoord(set, neighbor)) {
+                    return false;
+                }
                 koiNeighborCount++;
             }
         }
 
-        // mehr als 2 Koi-Nachbarn --> keine Reihe mehr, sondern verzweigte Gruppe
+        // Verzweigung: ein Koi berührt 3 oder mehr Koi -> keine Reihe
         if (koiNeighborCount > 2) {
             return false;
         }
+
+        if (koiNeighborCount === 1) {
+            koiWithOneNeighbor++;
+        }
+
+        if (koiNeighborCount === 2) {
+            koiWithTwoNeighbors++;
+        }
     }
-    return true;
+
+    // Einzelner Koi ist erlaubt
+    if (set.size === 1) {
+        return true;
+    }
+
+    // Zwei Koi nebeneinander sind erlaubt
+    if (set.size === 2) {
+        return koiWithOneNeighbor === 2;
+    }
+
+    // Dreieck aus genau 3 Koi ist erlaubt
+    if (set.size === 3 && koiWithTwoNeighbors === 3) {
+        return true;
+    }
+
+    // Normale Reihe ab 3 Koi:
+    // genau zwei Enden mit je 1 Nachbar,
+    // alle mittleren Koi mit je 2 Nachbarn
+    return koiWithOneNeighbor === 2;
 }
 
 
