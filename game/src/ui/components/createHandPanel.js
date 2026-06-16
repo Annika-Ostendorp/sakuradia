@@ -1,5 +1,14 @@
 import '../styles/handPanel.css';
 
+const LANDSCAPE_COLORS = Object.freeze({
+  BambooForest: '#2f7a3f',
+  Mountain: '#57606a',
+  Pond: '#2f81c5',
+  Sakura: '#e7a7ba',
+  Wetland: '#4f8f4f',
+  Undefined: '#8b949e',
+});
+
 function toReadableLabel(value) {
   if (!value) {
     return '-';
@@ -8,6 +17,18 @@ function toReadableLabel(value) {
   return String(value)
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .replace(/_/g, ' ');
+}
+
+function getLandscapeColor(landscape) {
+  return LANDSCAPE_COLORS[landscape] || LANDSCAPE_COLORS.Undefined;
+}
+
+function getAllowedAnimalsText(tileData) {
+  if (!tileData || !Array.isArray(tileData.animals) || tileData.animals.length === 0) {
+    return 'Keine';
+  }
+
+  return tileData.animals.map((animal) => toReadableLabel(animal)).join(', ');
 }
 
 export function createHandPanel({ onSelectPair } = {}) {
@@ -39,7 +60,7 @@ export function createHandPanel({ onSelectPair } = {}) {
       button.className = 'hand-panel__pair';
       button.setAttribute('role', 'listitem');
 
-      if (!pair?.tileData || !pair?.animal) {
+      if (!pair?.tileData) {
         button.classList.add('hand-panel__pair--empty');
         button.disabled = true;
         button.innerHTML = `
@@ -54,12 +75,21 @@ export function createHandPanel({ onSelectPair } = {}) {
       const primary = toReadableLabel(pair.tileData.primaryLandscape);
       const secondary = pair.tileData.isKeystone ? null : toReadableLabel(pair.tileData.secondaryLandscape);
       const tileText = secondary ? `${primary} / ${secondary}` : `${primary} (Keystone)`;
+      const primaryColor = getLandscapeColor(pair.tileData.primaryLandscape);
+      const secondaryColor = pair.tileData.isKeystone
+        ? primaryColor
+        : getLandscapeColor(pair.tileData.secondaryLandscape);
+      const tileVisualBackground = pair.tileData.isKeystone
+        ? primaryColor
+        : `linear-gradient(135deg, ${primaryColor} 0 50%, ${secondaryColor} 50% 100%)`;
+      const allowedAnimalsText = getAllowedAnimalsText(pair.tileData);
 
       button.classList.toggle('hand-panel__pair--selected', index === selectedIndex);
       button.innerHTML = `
         <span class="hand-panel__pair-index">${index + 1}</span>
+        <span class="hand-panel__tile-visual" style="background: ${tileVisualBackground}" aria-hidden="true"></span>
         <span class="hand-panel__pair-title">${tileText}</span>
-        <span class="hand-panel__pair-meta">Tier: ${toReadableLabel(pair.animal)}</span>
+        <span class="hand-panel__pair-meta">Erlaubte Tiere: ${allowedAnimalsText}</span>
       `;
 
       button.addEventListener('click', () => {
