@@ -454,8 +454,7 @@ function getFirstHexAtDistance(
     for (let step = 0; step < distance; step++) {
       // Checke ob das aktuelle HexCoord dem occupied-Filter entspricht. Wenn ja, gib es zurück.
       const doesNotWantOccupancy =
-        isPlaced === false &&
-        gridManager.isOccupied(current) === false;
+        isPlaced === false && gridManager.isOccupied(current) === false;
       const wantsSpecificOccupancy =
         isPlaced === true &&
         gridManager.getTileAt(current)?.occupiedBy === occupiedBy;
@@ -654,4 +653,24 @@ function getBestHexCoordInWorldDirectionFromCandidates(
   }
 
   return bestHexCoord;
+}
+
+export function getClosestHexCoordFromList(hexCoords, originHexCoord) {
+  if (!hexCoords || hexCoords.length === 0 || !originHexCoord) {
+    return null;
+  }
+
+  let closestHexCoord = null;
+  let closestDistance = Infinity;
+
+  for (const hexCoord of hexCoords) {
+    const distance = HexCoord.distance(originHexCoord, hexCoord);
+
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestHexCoord = hexCoord;
+    }
+  }
+
+  return closestHexCoord;
 }
