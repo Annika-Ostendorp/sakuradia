@@ -18,9 +18,9 @@ const LANDSCAPE_IMAGES = Object.freeze({
 });
 
 const LANDSCAPE_IMAGE_SCALES = Object.freeze({
-  default: 1.25,
-  Pond: 1.4,
-  Sakura: 1.6,
+  default: 1.38,
+  Pond: 1.52,
+  Sakura: 1.7,
 });
 
 function toReadableLabel(value) {
@@ -159,7 +159,6 @@ export function createHandPanel({ onSelectPair } = {}) {
         button.classList.add('hand-panel__pair--empty');
         button.disabled = true;
         button.innerHTML = `
-          <span class="hand-panel__pair-index">${index + 1}</span>
           <span class="hand-panel__pair-title">Leer</span>
           <span class="hand-panel__pair-meta">Kein Paar vorhanden</span>
         `;
@@ -167,9 +166,6 @@ export function createHandPanel({ onSelectPair } = {}) {
         continue;
       }
 
-      const primary = toReadableLabel(pair.tileData.primaryLandscape);
-      const secondary = pair.tileData.isKeystone ? null : toReadableLabel(pair.tileData.secondaryLandscape);
-      const tileText = secondary ? `${primary} / ${secondary}` : `${primary} (Keystone)`;
       const primaryColor = getLandscapeColor(pair.tileData.primaryLandscape);
       const secondaryColor = pair.tileData.isKeystone
         ? primaryColor
@@ -187,12 +183,11 @@ export function createHandPanel({ onSelectPair } = {}) {
 
       button.classList.toggle('hand-panel__pair--selected', index === selectedIndex);
       button.innerHTML = `
-        <span class="hand-panel__pair-index">${index + 1}</span>
         <span class="hand-panel__pair-visual-row">
           ${tileVisualSvg}
+          <span class="hand-panel__pair-divider" aria-hidden="true"></span>
           <span class="hand-panel__drawn-animal" aria-label="Gezogenes Tier">Tier: ${drawnAnimalText}</span>
         </span>
-        <span class="hand-panel__pair-title">${tileText}</span>
         <span class="hand-panel__pair-meta">Erlaubte Tiere: ${allowedAnimalsText}</span>
       `;
 
