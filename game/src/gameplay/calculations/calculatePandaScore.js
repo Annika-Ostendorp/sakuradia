@@ -75,7 +75,7 @@ function getNeighborPandas(hexCoord, grid, set) {
         }
 
         // Tile suchen, dass an dieser Nachbar-Koordinate liegt
-        const neighborTile = grid.getTileAt(neighbor);
+        const neighborTile = getTileFromGridAt(grid, neighbor);
 
         // wenn dort Tile liegt und darauf Panda ist, dann gehört Nachbar zur selben Panda-Gruppe
         if (neighborTile !== undefined && neighborTile.occupiedBy === Animal.PANDA) {
@@ -127,4 +127,17 @@ function setContainsCoord(set, hexCoord) {
         }
     }
     return false;
+}
+
+// Tile an bestimmter Koordinate finden
+function getTileFromGridAt(grid, hexCoord) {
+    // Map verwendet HexCoord-Objekte als Key
+    // Deshalb mit equals nach gleichen Koordinatenwerten suchen
+    for (const [placedHexCoord, tile] of grid.entries()) {
+        if (placedHexCoord.equals(hexCoord)) {
+            return tile;
+        }
+    }
+
+    return undefined;
 }
