@@ -52,12 +52,12 @@ export default class ModelLoader {
 
     async getModelForTile(tile) {
         // Vollmodell für Einzellandschaft laden.
-        if (tile.isKeystone) {
-            return await this.getModelForKeystone(tile.primaryLandscape);
+        if (tile.tileData.isKeystone) {
+            return await this.getModelForKeystone(tile.tileData.primaryLandscape);
         }
 
         // Kombination aus Primär- und Sekundärlandschaft behandeln.
-        return await this.getModelForLandscapeCombination(tile.primaryLandscape, tile.secondaryLandscape);
+        return await this.getModelForLandscapeCombination(tile.tileData.primaryLandscape, tile.tileData.secondaryLandscape);
     }
 
     async getModelForKeystone(landscape) {
@@ -97,6 +97,6 @@ export default class ModelLoader {
      * Vollmodell für Keystones, Halbmodell für normale Kacheln.
      */
     getModelNameForTile(tile) {
-        return tile.isKeystone ? "Hexagon_Full.glb" : "Hexagon_Half.glb";
+        return tile.tileData.isKeystone ? "Hexagon_Full.glb" : "Hexagon_Half.glb";
     }
 }

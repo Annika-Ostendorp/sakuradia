@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import RoundState from "/src/data/RoundState.js";
+import { RoundState } from "/src/data/RoundState.js";
 import DebugConfig from "/src/debug/DebugConfig.js";
 import DebugRayDrawer from "/src/debug/DebugRayDrawer.js";
 
@@ -42,6 +42,10 @@ export default class InputManager{
         // Ost-Button des Gamepads (Xbox B / PlayStation Circle) wird als Undo-Button verwendet
         this.gamepadUndoWasPressed = false;
         this.undoTurnRequested = false;
+
+        // Nord-Button des Gamepads (Xbox Y / PlayStation Triangle) wird als Skip-Turn-Button verwendet
+        this.gamepadSkipAnimalPlacementWasPressed = false;
+        this.skipAnimalPlacementRequested = false;
 
         // Shoulder sind für seitliche Kamera-Bewegung zuständig
         this.gamepadShoulderValue = 0;
@@ -120,13 +124,28 @@ export default class InputManager{
                 break;
 
             case RoundState.PLACE_TILE:
+                this.handlePlaceTile(inputDir); // Dynamische Bewegung durch Hex-Grid
+                break;
+
+            case RoundState.CANNOT_PLACE_ANIMAL:
                 if (this.undoTurnRequested){
+                    console.log("Turn undone by player input.");
                     this.undoTurnRequested = false;
                     this.gameplayManager.undoTileChoice();
                     return;
                 }
-                this.handlePlaceTile(inputDir); // Dynamische Bewegung durch Hex-Grid
+
+                if (this.skipAnimalPlacementRequested){
+                    console.log("Turn skipped by player input.");
+                    this.skipAnimalPlacementRequested = false;
+                    this.gameplayManager.skipAnimalPlacement();
+                }
                 break;
+
+            case RoundState.PLACE_ANIMAL:
+                this.handlePlaceAnimal(inputDir); // Dynamische Bewegung durch Hex-Grid
+                break;
+
 
             default:
                 console.warn("default case");
@@ -155,9 +174,7 @@ export default class InputManager{
 
     // Dynamische Bewegung durch Hex-Grid
     handlePlaceTile(inputDir){
-        if (inputDir == null){
-            return;
-        }
+        if (inputDir == null) return;
 
         // Flip y direction ohne den gemeinsamen Richtungsvektor zu verändern.
         const movementDir = inputDir.clone();
@@ -218,10 +235,49 @@ export default class InputManager{
         this.gameplayManager.updatePreviewTilePosition(targetPosition, isMicroMovement);
     }
 
-    // For later implementation
-    //handleCancelPlaceTile(event){
-        // Let GameplayManager reset state to RoundState.CHOOSE_TILE
-    //}
+    handlePlaceAnimal(inputDir){
+        if (inputDir == null) return;
+
+        // Flip y direction ohne den gemeinsamen Richtungsvektor zu verändern.
+        const movementDir = inputDir.clone();
+        const previewAnimalHexCoord = this.gameplayManager.previewAnimalHexCoord;
+        if (previewAnimalHexCoord == null){
+            console.error("PreviewAnimalHexCoord is null!")
+            return;
+        }
+        const game = this.gameplayManager.getGame();
+        const gridManager = game.getGridManager();
+
+        const isUsingStick = this.getGamepadLeftStickDirection().lengthSq() > 0;
+        const isUsingDPad = this.getGamepadDPadDirection().lengthSq() > 0;
+        const isMicroMovement = !isUsingStick && isUsingDPad;
+        
+        const cameraRelativeDir = this.getCameraRelativeDirection(movementDir);
+
+        if (cameraRelativeDir.lengthSq() === 0){
+            console.warn("Camera relative direction is zero in handlePlaceAnimal. This should not happen, da inputDir schon auf null geprüft wurde. inputDir:", inputDir);
+            return;
+        }
+
+        const targetPosition = gridManager.getPreviewAnimalMovementTarget(
+            previewAnimalHexCoord,
+            cameraRelativeDir,
+            this.gameplayManager.getPreviewAnimal()
+        );
+
+        if (!targetPosition) {
+            if (DebugConfig.enabled && DebugConfig.doLogSmallInfo){
+                console.info("No targetPosition found in handlePlaceAnimal");
+            }
+            return;
+        }
+        if(targetPosition == undefined){
+            console.warn("targetPosition is undefined in handlePlaceAnimal");
+            return;
+        }
+
+        this.gameplayManager.updatePreviewAnimalPosition(targetPosition);
+    }
 
     getGamepad(){
         const gamepads = navigator.getGamepads();
@@ -280,6 +336,13 @@ export default class InputManager{
             case 'KeyB':
                 if (isPressed){
                     this.undoTurnRequested = true;
+                }
+                break;
+
+            case 'KeyZ': // X und Y Taste wegen englischer/deutscher Tastaturbelegung
+            case 'KeyY':
+                if (isPressed){
+                    this.skipAnimalPlacementRequested = true;
                 }
                 break;
         }
@@ -467,18 +530,26 @@ export default class InputManager{
             this.requestCameraReset = true;
         }
 
+
         // Undo turn
         const undoButton = gamepad.buttons[1]; // East = B
         const isUndoButtonPressed = undoButton?.pressed === true;
         const undoButtonWasJustPressed =
             isUndoButtonPressed && !this.gamepadUndoWasPressed;
 
-        if (undoButtonWasJustPressed) {
-            this.undoTurnRequested = true;
-        }
-
+        this.undoTurnRequested = undoButtonWasJustPressed;
         this.gamepadUndoWasPressed = isUndoButtonPressed;
-        // Logic executed in update() because we only want to trigger undo in the correct round state (RoundState.PLACE_TILE)
+
+
+        // Skip turn
+        const skipTurnButton = gamepad.buttons[3]; // North = Y
+        const isSkipTurnButtonPressed = skipTurnButton?.pressed === true;
+        const skipTurnButtonWasJustPressed =
+            isSkipTurnButtonPressed && !this.gamepadSkipAnimalPlacementWasPressed;
+
+        this.skipAnimalPlacementRequested = skipTurnButtonWasJustPressed;
+        this.gamepadSkipAnimalPlacementWasPressed = isSkipTurnButtonPressed;
+
 
         // Trigger-Buttons für Rotation oder Index-Wechsel je nach round state
         const triggerLeftButton = gamepad.buttons[6]; // Xbox LT / PlayStation L2
@@ -587,6 +658,13 @@ export default class InputManager{
 
 
     onSubmit(){
+        const roundState = this.gameplayManager.getCurrentRoundState();
+        if (roundState === RoundState.CANNOT_PLACE_ANIMAL
+            || roundState === RoundState.GAME_OVER
+            || roundState === RoundState.DRAW
+        ){
+            return; // In diesen States soll Submit nichts tun
+        }
         this.gameplayManager.onSubmitted();
     }
 

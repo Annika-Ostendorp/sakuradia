@@ -76,6 +76,10 @@ export default class Game {
     }));
   }
 
+  getAnimalAtIndex(index) {
+    return this.animalsOnHand[index] || null;
+  }
+
   // Entfernt ein Paar an Index `index` aus beiden Queues und gibt es zurück.
   // Gibt `{tileData: null, animal: null}` zurück, wenn der Index ungültig ist.
   removePairFromHand(index = 0) {

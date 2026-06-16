@@ -1,10 +1,12 @@
-import RoundState from "../data/RoundState.js";
+import { RoundState } from "../data/RoundState.js";
 import Game from "./Game.js";
 import { createHandPanel } from "../ui/components/createHandPanel.js";
 import HexCoord from "../utils/HexCoord.js";
 import DebugConfig from "../debug/DebugConfig.js";
 import { Animal } from "../data/Animal.js";
 import { calculateScoreForGrid } from "./scoringSystem.js";
+import Tile from "/src/gameplay/Tile.js";
+import { getFirstHexWithMaxDistance } from "/src/gameplay/grid/gridQueryService.js";
 
 /**
  * Vermittelt zwischen Low-Level-Game-Logik (`Game`) und der UI/Interaktion.
@@ -32,10 +34,15 @@ export default class GameplayManager {
     this.latestPlacedTileHexCoord = null; // HexCoord, an der das zuletzt platzierte Tile liegt (nach Bestätigung)
 
     // Preview Parameter
+    this.currentTurnTileModel = null; // Referenz zum aktuell platzierten Tile-Model, um es löschen zu können bei einem undo turn
     this.previewTileModel = null; // Referenz zum model, welches nur im preview angezeigt wird
     this.previewTileModelPromise = null; // Promise, das auf die Fertigstellung des Ladens des preview-Modells wartet
     this.previewTileHexCoord = null; // HexCoord, an der das preview-Modell aktuell positioniert ist oder positioniert werden soll
     this.previewTileRotation = 0; // Rotation des preview-Modells in 60°-Schritten (Index 0-5)
+
+    this.previewAnimalModel = null; // Referenz zum animal model, welches nur im preview angezeigt wird
+    this.previewAnimalModelPromise = null; // Promise, das auf die Fertigstellung des Ladens des preview animal Modells wartet
+    this.previewAnimalHexCoord = null; // HexCoord, an der das preview animal Modell aktuell positioniert ist oder positioniert werden soll
 
     // Hand-Panel UI: Callback aktualisiert die Auswahl und synchronisiert das UI
     this.handPanel = createHandPanel({
@@ -52,10 +59,12 @@ export default class GameplayManager {
     }
     appShell.append(this.handPanel.element);
 
-    DebugConfig.logGameplayInfo(
-      "Initializing GameplayManager with gameConfig:" +
-        JSON.stringify(this.gameConfig),
-    );
+    if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+      console.log(
+        "Initializing GameplayManager with gameConfig:" +
+          JSON.stringify(this.gameConfig),
+      );
+    }
 
     // Initiales Ziehen: 3 Paare in die Hand füllen
     for (let i = 0; i < 3; i++) {
@@ -76,6 +85,15 @@ export default class GameplayManager {
     return this.roundState;
   }
 
+  getAnimalManager() {
+    const gridManager = this.game.gridManager;
+    return gridManager.animalManager;
+  }
+
+  getPreviewAnimal() {
+    return this.game.getAnimalAtIndex(this.selectedHandIndex);
+  }
+
   onHoverTileOnHand(index) {
     // Hover tile visually
     this.selectedHandIndex = index;
@@ -89,12 +107,13 @@ export default class GameplayManager {
 
     // Je nach State
     switch (previousState) {
-      case RoundState.GAME_OVER:
-      case RoundState.DRAW:
+      case RoundState.GAME_OVER: // Kein Bestätigen mehr möglich, Spiel ist vorbei
+      case RoundState.DRAW: // Kein Bestätigen im Draw-State, da hier nur nachgezogen wird, was automatisch geschieht
+      case RoundState.CANNOT_PLACE_ANIMAL: // Kein Bestätigen möglich, da Spieler hier nur die Wahl hat, die Tierplatzierung rückgängig zu machen (undoTileChoice) oder die Tierplatzierung zu überspringen
         break;
 
       case RoundState.CHOOSE_TILE:
-        if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+        if (DebugConfig.enabled && DebugConfig.doLogSmallInfo) {
           console.log(
             "Submitting chosen tile at index",
             this.selectedHandIndex,
@@ -106,8 +125,10 @@ export default class GameplayManager {
           this.latestPlacedTileHexCoord === null
             ? new HexCoord(0, 0)
             : this.latestPlacedTileHexCoord;
+
         this.previewTileHexCoord =
           this.getRandomUnoccupiedNeighbour(previousHexCoord);
+
         this.previewTileRotation = this.getRandomRotation();
         this.previewTileModel = null;
         this.previewTileModelPromise = this.placePreviewTile(
@@ -115,6 +136,7 @@ export default class GameplayManager {
           this.game.tilesOnHand[this.selectedHandIndex],
           this.previewTileRotation,
         );
+
         this.previewTileModelPromise
           .then((model) => {
             this.previewTileModel = model;
@@ -137,44 +159,38 @@ export default class GameplayManager {
         break;
 
       case RoundState.PLACE_TILE:
-        // Place tile permanently on the grid at the preview position
-        await this.placeTile(
+        // Setze Tile
+        this.currentTurnTileModel = await this.placeTile(
           this.previewTileHexCoord,
           this.game.tilesOnHand[this.selectedHandIndex],
           this.previewTileRotation,
         );
 
-        this.latestPlacedTileHexCoord = this.previewTileHexCoord;
+        // Check animal placement
+        this.checkAnimalPlacement();
 
-        // FÜR TESTING: Platziere Tier auf dem soeben platzierten Tile
-        const animal = this.game.animalsOnHand[this.selectedHandIndex];
-        this.game.gridManager.setAnimal(
-          this.latestPlacedTileHexCoord,
-          animal,
-          true,
-        );
+        break;
 
-        // Entferne das gespielte Paar aus der Hand
-        this.game.removePairFromHand(this.selectedHandIndex);
+      case RoundState.PLACE_ANIMAL:
+        // Platziere Tier
+        this.latestPlacedTileHexCoord = this.previewTileHexCoord; // Aktualisiere die Position des zuletzt platzierten Tiles für spätere Referenz
 
-        // Delete preview model (handle resolved or pending promise)
+        // Cleare das Preview Tile, da es jetzt endgültig platziert wurde
         this.clearPreviewTile();
 
-        // Aktulisiere state, UI und ziehe ein neues Paar nach
-        this.roundState = RoundState.DRAW;
-        this.onPairDrawn(
-          this.game.deckLogic.getNextTile(),
-          this.game.deckLogic.getNextAnimal(),
+        await this.placeAnimal(
+          this.previewAnimalHexCoord,
+          this.game.animalsOnHand[this.selectedHandIndex],
         );
+
         this.onTurnEnd();
-        this.syncHandPanel();
         break;
 
       default:
         console.warn("default case");
         break;
     }
-    if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+    if (DebugConfig.enabled && DebugConfig.doLogSmallInfo) {
       console.log(
         `Submitted action for round state ${previousState}. New round state: ${this.roundState}`,
       );
@@ -194,15 +210,20 @@ export default class GameplayManager {
     this.game.enqueueAnimalToHand(animal);
 
     // Debug-Ausgabe: Zeige die aktuelle Hand mit Landschaften und Tieren.
-    if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+    if (DebugConfig.enabled && DebugConfig.doLogInfoThatIsShownInUI) {
+      console.groupCollapsed(
+        `Hand after drawing new pair (Turn ${this.currentTurn}):`,
+      );
       this.game.tilesOnHand.forEach((tile, index) => {
-        DebugConfig.logGameplayInfo(
-          `Pair ${index + 1}: ${tile.primaryLandscape}${tile.isKeystone ? "" : " & " + tile.secondaryLandscape} | ${this.game.animalsOnHand[index]}`,
+        console.log(
+          `Pair ${index + 1}: ${tile.primaryLandscape}${tile.isKeystone ? "" : " & " + tile.secondaryLandscape} | ${this.game.getAnimalAtIndex(index)}`,
         );
+
+        console.info(`Current round: ${this.currentTurn}/${this.gameLength}.
+        \nTiles left in deck: ${this.game.deckLogic.deck.length}.
+        \nAnimals left in deck: ${this.game.deckLogic.animalDeck.length}.`);
       });
-      DebugConfig.logGameplayInfo(`Current round: ${this.currentTurn}/${this.gameLength}.
-                \nTiles left in deck: ${this.game.deckLogic.deck.length}.
-                \nAnimals left in deck: ${this.game.deckLogic.animalDeck.length}.`);
+      console.groupEnd();
     }
 
     this.syncHandPanel();
@@ -210,25 +231,31 @@ export default class GameplayManager {
 
   // Erhöht die Rundenzahl und setzt GAME_OVER, wenn das Spielende erreicht ist.
   onTurnEnd() {
-    if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
-      // Grid Content
-      const occupiedHexCoords = this.game.gridManager.getOccupiedHexCoords();
-      let gridContent = "Current grid state:\n";
-      occupiedHexCoords.forEach((hexCoord) => {
-        const tile = this.game.gridManager.getTileAt(hexCoord);
-        gridContent += `
-                    Hex (${hexCoord.column}, ${hexCoord.row}): 
-                    ${tile && tile.occupiedBy !== Animal.NONE ? "Occupied by: " + tile.occupiedBy : "Unoccupied"}`;
-      });
-      console.log(gridContent);
+    // Entferne das gespielte Paar aus der Hand
+    this.game.removePairFromHand(this.selectedHandIndex);
 
-      // Score Berechnung
-      const scoreResult = calculateScoreForGrid(
-        this.game.gridManager.grid,
-        "player1",
-        0,
-      );
-      console.log("Current score result:", scoreResult);
+    // Aktualisiere UI und ziehe ein neues Paar nach
+    this.onPairDrawn(
+      this.game.deckLogic.getNextTile(),
+      this.game.deckLogic.getNextAnimal(),
+    );
+    this.syncHandPanel();
+
+    if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
+      console.groupCollapsed("Animals in deck:");
+
+      const animalsInDeck = this.game.deckLogic.animalDeck;
+      let animalCounts = {};
+      animalsInDeck.forEach((animal) => {
+        animalCounts[animal] = (animalCounts[animal] || 0) + 1;
+      });
+      for (const [animal, count] of Object.entries(animalCounts)) {
+        console.log(`${animal}: ${count}`);
+      }
+
+      console.groupEnd();
+
+      this.logGameplayInfo();
     }
     this.currentTurn++;
     this.currentPlayer = ((this.currentTurn - 1) % this.playerCount) + 1;
@@ -260,19 +287,39 @@ export default class GameplayManager {
   // Hinweis: Rotation ist ein Index (0-5) für 60° Schritte.
   // Returnt das model
   async placePreviewTile(hexCoord, tileData, rotation = 0, setToGrid = false) {
+    const tile = new Tile(tileData, rotation);
     return await this.game.gridManager.setTile(
       hexCoord,
-      tileData,
+      tile,
       rotation,
       setToGrid,
     );
   }
 
-  // Platziert ein Tile an einer zufälligen, leeren Nachbar-Position mit zufälliger Rotation
-  // und fügt es dem Grid hinzu
+  async removePreviewTile() {
+    const response = await this.game.gridManager.removeTileAt(
+      this.previewTileHexCoord,
+    );
+    if (!response) {
+      console.warn(
+        `Failed to remove tile at ${this.previewTileHexCoord}. No tile found.`,
+      );
+    }
+
+    this.clearPreviewTile();
+
+    return response;
+  }
+
+  // Platziert ein Tile und fügt es dem Grid hinzu.
   // Returnt das model
   async placeTile(hexCoord, tileData, rotation) {
-    return await this.game.gridManager.setTile(hexCoord, tileData, rotation);
+    const tile = new Tile(tileData, rotation);
+    return await this.game.gridManager.setTile(hexCoord, tile, rotation);
+  }
+
+  async placeAnimal(hexCoord, animal) {
+    return await this.game.gridManager.setAnimal(hexCoord, animal);
   }
 
   getRandomUnoccupiedNeighbour(hexCoord) {
@@ -355,6 +402,17 @@ export default class GameplayManager {
     this.game.gridManager.refreshBlueprints(newHexCoord, isMicroMovement);
   }
 
+  updatePreviewAnimalPosition(newHexCoord) {
+    if (!newHexCoord) {
+      console.error("updatePreviewAnimalPosition called with null newHexCoord");
+      return;
+    }
+
+    this.previewAnimalHexCoord = newHexCoord;
+
+    this.getAnimalManager().hoverAnimal(newHexCoord, this.getPreviewAnimal());
+  }
+
   /**
    *
    * @param {boolean} clockwise = true wenn im Uhrzeigersinn rotiert werden soll, sonst gegen den Uhrzeigersinn
@@ -416,10 +474,133 @@ export default class GameplayManager {
     }
   }
 
-  undoTileChoice() {
-    if (this.roundState === RoundState.PLACE_TILE) {
+  clearCurrentTurnTile() {
+    if (this.currentTurnTileModel) {
+      this.scene.remove(this.currentTurnTileModel);
+      this.currentTurnTileModel = null;
+    }
+  }
+
+  clearPreviewAnimal() {
+    this.previewAnimalHexCoord = null;
+    this.previewAnimalRotation = 0;
+    const removeModelFromScene = (model) => {
+      if (!model) return;
+
+      // Keystone
+      if (model.position) {
+        this.scene.remove(model);
+        return;
+      }
+
+      // Doppel-Landschaft
+      if (model.primaryHalf) this.scene.remove(model.primaryHalf);
+      if (model.secondaryHalf) this.scene.remove(model.secondaryHalf);
+    };
+
+    if (this.previewAnimalModel) {
+      removeModelFromScene(this.previewAnimalModel);
+    } else if (this.previewAnimalModelPromise) {
+      this.previewAnimalModelPromise
+        .then((model) => {
+          removeModelFromScene(model);
+        })
+        .catch(() => {});
+    }
+  }
+
+  checkAnimalPlacement() {
+    const animal = this.game.getAnimalAtIndex(this.selectedHandIndex);
+    const allowedPositions = this.getAllowedAnimalPlacements(animal);
+
+    if (allowedPositions.length === 0) {
+      this.roundState = RoundState.CANNOT_PLACE_ANIMAL;
+      this.getAnimalManager().showNoValidAnimalPlacementPossible(
+        this.previewTileHexCoord,
+      );
+
+      console.log(
+        `Es gibt keine erlaubten Positionen für die Platzierung des Tieres.
+        Du kannst entweder die Tierplatzierung rückgängig machen (undo) oder die Platzierung überspringen (skip).
+        undo: Controller: Ost-Button | Tastautur: B
+        skip: Controller: Nord-Button | Tastatur: Y`,
+      );
+      return;
+    }
+
+    this.previewAnimalHexCoord =
+      this.game.gridManager.getClosestHexCoordFromList(
+        allowedPositions,
+        this.previewTileHexCoord,
+      );
+    this.roundState = RoundState.PLACE_ANIMAL;
+
+    this.updatePreviewAnimalPosition(this.previewAnimalHexCoord);
+  }
+
+  getAllowedAnimalPlacements(animal) {
+    const animalManager = this.getAnimalManager();
+    const allowedPositions =
+      animalManager.getUnoccupiedTilesThatAllowAnimal(animal);
+
+    return allowedPositions;
+  }
+
+  async undoTileChoice() {
+    // Will only undo/be active when animal cannot be placed
+    if (this.roundState === RoundState.CANNOT_PLACE_ANIMAL) {
+      this.getAnimalManager().hideNoValidAnimalPlacementPossible();
+      await this.removePreviewTile();
+      this.clearCurrentTurnTile();
       this.clearPreviewTile();
+      this.clearPreviewAnimal();
       this.roundState = RoundState.CHOOSE_TILE;
     }
+  }
+
+  skipAnimalPlacement() {
+    console.log("State before skipping animal placement:", this.roundState);
+    if (this.roundState !== RoundState.CANNOT_PLACE_ANIMAL) return;
+
+    this.getAnimalManager().hideNoValidAnimalPlacementPossible();
+    this.clearPreviewTile();
+    this.clearPreviewAnimal();
+
+    // Füge aktuelles Tier wieder dem Deck hinzu, da es nicht platziert wurde
+    const animal = this.game.getAnimalAtIndex(this.selectedHandIndex);
+    this.game.deckLogic.returnAnimalToDeck(animal);
+    this.onTurnEnd();
+  }
+
+  logGameplayInfo() {
+    console.info(`Current round: ${this.currentTurn}/${this.gameLength}`);
+
+    // Grid Content
+    const occupiedHexCoords = this.game.gridManager.getOccupiedHexCoords();
+    let gridContent = "";
+    occupiedHexCoords.forEach((hexCoord) => {
+      const tile = this.game.gridManager.getTileAt(hexCoord);
+      gridContent += `
+                    Hex (${hexCoord.column}, ${hexCoord.row}): 
+                    ${tile && tile.occupiedBy !== Animal.NONE ? "Occupied by: " + tile.occupiedBy : "Unoccupied"}`;
+    });
+    console.groupCollapsed(`Grid contents ${occupiedHexCoords.length}`);
+    console.log(gridContent);
+    console.groupEnd();
+
+    // Score Berechnung
+    const scoreResult = calculateScoreForGrid(
+      this.game.gridManager.grid,
+      "player1",
+      0,
+    );
+    console.group(`Current score result`);
+    console.log("playerId:", scoreResult.playerId);
+    console.log("totalScore:", scoreResult.totalScore);
+
+    console.group("scores");
+    console.log("landscapeScores:", scoreResult.scores.landscapeScores);
+    console.log("animalScores:", scoreResult.scores.animalScores);
+    console.groupEnd();
   }
 }
