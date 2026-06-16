@@ -31,6 +31,28 @@ function getAllowedAnimalsText(tileData) {
   return tileData.animals.map((animal) => toReadableLabel(animal)).join(', ');
 }
 
+function buildHexagonSvg({ index, primaryColor, secondaryColor, isKeystone }) {
+  const gradientId = `tile-grad-${index}-${primaryColor.replace('#', '')}-${secondaryColor.replace('#', '')}`;
+  const fillValue = isKeystone ? primaryColor : `url(#${gradientId})`;
+
+  return `
+    <svg class="hand-panel__tile-visual" viewBox="0 0 100 86.60254" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="${gradientId}" x1="0%" y1="50%" x2="100%" y2="50%">
+          <stop offset="50%" stop-color="${primaryColor}"></stop>
+          <stop offset="50%" stop-color="${secondaryColor}"></stop>
+        </linearGradient>
+      </defs>
+      <polygon
+        points="0,43.30127 25,0 75,0 100,43.30127 75,86.60254 25,86.60254"
+        fill="${fillValue}"
+        stroke="rgba(255,255,255,0.35)"
+        stroke-width="2"
+      ></polygon>
+    </svg>
+  `;
+}
+
 export function createHandPanel({ onSelectPair } = {}) {
   const panel = document.createElement('aside');
   panel.className = 'hand-panel';
@@ -79,15 +101,22 @@ export function createHandPanel({ onSelectPair } = {}) {
       const secondaryColor = pair.tileData.isKeystone
         ? primaryColor
         : getLandscapeColor(pair.tileData.secondaryLandscape);
-      const tileVisualBackground = pair.tileData.isKeystone
-        ? primaryColor
-        : `linear-gradient(135deg, ${primaryColor} 0 50%, ${secondaryColor} 50% 100%)`;
+      const tileVisualSvg = buildHexagonSvg({
+        index,
+        primaryColor,
+        secondaryColor,
+        isKeystone: pair.tileData.isKeystone,
+      });
+      const drawnAnimalText = toReadableLabel(pair.animal);
       const allowedAnimalsText = getAllowedAnimalsText(pair.tileData);
 
       button.classList.toggle('hand-panel__pair--selected', index === selectedIndex);
       button.innerHTML = `
         <span class="hand-panel__pair-index">${index + 1}</span>
-        <span class="hand-panel__tile-visual" style="background: ${tileVisualBackground}" aria-hidden="true"></span>
+        <span class="hand-panel__pair-visual-row">
+          ${tileVisualSvg}
+          <span class="hand-panel__drawn-animal" aria-label="Gezogenes Tier">Tier: ${drawnAnimalText}</span>
+        </span>
         <span class="hand-panel__pair-title">${tileText}</span>
         <span class="hand-panel__pair-meta">Erlaubte Tiere: ${allowedAnimalsText}</span>
       `;
