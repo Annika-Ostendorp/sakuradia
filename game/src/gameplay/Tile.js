@@ -9,8 +9,7 @@ import { Landscape } from "../data/Landscape.js";
  * - `occupiedBy`: das Tier, das auf der Kachel sitzt (oder `Animal.NONE` wenn leer)
  */
 export default class Tile {
-  constructor(tileData, rotation = 0, hexCoord = null) {
-    this.hexCoord = hexCoord;
+  constructor(tileData, rotation = 0) {
     this.tileData = tileData;
     this.occupiedBy = Animal.NONE; // Standardmäßig kein Tier auf der Kachel
     this.rotation = rotation;
