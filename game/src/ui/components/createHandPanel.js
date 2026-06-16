@@ -9,6 +9,20 @@ const LANDSCAPE_COLORS = Object.freeze({
   Undefined: '#8b949e',
 });
 
+const LANDSCAPE_IMAGES = Object.freeze({
+  BambooForest: '/assets/images/landscape/bamboo_topview.png',
+  Mountain: '/assets/images/landscape/mountain_topview.png',
+  Pond: '/assets/images/landscape/river_topview.png',
+  Sakura: '/assets/images/landscape/sakura_tree_topview.png',
+  Wetland: '/assets/images/landscape/grass_topview.png',
+});
+
+const LANDSCAPE_IMAGE_SCALES = Object.freeze({
+  default: 1.25,
+  Pond: 1.4,
+  Sakura: 1.6,
+});
+
 function toReadableLabel(value) {
   if (!value) {
     return '-';
@@ -23,6 +37,14 @@ function getLandscapeColor(landscape) {
   return LANDSCAPE_COLORS[landscape] || LANDSCAPE_COLORS.Undefined;
 }
 
+function getLandscapeImagePath(landscape) {
+  return LANDSCAPE_IMAGES[landscape] || null;
+}
+
+function getLandscapeImageScale(landscape) {
+  return LANDSCAPE_IMAGE_SCALES[landscape] || LANDSCAPE_IMAGE_SCALES.default;
+}
+
 function getAllowedAnimalsText(tileData) {
   if (!tileData || !Array.isArray(tileData.animals) || tileData.animals.length === 0) {
     return 'Keine';
@@ -31,21 +53,72 @@ function getAllowedAnimalsText(tileData) {
   return tileData.animals.map((animal) => toReadableLabel(animal)).join(', ');
 }
 
-function buildHexagonSvg({ index, primaryColor, secondaryColor, isKeystone }) {
-  const gradientId = `tile-grad-${index}-${primaryColor.replace('#', '')}-${secondaryColor.replace('#', '')}`;
-  const fillValue = isKeystone ? primaryColor : `url(#${gradientId})`;
+function sanitizeForSvgId(value) {
+  return String(value).replace(/[^a-z0-9_-]/gi, '-');
+}
+
+function buildHexagonSvg({ index, primaryLandscape, secondaryLandscape, primaryColor, secondaryColor, isKeystone }) {
+  const primaryImagePath = getLandscapeImagePath(primaryLandscape);
+  const secondaryImagePath = getLandscapeImagePath(secondaryLandscape);
+  const primaryScale = getLandscapeImageScale(primaryLandscape);
+  const secondaryScale = getLandscapeImageScale(secondaryLandscape);
+
+  const viewWidth = 100;
+  const viewHeight = 86.60254;
+  const primaryScaledWidth = viewWidth * primaryScale;
+  const primaryScaledHeight = viewHeight * primaryScale;
+  const primaryOffsetX = (viewWidth - primaryScaledWidth) / 2;
+  const primaryOffsetY = (viewHeight - primaryScaledHeight) / 2;
+
+  const secondaryScaledWidth = viewWidth * secondaryScale;
+  const secondaryScaledHeight = viewHeight * secondaryScale;
+  const secondaryOffsetX = (viewWidth - secondaryScaledWidth) / 2;
+  const secondaryOffsetY = (viewHeight - secondaryScaledHeight) / 2;
+
+  const primaryPatternId = `tile-pattern-primary-${index}-${sanitizeForSvgId(primaryLandscape)}`;
+  const secondaryPatternId = `tile-pattern-secondary-${index}-${sanitizeForSvgId(secondaryLandscape || 'none')}`;
+  const leftClipId = `tile-left-clip-${index}`;
+  const rightClipId = `tile-right-clip-${index}`;
+
+  const primaryFill = primaryImagePath ? `url(#${primaryPatternId})` : primaryColor;
+  const secondaryFill = secondaryImagePath ? `url(#${secondaryPatternId})` : secondaryColor;
+
+  const splitPolygons = isKeystone
+    ? `<polygon
+        points="0,43.30127 25,0 75,0 100,43.30127 75,86.60254 25,86.60254"
+        fill="${primaryFill}"
+      ></polygon>`
+    : `<polygon
+        points="0,43.30127 25,0 75,0 100,43.30127 75,86.60254 25,86.60254"
+        fill="${primaryFill}"
+        clip-path="url(#${leftClipId})"
+      ></polygon>
+      <polygon
+        points="0,43.30127 25,0 75,0 100,43.30127 75,86.60254 25,86.60254"
+        fill="${secondaryFill}"
+        clip-path="url(#${rightClipId})"
+      ></polygon>`;
 
   return `
     <svg class="hand-panel__tile-visual" viewBox="0 0 100 86.60254" aria-hidden="true" focusable="false">
       <defs>
-        <linearGradient id="${gradientId}" x1="0%" y1="50%" x2="100%" y2="50%">
-          <stop offset="50%" stop-color="${primaryColor}"></stop>
-          <stop offset="50%" stop-color="${secondaryColor}"></stop>
-        </linearGradient>
+        <pattern id="${primaryPatternId}" patternUnits="userSpaceOnUse" width="100" height="86.60254">
+          <image href="${primaryImagePath || ''}" x="${primaryOffsetX}" y="${primaryOffsetY}" width="${primaryScaledWidth}" height="${primaryScaledHeight}" preserveAspectRatio="xMidYMid slice"></image>
+        </pattern>
+        <pattern id="${secondaryPatternId}" patternUnits="userSpaceOnUse" width="100" height="86.60254">
+          <image href="${secondaryImagePath || ''}" x="${secondaryOffsetX}" y="${secondaryOffsetY}" width="${secondaryScaledWidth}" height="${secondaryScaledHeight}" preserveAspectRatio="xMidYMid slice"></image>
+        </pattern>
+        <clipPath id="${leftClipId}">
+          <rect x="0" y="0" width="50" height="86.60254"></rect>
+        </clipPath>
+        <clipPath id="${rightClipId}">
+          <rect x="50" y="0" width="50" height="86.60254"></rect>
+        </clipPath>
       </defs>
+      ${splitPolygons}
       <polygon
         points="0,43.30127 25,0 75,0 100,43.30127 75,86.60254 25,86.60254"
-        fill="${fillValue}"
+        fill="none"
         stroke="rgba(255,255,255,0.35)"
         stroke-width="2"
       ></polygon>
@@ -103,6 +176,8 @@ export function createHandPanel({ onSelectPair } = {}) {
         : getLandscapeColor(pair.tileData.secondaryLandscape);
       const tileVisualSvg = buildHexagonSvg({
         index,
+        primaryLandscape: pair.tileData.primaryLandscape,
+        secondaryLandscape: pair.tileData.secondaryLandscape,
         primaryColor,
         secondaryColor,
         isKeystone: pair.tileData.isKeystone,
