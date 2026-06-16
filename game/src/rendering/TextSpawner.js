@@ -99,7 +99,7 @@ export default class TextSpawner {
         size = 0.4,
         color = 0xffffff,
         shadowColor = 0x000000,
-        shadowOffset = { x: 0.04, y: -0.01, z: 0.04 }
+        shadowOffset = { x: 0.02, y: -0.01, z: 0.02 }
     ) {
         const shadowPosition = {
             x: position.x + shadowOffset.x,

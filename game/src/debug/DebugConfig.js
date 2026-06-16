@@ -1,17 +1,16 @@
 export default class DebugConfig {
   static enabled = true;
 
-  static doInWorldDebugInfo = false;
+  static doLogInfoThatIsShownInUI = false;
+  static doLogSmallInfo = false;
+  static doInWorldDebugInfo = true;
   static doLogGameplayInfo = true;
   static doShowBlueprints = false;
+  static doLogGrid = true;
+  static doLogCalculations = false;
   static doShowCoordinateText = false;
   static doLogInputs = false;
   static doShowAxes = false;
   static doDrawRays = false;
-
-  static logGameplayInfo(message) {
-    if (this.enabled && this.doLogGameplayInfo) {
-      console.log(message);
-    }
-  }
+  static doShowTileChecks = false;
 }

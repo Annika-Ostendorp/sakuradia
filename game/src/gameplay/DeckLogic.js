@@ -58,4 +58,13 @@ export default class DeckLogic {
     }
     return this.animalDeck.pop();
   }
+
+  returnAnimalToDeck(animal) {
+    if (!Object.values(Animal).includes(animal)) {
+      console.warn("Ungültiges Tier, kann nicht zum Deck hinzugefügt werden:", animal);
+      return;
+    }
+    this.animalDeck.push(animal); // Füge Tier hinzu
+    this.animalDeck.sort(() => Math.random() - 0.5); // Mischen
+  }
 }
