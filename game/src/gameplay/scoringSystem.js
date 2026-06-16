@@ -1,6 +1,7 @@
 import HexCoord from "/src/utils/HexCoord.js";
 import { Animal } from "/src/data/Animal.js";
 import { Landscape } from "/src/data/Landscape.js";
+import { calculatePandaScore } from "./calculations/calculatePandaScore.js";
 
 /**
  * Berechnet die Punkte für das gegebene Grid basierend auf den platzierten Tieren und den Landschaften der Tiles.
@@ -137,11 +138,7 @@ function calculateScoreFor_Koi(grid) {
 }
 
 function calculateScoreFor_Panda(grid) {
-  let score = 0;
-
-  // Logic
-
-  return score;
+  return calculatePandaScore(grid);
 }
 
 function calculateScoreFor_Sika(grid) {
