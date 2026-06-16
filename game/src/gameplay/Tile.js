@@ -125,14 +125,17 @@ export class StarterTileData {
   }
 
   get keystone() {
-    return this.tiles[0];
+    const keystone = new Tile(this.tiles[0]);
+    return keystone;
   }
 
   get leftTile() {
-    return this.tiles[1];
+    const leftTile = new Tile(this.tiles[1]);
+    return leftTile;
   }
 
   get rightTile() {
-    return this.tiles[2];
+    const rightTile = new Tile(this.tiles[2]);
+    return rightTile;
   }
 }
