@@ -1,5 +1,5 @@
-import Animal from "../data/Animal.js";
-import { Landscape } from "../data/Landscape.js";
+import Animal from "/src/data/Animal.js";
+import { Landscape } from "/src/data/Landscape.js";
 
 /**
  * Repräsentiert eine platzierbare Kachel im Spiel. Enthält:
