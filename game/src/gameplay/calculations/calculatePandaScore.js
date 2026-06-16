@@ -1,4 +1,4 @@
-import { Animal } from "../data/Animal.js";
+import { Animal } from "src/data/Animal.js";
 
 // Hauptfunktion: alle Pandas finden, zusammenhängende Panda-Gruppen finden, jede Gruppe zählen, für jede Gruppe mit genau 3 Pandas 10 Punkte vergeben
 export function calculatePandaScore(grid) {
@@ -75,7 +75,7 @@ function getNeighborPandas(hexCoord, grid, set) {
         }
 
         // Tile suchen, dass an dieser Nachbar-Koordinate liegt
-        const neighborTile = getTileFromGridAt(grid, neighbor);
+        const neighborTile = grid.getTileAt(neighbor);
 
         // wenn dort Tile liegt und darauf Panda ist, dann gehört Nachbar zur selben Panda-Gruppe
         if (neighborTile !== undefined && neighborTile.occupiedBy === Animal.PANDA) {
@@ -128,17 +128,3 @@ function setContainsCoord(set, hexCoord) {
     }
     return false;
 }
-
-
-// Tile an best. Koordinate geben
-function getTileFromGridAt(grid, hexCoord) {
-    // Map verwendet HexCoord-Objekte auch als Key --> nach Koordinate suchen mit gleichen Werten
-    for (const [placedHexCoord, tile] of grid.entries()) {
-        if (placedHexCoord.equals(hexCoord)) {
-            return tile;
-        }
-    }
-    return undefined; // wenn kein Tile an dieser Koordinate gefunden wurde
-}
-
-
