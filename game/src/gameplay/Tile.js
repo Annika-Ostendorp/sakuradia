@@ -1,4 +1,4 @@
-import Animal from "/src/data/Animal.js";
+import { Animal } from "/src/data/Animal.js";
 import { Landscape } from "/src/data/Landscape.js";
 
 /**
