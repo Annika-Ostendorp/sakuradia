@@ -1,4 +1,4 @@
-import { Animal } from "src/data/Animal.js";
+import { Animal } from "/src/data/Animal.js";
 
 // Hauptfunktion: alle Pandas finden, zusammenhängende Panda-Gruppen finden, jede Gruppe zählen, für jede Gruppe mit genau 3 Pandas 10 Punkte vergeben
 export function calculatePandaScore(grid) {
