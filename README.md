@@ -7,12 +7,22 @@ Koi, sowie Sika und finden sich als Verwalter von Bambuswäldern, Teichen und
 Kirschbaumwiesen wieder.
 
 ## Aktueller Stand
-- Der aktuelle Stand ist im main-branch einsehbar
-- Hauptmenü mit Rundenanzahl-Slider (1-20 Runden, Standard auf 85)
+- Der aktuelle Stand ist im dev-main-branch einsehbar
+- Das Hauptmenü beinhaltet
+    - Einen Rundenanzahl-Slider (1-20 Runden, Standard auf 85)
+    - Spieler-Anzahl-Slider (1-4, Standard auf 1)
+    - Start-Button
+    - Hintergrundbild (KI-Platzhalter)
 - Tiles können mit Tastatur oder Controller ausgewählt, platziert und gedreht werden
-- Tiere werden (noch) automatisch auf ihren zugewiesenen Tile platziert
-- Tiles werden als farbcodierte **placeholder models** dargestellt
-- Tiere werden visuell **nicht** dargestellt
+- Tiles werden als Blender Modelle aus Sprint 2 dargestellt
+- Tiere können nach Platzierung der Tiles manuell platziert werden
+- Tiere werden visuell als farb-codierter Text dargestellt
+    - Grün: Aktuelle Position
+    - Blau: Wählbare Position
+    - Gelb: Bereits besetze Position
+    - Rot: Unbesetze, aber invalide Position (Tier darf nicht platziert werden)
+- Hand besteht teilweise noch aus Text-Platzhaltern
+- Details zum Spielablauf und Informationen wie Punktestand sind aktuell nur in der Konsole (F12) einsehbar
 
 ## Manuell starten
 ```txt
