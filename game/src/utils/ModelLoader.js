@@ -321,24 +321,24 @@ const HALF_TILE_MODEL_CORRECTIONS = {
     position: new THREE.Vector3(0, 0, 0),
   },
   mountain: {
-    scale: 0.69,
-    rotationY: 300,
-    position: new THREE.Vector3(0, 0, 0),
+    scale: 0.89,
+    rotationY: 270,
+    position: new THREE.Vector3(0, 0, -0.15),
   },
   pond: {
     scale: 0.96,
     rotationY: 269.7,
-    position: new THREE.Vector3(0.1475, 0, -0.23),
-  },
-  sakura: {
-    scale: 0.75,
-    rotationY: 120,
     position: new THREE.Vector3(0, 0, 0),
   },
+  sakura: {
+    scale: 0.89,
+    rotationY: 90,
+    position: new THREE.Vector3(0, 0, -0.01),
+  },
   wetland: {
-    scale: 0.9,
+    scale: 0.885,
     rotationY: 270,
-    position: new THREE.Vector3(0, 0, 0.055),
+    position: new THREE.Vector3(0, 0, 0.05),
   },
 };
 

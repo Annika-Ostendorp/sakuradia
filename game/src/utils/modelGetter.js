@@ -20,12 +20,12 @@ export function getModelPathForHalfTile(landscape) {
         case Landscape.BAMBOOFOREST:
             return "/assets/models/half_tiles/bamboo/bamboo_half_sprint2_tryfix.glb";
         case Landscape.MOUNTAIN:
-            return "/assets/models/half_tiles/mountain/mountain_half_sprint2.glb";
+            return "/assets/models/half_tiles/mountain/mountain_half_sprint2_tryfix.glb";
         case Landscape.POND:
-            return "/assets/models/half_tiles/pond/pond_half_sprint2.glb";
+            return "/assets/models/half_tiles/pond/pond_half_sprint2_tryfix.glb";
         case Landscape.SAKURA:
-            return "/assets/models/half_tiles/sakura/sakura_half_sprint2.glb";
+            return "/assets/models/half_tiles/sakura/sakura_half_sprint2_tryfix.glb";
         case Landscape.WETLAND:
-            return "/assets/models/half_tiles/wetland/wetland_half_sprint2.glb";
+            return "/assets/models/half_tiles/wetland/wetland_half_sprint2_tryfix.glb";
     }
 }
