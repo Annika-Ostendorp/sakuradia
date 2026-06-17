@@ -75,6 +75,8 @@ export default class ModelLoader {
 
     const model = scene.clone(true);
 
+    this.enableShadows(model);
+
     this.normalizeModelToBounds(model, 2.5);
     this.applyKeystoneCorrection(model, landscape);
 
@@ -290,6 +292,8 @@ export default class ModelLoader {
 
     const model = scene.clone(true);
 
+    this.enableShadows(model);
+
     this.normalizeModelToBounds(model, 2.5);
 
     if (
@@ -311,6 +315,15 @@ export default class ModelLoader {
     box.getCenter(center);
 
     model.position.sub(center);
+  }
+
+  enableShadows(model) {
+    model.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
   }
 }
 
