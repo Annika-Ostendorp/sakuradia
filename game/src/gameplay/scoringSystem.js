@@ -115,21 +115,59 @@ function calculateScoreFor_Landscape(grid, landscape) {
 function calculateScoreFor_Crane(grid) {
   let craneCount = 0;
 
-  // Bekomme Liste mit allen Kranichen
+  // Gehe durch jedes Tile im Grid
+  for (const [hexCoord, tile] of grid.entries()) {
 
+    // Prüfe, ob auf dem aktuellen Tile ein Kranich ist
+    if (!tileHasCrane(tile)) {
+      continue;
+    }
 
-  // Bekomme Liste mit allen Kranichen, die keinen Nachbarn haben
+    let hasCraneNeighbor = false;
 
+    // Bekomme Liste mit allen Nachbarfeldern des aktuellen Kranichs
+    for (const neighborCoord of hexCoord.getNeighbors()) {
+      const neighborTile = getTileAt(grid, neighborCoord);
 
-  // Zähle, wie viele Kraniche in der Liste sind
+      // Prüfe, ob auf einem Nachbarfeld auch ein Kranich liegt
+      if (tileHasCrane(neighborTile)) {
+        hasCraneNeighbor = true;
+        break;
+      }
+    }
 
+    // Wenn kein Kranich-Nachbar gefunden wurde, zählt dieser Kranich
+    if (!hasCraneNeighbor) {
+      craneCount++;
+    }
+  }
 
-  // Berechne Punkte basierend auf der Anzahl der Kraniche ohne Nachbarn
+  // Gebe Punkte basierend auf der Anzahl der Kraniche ohne Nachbarn zurück
+console.log("Kranich-Anzahl ohne Nachbarn:", craneCount);
+console.log("Kranich-Punkte:", getPointsForCraneCount(craneCount));
 
-
-   // Gebe Punkte basierend auf der Anzahl der Kraniche ohne Nachbarn zurück
   return getPointsForCraneCount(craneCount);
 }
+
+// Prüft, ob ein Tile einen Kranich enthält
+function tileHasCrane(tile) {
+    return tile &&
+        tile.tileData &&
+        tile.tileData.animals &&
+        tile.tileData.animals.includes(Animal.CRANE);
+}
+
+// Sucht ein Tile anhand seiner Hex-Koordinate im Grid
+function getTileAt(grid, hexCoord) {
+    for (const [placedHexCoord, tile] of grid.entries()) {
+        if (placedHexCoord.equals(hexCoord)) {
+            return tile;
+        }
+    }
+
+    return undefined;
+}
+
 
 // Je nach Anzahl der Kraniche ohne Nachbarn gibt es unterschiedliche Punkte.
 // Diese Werte sind vom Basis-Spiel übernommen.
