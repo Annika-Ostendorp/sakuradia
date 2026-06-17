@@ -1,14 +1,31 @@
-export default function getModelPathForKeystone(landscape) {
+import { Landscape } from "/src/data/Landscape.js";
+
+export function getModelPathForKeystone(landscape) {
     switch (landscape) {
         case Landscape.BAMBOOFOREST:
-            return "assets/models/tiles/designed/bamboo/bamboo_tile_sprint2.glb";
+            return "/assets/models/full_tiles/bamboo/bamboo_keystone_sprint2.glb";
         case Landscape.MOUNTAIN:
-            return "assets/models/tiles/designed/mountain/mountain_tile_sprint2.glb";
+            return "/assets/models/full_tiles/mountain/mountain_keystone_sprint2.glb";
         case Landscape.POND:
-            return "assets/models/tiles/designed/pond/pond_tile_sprint2.glb";
+            return "/assets/models/full_tiles/pond/pond_keystone_sprint2.glb";
         case Landscape.SAKURA:
-            return "assets/models/tiles/designed/sakura/sakura_tile_sprint2.glb";
+            return "/assets/models/full_tiles/sakura/sakura_keystone_sprint2.glb";
         case Landscape.WETLAND:
-            return "assets/models/tiles/designed/wetland/wetland_tile_sprint2.glb";
+            return "/assets/models/full_tiles/wetland/wetland_keystone_sprint2.glb";
+    }
+}
+
+export function getModelPathForHalfTile(landscape) {
+    switch (landscape) {
+        case Landscape.BAMBOOFOREST:
+            return "/assets/models/half_tiles/bamboo/bamboo_half_sprint2_tryfix.glb";
+        case Landscape.MOUNTAIN:
+            return "/assets/models/half_tiles/mountain/mountain_half_sprint2.glb";
+        case Landscape.POND:
+            return "/assets/models/half_tiles/pond/pond_half_sprint2.glb";
+        case Landscape.SAKURA:
+            return "/assets/models/half_tiles/sakura/sakura_half_sprint2.glb";
+        case Landscape.WETLAND:
+            return "/assets/models/half_tiles/wetland/wetland_half_sprint2.glb";
     }
 }
