@@ -7,6 +7,7 @@ import {
     moveOrbitCameraHorizontal
 } from '../rendering/OrbitalCamera.js';
 import ModelLoader from "/src/utils/ModelLoader.js";
+import SmoothAnimator from "/src/utils/SmoothAnimator.js";
 import GameplayManager from '../gameplay/GameplayManager.js';
 import InputManager from '../input/InputManager.js';
 import DebugConfig from "../debug/DebugConfig.js";
@@ -40,11 +41,12 @@ export default class GameScene {
     #modelLoader = null;
     constructor(gameConfig) {
         this.gameConfig = gameConfig;
+        this.smoothAnimator = new SmoothAnimator();
         this.#modelLoader = new ModelLoader();
         this.initialization();
         this.timer = new THREE.Timer();
 
-        this.gameplayManager = new GameplayManager(this.scene, this.gameConfig, this.#modelLoader);
+        this.gameplayManager = new GameplayManager(this.scene, this.gameConfig, this.#modelLoader, this.smoothAnimator);
         this.inputManager = new InputManager(
             this.scene,
             this.canvas,
@@ -131,6 +133,8 @@ export default class GameScene {
         this.timer.update();
         const deltaTime = this.timer.getDelta(); // Die Zeit seit dem letzten Frame
         const elapsed = this.timer.getElapsed(); // Die Zeit seit Start des Timers
+
+        this.smoothAnimator.update(deltaTime);
 
 	    updateOrbitControlsWithRightStick(
             this.controls,
