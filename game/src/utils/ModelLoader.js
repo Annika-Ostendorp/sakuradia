@@ -1,8 +1,12 @@
 import * as THREE from "three";
+import HexCoord from "/src/utils/HexCoord.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { Landscape } from "/src/data/Landscape.js";
 import { getColorForLandscape, applyColorToModel } from "./colorUtils.js";
-import getModelPathForKeystone from "/src/utils/modelGetter.js";
+import {
+  getModelPathForKeystone,
+  getModelPathForHalfTile,
+} from "/src/utils/modelGetter.js";
 
 /**
  * `ModelLoader`
@@ -13,114 +17,355 @@ import getModelPathForKeystone from "/src/utils/modelGetter.js";
  * - Verwendet `ColorUtils` zur Bestimmung der Landschaftsfarben.
  */
 export default class ModelLoader {
-    /**
-     * Konstruktor
-     * @param {Object|null} library - Optionales Objekt mit Ressourcenpfaden (nicht zwingend benötigt).
-     */
-    constructor(library = null) {
-        this.gltfLoader = new GLTFLoader();
-        this.modelCache = new Map(); // Cache für geladene Modelle.
-        this.library = library; // Wird durch den GameplayManager übergeben.
-        this.getColorForLandscape = getColorForLandscape;
-        this.applyColorToModel = applyColorToModel;
+  /**
+   * Konstruktor
+   * @param {Object|null} library - Optionales Objekt mit Ressourcenpfaden (nicht zwingend benötigt).
+   */
+  constructor(library = null) {
+    this.gltfLoader = new GLTFLoader();
+    this.modelCache = new Map(); // Cache für geladene Modelle.
+    this.library = library; // Wird durch den GameplayManager übergeben.
+    this.getColorForLandscape = getColorForLandscape;
+    this.applyColorToModel = applyColorToModel;
+  }
+
+  /**
+   * Lädt ein 3D-Modell und speichert es im Cache. Gibt ein Promise zurück, das das geladene Modell enthält.
+   * @param {Tile} tile - Die Kachel, für die das Modell geladen werden soll.
+   * @returns {Promise<{scene: THREE.Group}>} - Ein Promise, das das geladene Modell enthält.
+   */
+  async getModelForTile(hexCoord, tile, hexSize) {
+    if (!hexCoord || typeof hexCoord.hexToWorld !== "function") {
+      throw new Error("getModelForTile expects a HexCoord instance");
     }
 
-    loadKeystoneModel(landscape) {
-        const modelPath = getModelPathForKeystone(landscape);
-        return this.loadFullModel(modelPath);
+    const worldPos = hexCoord.hexToWorld(hexCoord, hexSize);
+
+    let model = null;
+    let positionOffset = new THREE.Vector3(0, 0, 0);
+
+    if (tile.isKeystone) {
+      model = await this.loadKeystoneModel(tile.tileData.primaryLandscape);
+      positionOffset = this.getCorrectionPosition(
+        tile.tileData.primaryLandscape,
+        true,
+      );
+    } else {
+      model = await this.loadDoubleModel(
+        tile.tileData.primaryLandscape,
+        tile.tileData.secondaryLandscape,
+        hexSize,
+      );
     }
 
-    loadFullModel(modelPath) {
-        if (this.modelCache.has(modelPath)) {
-            return Promise.resolve(this.modelCache.get(modelPath));
-        }
-        return new Promise((resolve, reject) => {
-            this.gltfLoader.load(
-                modelPath, 
-                (gltf) => {
-                    const result = { scene: gltf.scene };
-                    this.modelCache.set(modelPath, result);
-                    resolve(result);
-                },
-                undefined,
-                (error) => reject(error)
-            );
-        });
+    model.position.set(
+      worldPos.x + positionOffset.x,
+      worldPos.y + positionOffset.y,
+      worldPos.z + positionOffset.z,
+    );
+
+    model.rotation.y += tile.rotation * (Math.PI / 3);
+
+    return model;
+  }
+
+  async loadKeystoneModel(landscape) {
+    const modelPath = getModelPathForKeystone(landscape);
+    const { scene } = await this.loadModel(modelPath);
+
+    const model = scene.clone(true);
+
+    this.normalizeModelToBounds(model, 2.5);
+    this.applyKeystoneCorrection(model, landscape);
+
+    return model;
+  }
+
+  async loadSingleHalfTileModel(landscape) {
+    return await this.loadCorrectedHalfTileModel(landscape);
+  }
+
+  async loadDoubleModel(primaryLandscape, secondaryLandscape) {
+    const firstModel = await this.loadCorrectedHalfTileModel(primaryLandscape);
+    const secondModel =
+      await this.loadCorrectedHalfTileModel(secondaryLandscape);
+
+    const firstOffset = this.getCorrectionPosition(primaryLandscape, false);
+    const secondOffset = this.getCorrectionPosition(secondaryLandscape, false);
+
+    // Since a split landscape tile is ONE hex tile, both halves share the same center.
+    // This value only separates the visual half models inside the same hex.
+    const halfTileLocalOffset = 0;
+
+    // Default half tile has its long side facing left.
+    // That means the unrotated model works as the RIGHT half.
+    // The left half must be rotated by 180 degrees.
+    firstModel.rotation.y += Math.PI;
+
+    // firstModel = left half
+    firstModel.position.set(
+      -halfTileLocalOffset + firstOffset.x,
+      firstOffset.y,
+      firstOffset.z,
+    );
+
+    // secondModel = right half
+    secondModel.position.set(
+      halfTileLocalOffset + secondOffset.x,
+      secondOffset.y,
+      secondOffset.z,
+    );
+
+    const group = new THREE.Group();
+    group.add(firstModel);
+    group.add(secondModel);
+
+    return group;
+  }
+
+  loadModel(modelPath) {
+    if (this.modelCache.has(modelPath)) {
+      return Promise.resolve(this.modelCache.get(modelPath));
     }
-    
-    /**
-     * Lädt ein 3D-Modell und speichert es im Cache. Gibt ein Promise zurück, das das geladene Modell enthält.
-     * @param {Tile} tile - Die Kachel, für die das Modell geladen werden soll.
-     * @returns {Promise<{scene: THREE.Group}>} - Ein Promise, das das geladene Modell enthält.
-     */
-    loadModel(tileOrModelName) {
-        const modelName = typeof tileOrModelName === "string"
-            ? tileOrModelName
-            : this.getModelNameForTile(tileOrModelName);
-        if (this.modelCache.has(modelName)) {
-            return Promise.resolve(this.modelCache.get(modelName));
-        }
-        return new Promise((resolve, reject) => {
-            this.gltfLoader.load(
-                `assets/models/tiles/simple/${modelName}`, 
-                (gltf) => {
-                    const result = { scene: gltf.scene };
-                    this.modelCache.set(modelName, result);
-                    resolve(result);
-                },
-                undefined,
-                (error) => reject(error)
-            );
-        });
+    return new Promise((resolve, reject) => {
+      this.gltfLoader.load(
+        modelPath,
+        (gltf) => {
+          const result = { scene: gltf.scene };
+          this.modelCache.set(modelPath, result);
+          resolve(result);
+        },
+        undefined,
+        (error) => reject(error),
+      );
+    });
+  }
+
+  normalizeModelToBounds(model, targetSize = 1) {
+    const box = new THREE.Box3().setFromObject(model);
+    const size = new THREE.Vector3();
+
+    box.getSize(size);
+
+    const maxAxis = Math.max(size.x, size.y, size.z);
+
+    if (maxAxis === 0) {
+      console.warn("Model has zero bounds:", model);
+      return;
     }
 
-    async getModelForTile(tile) {
-        // Vollmodell für Einzellandschaft laden.
-        if (tile.tileData.isKeystone) {
-            return await this.getModelForKeystone(tile.tileData.primaryLandscape);
-        }
+    const scale = targetSize / maxAxis;
+    model.scale.multiplyScalar(scale);
+  }
 
-        // Kombination aus Primär- und Sekundärlandschaft behandeln.
-        return await this.getModelForLandscapeCombination(tile.tileData.primaryLandscape, tile.tileData.secondaryLandscape);
+  async spawnLandscapeModelOverviewOnHexGrid(
+    gridManager,
+    startHexCoord = new HexCoord(-4, -4),
+  ) {
+    const scene = gridManager.scene;
+    const hexSize = gridManager.hexSize;
+
+    const landscapes = [
+      Landscape.BAMBOOFOREST,
+      Landscape.MOUNTAIN,
+      Landscape.POND,
+      Landscape.SAKURA,
+      Landscape.WETLAND,
+    ];
+
+    const columnStep = 1;
+    const halfTileRowOffset = 2;
+
+    for (let i = 0; i < landscapes.length; i++) {
+      const landscape = landscapes[i];
+
+      const keystoneHexCoord = new HexCoord(
+        startHexCoord.column + i * columnStep,
+        startHexCoord.row,
+      );
+
+      const halfTileHexCoord = new HexCoord(
+        startHexCoord.column + i * columnStep,
+        startHexCoord.row + halfTileRowOffset,
+      );
+
+      const keystoneWorldPos = keystoneHexCoord.hexToWorld(
+        keystoneHexCoord,
+        hexSize,
+      );
+
+      const halfTileWorldPos = halfTileHexCoord.hexToWorld(
+        halfTileHexCoord,
+        hexSize,
+      );
+
+      const keystoneModel = await this.loadKeystoneModel(landscape);
+      const keystoneOffset = this.getCorrectionPosition(landscape, true);
+
+      keystoneModel.position.set(
+        keystoneWorldPos.x + keystoneOffset.x,
+        keystoneWorldPos.y + keystoneOffset.y,
+        keystoneWorldPos.z + keystoneOffset.z,
+      );
+
+      scene.add(keystoneModel);
+
+      const halfTileModel = await this.loadSingleHalfTileModel(landscape);
+      const halfTileOffset = this.getCorrectionPosition(landscape, false);
+
+      halfTileModel.position.set(
+        halfTileWorldPos.x + halfTileOffset.x,
+        halfTileWorldPos.y + halfTileOffset.y,
+        halfTileWorldPos.z + halfTileOffset.z,
+      );
+
+      scene.add(halfTileModel);
+
+      console.groupCollapsed(
+        `Spawned hex-grid model overview for ${landscape}`,
+      );
+      console.log("landscape", landscape);
+      console.log("keystoneHexCoord", keystoneHexCoord);
+      console.log("halfTileHexCoord", halfTileHexCoord);
+      console.log("keystoneWorldPos", keystoneWorldPos);
+      console.log("halfTileWorldPos", halfTileWorldPos);
+      console.log("keystoneOffset", keystoneOffset);
+      console.log("halfTileOffset", halfTileOffset);
+      console.log("keystoneModel", keystoneModel);
+      console.log("halfTileModel", halfTileModel);
+      console.groupEnd();
+    }
+  }
+
+  applyKeystoneCorrection(model, landscape) {
+    const correction =
+      KEYSTONE_MODEL_CORRECTIONS[landscape] ??
+      KEYSTONE_MODEL_CORRECTIONS[String(landscape).toLowerCase()];
+
+    if (!correction) {
+      console.warn("No keystone correction found for landscape:", landscape);
+      return;
     }
 
-    async getModelForKeystone(landscape) {
-        const { scene } = await this.loadModel("Hexagon_Full.glb");
-        const model = scene.clone(true);
-        this.applyColorToModel(model, this.getColorForLandscape(landscape));
-        return model;
+    model.scale.multiplyScalar(correction.scale);
+    model.rotation.y += THREE.MathUtils.degToRad(correction.rotationY);
+
+    // Position is applied later to the final world position.
+  }
+
+  applyHalfTileCorrection(model, landscape) {
+    const correction =
+      HALF_TILE_MODEL_CORRECTIONS[landscape] ??
+      HALF_TILE_MODEL_CORRECTIONS[String(landscape).toLowerCase()];
+
+    if (!correction) {
+      console.warn("No half tile correction found for landscape:", landscape);
+      return;
     }
 
-    async getModelForLandscapeCombination(primaryLandscape, secondaryLandscape) {
-        const { scene } = await this.loadModel("Hexagon_Half.glb");
-        const primaryHalf = scene.clone(true);
-        const secondaryHalf = scene.clone(true);
+    model.scale.multiplyScalar(correction.scale);
+    model.rotation.y += THREE.MathUtils.degToRad(correction.rotationY);
 
-        // Container für beide Hälften erstellen.
-        const container = new THREE.Group();
+    // Position is applied later to the final world position.
+  }
 
-        // Für Doppellandschafts-Kacheln werden einfache Hälften geladen und eingefärbt.
-        this.applyColorToModel(primaryHalf, this.getColorForLandscape(primaryLandscape));
-        this.applyColorToModel(secondaryHalf, this.getColorForLandscape(secondaryLandscape));
+  getCorrectionPosition(landscape, isKeystone = false) {
+    const corrections = isKeystone
+      ? KEYSTONE_MODEL_CORRECTIONS
+      : HALF_TILE_MODEL_CORRECTIONS;
 
-        // Sekundäre Hälfte um 180 Grad um die Y-Achse drehen.
-        secondaryHalf.rotation.y = Math.PI;
+    const correction =
+      corrections[landscape] ?? corrections[String(landscape).toLowerCase()];
 
-        // Beide Hälften dem Container hinzufügen.
-        container.add(primaryHalf);
-        container.add(secondaryHalf);
-
-        container.castShadow = true;
-        container.receiveShadow = true;
-
-        return container;
-    };
-
-    /**
-     * Liefert den Dateinamen des Modells für eine gegebene Kachel zurück.
-     * Vollmodell für Keystones, Halbmodell für normale Kacheln.
-     */
-    getModelNameForTile(tile) {
-        return tile.tileData.isKeystone ? "Hexagon_Full.glb" : "Hexagon_Half.glb";
+    if (!correction) {
+      return new THREE.Vector3(0, 0, 0);
     }
+
+    return correction.position;
+  }
+
+  async loadCorrectedHalfTileModel(landscape) {
+    const modelPath = getModelPathForHalfTile(landscape);
+    const { scene } = await this.loadModel(modelPath);
+
+    const model = scene.clone(true);
+
+    this.normalizeModelToBounds(model, 2.5);
+
+    if (
+      landscape === Landscape.BAMBOOFOREST ||
+      String(landscape).toLowerCase() === "bambooforest"
+    ) {
+      this.centerModelOnLocalOrigin(model);
+    }
+
+    this.applyHalfTileCorrection(model, landscape);
+
+    return model;
+  }
+
+  centerModelOnLocalOrigin(model) {
+    const box = new THREE.Box3().setFromObject(model);
+    const center = new THREE.Vector3();
+
+    box.getCenter(center);
+
+    model.position.sub(center);
+  }
 }
+
+const HALF_TILE_MODEL_CORRECTIONS = {
+  bambooforest: {
+    scale: 0.79,
+    rotationY: 270.075,
+    position: new THREE.Vector3(0, 0, 0),
+  },
+  mountain: {
+    scale: 0.69,
+    rotationY: 300,
+    position: new THREE.Vector3(0, 0, 0),
+  },
+  pond: {
+    scale: 0.96,
+    rotationY: 269.7,
+    position: new THREE.Vector3(0.1475, 0, -0.23),
+  },
+  sakura: {
+    scale: 0.75,
+    rotationY: 120,
+    position: new THREE.Vector3(0, 0, 0),
+  },
+  wetland: {
+    scale: 0.9,
+    rotationY: 270,
+    position: new THREE.Vector3(0, 0, 0.055),
+  },
+};
+
+const KEYSTONE_MODEL_CORRECTIONS = {
+  bambooforest: {
+    scale: 1.03,
+    rotationY: 30.5,
+    position: new THREE.Vector3(0.01, -0.02, -0.05),
+  },
+  mountain: {
+    scale: 0.8,
+    rotationY: 0,
+    position: new THREE.Vector3(0, 0, -0.01),
+  },
+  pond: {
+    scale: 0.85,
+    rotationY: 30,
+    position: new THREE.Vector3(0, 0, 0),
+  },
+  sakura: {
+    scale: 0.9,
+    rotationY: 0,
+    position: new THREE.Vector3(0, 0, 0),
+  },
+  wetland: {
+    scale: 0.85,
+    rotationY: 0,
+    position: new THREE.Vector3(0, 0, 0),
+  },
+};

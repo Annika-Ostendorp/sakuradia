@@ -16,9 +16,10 @@ import { getFirstHexWithMaxDistance } from "/src/gameplay/grid/gridQueryService.
  * - Verwaltung von Runden/Spielablauf
  */
 export default class GameplayManager {
-  constructor(scene, gameConfig) {
+  constructor(scene, gameConfig, modelLoader) {
     this.scene = scene;
     this.gameConfig = gameConfig;
+    this.modelLoader = modelLoader;
     this.playerCount = Math.max(1, Number(this.gameConfig.playerCount || 1));
     this.currentTurn = 1; // Absoluter Zugzähler über alle Spieler
     this.currentRound = 1;
@@ -26,7 +27,7 @@ export default class GameplayManager {
     this.playerScores = Array.from({ length: this.playerCount }, () => 0);
     this.gameLength = this.gameConfig.rounds; // Rounds to be played until game end
     this.maxTurns = this.gameLength * this.playerCount;
-    this.game = new Game(this.scene);
+    this.game = new Game(this.scene, this.modelLoader);
     this.roundState = RoundState.CHOOSE_TILE; // Initial round state
 
     // Index des aktuell in der UI markierten Hand-Paares
