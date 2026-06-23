@@ -112,7 +112,7 @@ export default class AudioManager {
 
     if (sound instanceof THREE.PositionalAudio) {
       sound.position.copy(position);
-      sound.setRefDistance(5);
+      sound.setRefDistance(0);
       sound.setRolloffFactor(1);
       sound.setDistanceModel("linear");
 
@@ -138,7 +138,6 @@ export default class AudioManager {
 
   /**
    * Plays an interaction sound and stops the previous one.
-   *
    * @param {string} soundPath
    * @param {THREE.Vector3} position
    * @param {number} spatialBlend
