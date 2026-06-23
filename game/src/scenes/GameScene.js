@@ -45,8 +45,8 @@ export default class GameScene {
     this.initialization();
     this.timer = new THREE.Timer();
 
-    const audioManager = AudioManager.getInstance();
-    audioManager.initialize(this.#scene, this.#camera);
+    this.audioManager = AudioManager.getInstance();
+    this.audioManager.initialize(this.#scene, this.#camera);
     this.gameplayManager = new GameplayManager(this.#scene, this.gameConfig);
     this.inputManager = new InputManager(
       this.#scene,
@@ -128,6 +128,7 @@ export default class GameScene {
     this.#scene.remove(this.#camera);
     this.setupCamera();
     this.inputManager.updateCamera(this.#camera);
+    this.audioManager.initialize(this.#scene, this.#camera);
   }
 
   // Render-Loop
