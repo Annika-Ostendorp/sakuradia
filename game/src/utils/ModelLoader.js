@@ -17,6 +17,10 @@ import {
  * - Verwendet `ColorUtils` zur Bestimmung der Landschaftsfarben.
  */
 export default class ModelLoader {
+
+  #doApplyCorrections = false;
+
+
   /**
    * Konstruktor
    * @param {Object|null} library - Optionales Objekt mit Ressourcenpfaden (nicht zwingend benötigt).
@@ -78,8 +82,9 @@ export default class ModelLoader {
     this.enableShadows(model);
 
     this.normalizeModelToBounds(model, 2.5);
-    this.applyKeystoneCorrection(model, landscape);
-
+    if (this.#doApplyCorrections) {
+      this.applyKeystoneCorrection(model, landscape);
+    }
     return model;
   }
 
@@ -303,7 +308,9 @@ export default class ModelLoader {
       this.centerModelOnLocalOrigin(model);
     }
 
+    if (this.#doApplyCorrections) {
     this.applyHalfTileCorrection(model, landscape);
+    }
 
     return model;
   }

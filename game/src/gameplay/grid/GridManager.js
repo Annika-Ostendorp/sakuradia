@@ -69,7 +69,7 @@ export default class GridManager {
 
     this.paintCoordinates();
 
-    //this.spawnLandscapeModelOverviewOnHexGrid();
+    this.spawnLandscapeModelOverviewOnHexGrid();
   }
 
   async spawnLandscapeModelOverviewOnHexGrid() {
