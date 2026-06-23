@@ -112,7 +112,7 @@ export default class AudioManager {
 
     if (sound instanceof THREE.PositionalAudio) {
       sound.position.copy(position);
-      sound.setRefDistance(0);
+      sound.setRefDistance(1);
       sound.setRolloffFactor(1);
       sound.setDistanceModel("linear");
 
