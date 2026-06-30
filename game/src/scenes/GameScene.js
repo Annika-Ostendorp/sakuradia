@@ -17,6 +17,7 @@ import ruleImage04 from "../assets/images/rules/Sakura_RulePopup-04.jpg";
 import ruleImage07 from "../assets/images/rules/Sakura_RulePopup-07.jpg";
 import ruleImage08 from "../assets/images/rules/Sakura_RulePopup-08.jpg";
 import AudioManager from "/src/audio/AudioManager.js";
+import { AudioType } from "/src/data/AudioType.js";
 
 const RULE_PAGES = [
   { src: ruleImage01, alt: "Rules page 1" },
@@ -47,6 +48,17 @@ export default class GameScene {
 
     this.audioManager = AudioManager.getInstance();
     this.audioManager.initialize(this.#scene, this.#camera);
+
+    this.audioManager.play(
+      "/assets/audio/synth.mp3",
+      new THREE.Vector3(0, 0, 0),
+      0,
+      AudioType.AMBIENCE,
+      1,
+      1,
+      true
+    );
+
     this.gameplayManager = new GameplayManager(this.#scene, this.gameConfig);
     this.inputManager = new InputManager(
       this.#scene,
