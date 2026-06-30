@@ -1,3 +1,4 @@
+import { Animal } from "/src/data/Animal.js";
 import { Landscape } from "/src/data/Landscape.js";
 
 export function getModelPathForKeystone(landscape) {
@@ -27,5 +28,26 @@ export function getModelPathForHalfTile(landscape) {
             return "/assets/models/half_tiles/sakura/sakura_half_sprint3.glb";
         case Landscape.WETLAND:
             return "/assets/models/half_tiles/wetland/wetland_half_sprint3.glb";
+    }
+}
+
+// CRANE: "Crane",
+// JAPANMAKAK: "Japanmakak",
+// KOI: "Koi",
+// PANDA: "Panda",
+// SIKA: "Sika",
+
+export function getModelForAnimal(animal) {
+    switch (animal) {
+        case ANIMAL.Crane:
+            return "/assets/models/animals/crane/07-01_Crane.glb.glb";
+        case ANIMAL.Japanmakak:
+            return "/assets/models/animals/japanmakak/05-19_Japanmakak.glb.glb";
+        case ANIMAL.Koi:
+            return "/assets/models/animals/koi/07-01_Koi.glb.glb";
+        case ANIMAL.Panda:
+            return "/assets/models/animals/panda/05-19_Panda.glb.glb";
+        case ANIMAL.Sika:
+            return "/assets/models/animals/sika/07-01_Sika.glb.glb";
     }
 }
