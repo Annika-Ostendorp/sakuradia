@@ -109,13 +109,7 @@ export default class GameplayManager {
   async onSubmitted() {
     const previousState = this.getCurrentRoundState();
 
-    this.audioManager.play(
-      "/assets/audio/test.mp3",
-      new THREE.Vector3(0, 0, 0),
-      0,
-      AudioType.SFX,
-      0,
-    );
+    this.audioManager.playInteraction("/assets/audio/test.mp3");
 
     // Je nach State
     switch (previousState) {
