@@ -11,7 +11,7 @@ export function createRoundSlider({
 
   sliderElement.innerHTML = `
     <div class="round-slider__header">
-      <label class="round-slider__label" for="round-count-slider">Anzahl der Runden</label>
+      <label class="round-slider__label" for="round-count-slider"></label>
     </div>
     <input
       id="round-count-slider"
@@ -24,14 +24,22 @@ export function createRoundSlider({
     />
   `;
 
+  const labelElement = sliderElement.querySelector('.round-slider__label');
   const inputElement = sliderElement.querySelector('.round-slider__input');
 
-  if (!inputElement) {
+  if (!labelElement || !inputElement) {
     throw new Error('Round slider could not be created.');
   }
 
+  const updateLabel = (nextValue) => {
+    labelElement.textContent = `Anzahl der Runden: ${nextValue}`;
+  };
+
+  updateLabel(Number(inputElement.value));
+
   inputElement.addEventListener('input', () => {
     const nextValue = Number(inputElement.value);
+    updateLabel(nextValue);
 
     onChange?.(nextValue);
   });

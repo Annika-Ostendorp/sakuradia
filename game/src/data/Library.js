@@ -1,5 +1,5 @@
-import Landscape from "./Landscape.js";
-import Animal from "./Animal.js";
+import { Landscape } from "./Landscape.js";
+import { Animal } from "./Animal.js";
 import { TileData, StarterTileData } from "../gameplay/Tile.js";
 
 /**

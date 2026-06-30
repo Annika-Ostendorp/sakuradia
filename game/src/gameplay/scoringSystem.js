@@ -1,6 +1,8 @@
 import HexCoord from "/src/utils/HexCoord.js";
 import { Animal } from "/src/data/Animal.js";
 import { Landscape } from "/src/data/Landscape.js";
+import { calculateKoiScore } from "./calculations/calculateKoiScore.js";
+import { calculatePandaScore } from "./calculations/calculatePandaScore.js";
 
 /**
  * Berechnet die Punkte für das gegebene Grid basierend auf den platzierten Tieren und den Landschaften der Tiles.
@@ -10,7 +12,11 @@ import { Landscape } from "/src/data/Landscape.js";
  * @returns {Object} Ein Objekt, das die Punktzahl für jede Landschaftsart und Tierart enthält. Die Struktur ist im Issue Punktesystem (Zaehlsystem)#25 beschrieben.
  */
 
-export function calculateScoreForGrid(grid, playerId, remainingNatureTokens) {
+export function calculateScoreForGrid(
+  gridmanager,
+  playerId,
+  remainingNatureTokens,
+) {
   const scoreResult = {
     playerId: playerId,
     totalScore: remainingNatureTokens,
@@ -35,7 +41,7 @@ export function calculateScoreForGrid(grid, playerId, remainingNatureTokens) {
   // Landschaften
 
   // Array der scores für jede Landschaft
-  const landscapeResult = calculateScoreForLandscapes(grid);
+  const landscapeResult = calculateScoreForLandscapes(gridmanager);
 
   // Bambooforest
   scoreResult.scores.landscapeScores.bambooforest =
@@ -63,47 +69,51 @@ export function calculateScoreForGrid(grid, playerId, remainingNatureTokens) {
   // Tiere
 
   // Crane
-  scoreResult.scores.animalScores.crane = calculateScoreFor_Crane(grid);
+  scoreResult.scores.animalScores.crane = calculateScoreFor_Crane(gridmanager);
   scoreResult.totalScore += scoreResult.scores.animalScores.crane;
 
   // Japanmakak
-  scoreResult.scores.animalScores.japanmakak = calculateScoreFor_Japanmakak(grid);
+  scoreResult.scores.animalScores.japanmakak =
+    calculateScoreFor_Japanmakak(gridmanager);
   scoreResult.totalScore += scoreResult.scores.animalScores.japanmakak;
 
   // Koi
-  scoreResult.scores.animalScores.koi = calculateScoreFor_Koi(grid);
+  scoreResult.scores.animalScores.koi = calculateScoreFor_Koi(gridmanager);
   scoreResult.totalScore += scoreResult.scores.animalScores.koi;
 
   // Panda
-  scoreResult.scores.animalScores.panda = calculateScoreFor_Panda(grid);
+  scoreResult.scores.animalScores.panda = calculateScoreFor_Panda(gridmanager);
   scoreResult.totalScore += scoreResult.scores.animalScores.panda;
 
   // Sika
-  scoreResult.scores.animalScores.sika = calculateScoreFor_Sika(grid);
+  scoreResult.scores.animalScores.sika = calculateScoreFor_Sika(gridmanager);
   scoreResult.totalScore += scoreResult.scores.animalScores.sika;
 
   return scoreResult;
 }
 
 // Für jedes Element im Landscape Enum, berechne die Punkte für diese Landschaft und addiere sie zum Gesamtscore hinzu
-function calculateScoreForLandscapes(grid) {
+function calculateScoreForLandscapes(gridmanager) {
   const landscapeScores = {};
 
   for (const landscape of Object.values(Landscape)) {
     if (landscape === Landscape.UNDEFINED) continue;
 
-    landscapeScores[landscape] = calculateScoreFor_Landscape(grid, landscape);
+    landscapeScores[landscape] = calculateScoreFor_Landscape(
+      gridmanager,
+      landscape,
+    );
   }
 
   return landscapeScores;
 }
 
 // PLACEHOLDER: Gibt 1 Punkt pro Tile mit der Landschaft
-function calculateScoreFor_Landscape(grid, landscape) {
+function calculateScoreFor_Landscape(gridmanager, landscape) {
   let score = 0;
 
   // Erstmal simple Logik, erhalte 1 Punkt pro Tile mit der Landschaft
-  for (const [hexCoord, tile] of grid) {
+  for (const [hexCoord, tile] of gridmanager.grid.entries()) {
     if (tile.hasLandscape(landscape)) {
       score += 1;
     }
@@ -112,12 +122,11 @@ function calculateScoreFor_Landscape(grid, landscape) {
   return score;
 }
 
-function calculateScoreFor_Crane(grid) {
-  let craneCount = 0;
+function calculateScoreFor_Crane(gridmanager) {
+  let score = 0;
 
   // Gehe durch jedes Tile im Grid
-  for (const [hexCoord, tile] of grid.entries()) {
-
+  for (const [hexCoord, tile] of gridmanager.grid.entries()) {
     // Prüfe, ob auf dem aktuellen Tile ein Kranich ist
     if (!tileHasCrane(tile)) {
       continue;
@@ -127,7 +136,7 @@ function calculateScoreFor_Crane(grid) {
 
     // Bekomme Liste mit allen Nachbarfeldern des aktuellen Kranichs
     for (const neighborCoord of hexCoord.getNeighbors()) {
-      const neighborTile = getTileAt(grid, neighborCoord);
+      const neighborTile = getTileAt(gridmanager.grid, neighborCoord);
 
       // Prüfe, ob auf einem Nachbarfeld auch ein Kranich liegt
       if (tileHasCrane(neighborTile)) {
@@ -143,37 +152,16 @@ function calculateScoreFor_Crane(grid) {
   }
 
   // Gebe Punkte basierend auf der Anzahl der Kraniche ohne Nachbarn zurück
-console.log("Kranich-Anzahl ohne Nachbarn:", craneCount);
-console.log("Kranich-Punkte:", getPointsForCraneCount(craneCount));
+  console.log("Kranich-Anzahl ohne Nachbarn:", craneCount);
+  console.log("Kranich-Punkte:", getPointsForCraneCount(craneCount));
 
   return getPointsForCraneCount(craneCount);
 }
 
-// Prüft, ob ein Tile einen Kranich enthält
-function tileHasCrane(tile) {
-    return tile &&
-        tile.tileData &&
-        tile.tileData.animals &&
-        tile.tileData.animals.includes(Animal.CRANE);
-}
-
-// Sucht ein Tile anhand seiner Hex-Koordinate im Grid
-function getTileAt(grid, hexCoord) {
-    for (const [placedHexCoord, tile] of grid.entries()) {
-        if (placedHexCoord.equals(hexCoord)) {
-            return tile;
-        }
-    }
-
-    return undefined;
-}
-
-
 // Je nach Anzahl der Kraniche ohne Nachbarn gibt es unterschiedliche Punkte.
 // Diese Werte sind vom Basis-Spiel übernommen.
 function getPointsForCraneCount(count) {
-  if (count >= 8)
-    return 26; // Maximalpunktzahl für 8 oder mehr Kraniche ohne Nachbarn
+  if (count >= 8) return 26; // Maximalpunktzahl für 8 oder mehr Kraniche ohne Nachbarn
 
   switch (count) {
     case 1:
@@ -195,7 +183,6 @@ function getPointsForCraneCount(count) {
   }
 }
 
-
 function calculateScoreFor_Japanmakak(grid) {
   let score = 0;
 
@@ -204,23 +191,15 @@ function calculateScoreFor_Japanmakak(grid) {
   return score;
 }
 
-function calculateScoreFor_Koi(grid) {
-  let score = 0;
-
-  // Logic
-
-  return score;
+function calculateScoreFor_Koi(gridmanager) {
+  return calculateKoiScore(gridmanager);
 }
 
-function calculateScoreFor_Panda(grid) {
-  let score = 0;
-
-  // Logic
-
-  return score;
+function calculateScoreFor_Panda(gridmanager) {
+  return calculatePandaScore(gridmanager);
 }
 
-function calculateScoreFor_Sika(grid) {
+function calculateScoreFor_Sika(gridmanager) {
   let score = 0;
 
   // Logic

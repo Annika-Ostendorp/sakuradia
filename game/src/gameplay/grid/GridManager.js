@@ -1,10 +1,13 @@
 import AnimalManager from "/src/gameplay/AnimalManager.js";
+import { Animal } from "/src/data/Animal.js";
+import { Landscape } from "/src/data/Landscape.js";
 import BlueprintManager from "/src/gameplay/BlueprintManager.js";
 import DebugConfig from "/src/debug/DebugConfig.js";
 import DebugTextInWorld from "/src/debug/DebugTextInWorld.js";
 import HexCoord from "/src/utils/HexCoord.js";
 import { spawnTile } from "/src/rendering/tileRenderer.js";
 import * as THREE from "three";
+import Tile from "/src/gameplay/Tile.js";
 import {
   getRandomEmptyHexCoord as getRandomEmptyHexCoordUtil,
   getOccupiedNeighbours as getOccupiedNeighboursUtil,
@@ -18,8 +21,10 @@ import {
   getFirstUnoccupiedHexInEachDirection as getFirstUnoccupiedHexInEachDirectionUtil,
   tryGetHexagonalPositionInHexDirection as tryGetHexagonalPositionInHexDirectionUtil,
   getHexagonalMovementForDirection as getHexagonalMovementForDirectionUtil,
+  getPreviewAnimalMovementTarget as getPreviewAnimalMovementTargetUtil,
+  getFirstHexWithMaxDistance as getFirstHexWithMaxDistanceUtil,
+  getClosestHexCoordFromList as getClosestHexCoordFromListUtil,
 } from "/src/gameplay/grid/gridQueryService.js";
-
 
 /**
  * Verantwortlich für das Speichern und Verwalten des hexagonalen Spielfelds.
@@ -65,6 +70,12 @@ export default class GridManager {
     return this.#grid;
   }
 
+  getGridWithAdditionalHexTile(hexCoord, tile) {
+    const newGrid = new Map(this.#grid);
+    newGrid.set(hexCoord, tile);
+    return newGrid;
+  }
+
   /**
    * @returns Gibt die Größe der Hex-Felder im Grid zurück.
    */
@@ -94,6 +105,21 @@ export default class GridManager {
   }
 
   /**
+   * Entfernt das Tile an der angegebenen Hex-Koordinate.
+   * @param {HexCoord} hexCoord Die Hex-Koordinate, für die das Tile entfernt werden soll.
+   * @returns {boolean} true, wenn das Tile entfernt wurde, sonst false.
+   */
+  removeTileAt(hexCoord) {
+    for (const [placedHexCoord, tile] of this.grid.entries()) {
+      if (placedHexCoord.equals(hexCoord)) {
+        this.grid.delete(placedHexCoord);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Prüft, ob an der angegebenen Hex-Koordinate bereits ein Tile liegt.
    * @param {HexCoord} hexCoord Die Hex-Koordinate, für die geprüft werden soll.
    * @returns {boolean} true, wenn an der angegebenen Hex-Koordinate ein Tile liegt, sonst false.
@@ -118,12 +144,12 @@ export default class GridManager {
     if (setToGrid) {
       this.#grid.set(hexCoord, tile);
       this.blueprintManager.clearBlueprints();
-      this.debugLogGrid();
 
       if (DebugConfig.enabled && DebugConfig.doShowCoordinateText && hexCoord) {
         this.trySetCoordinateTextColor(hexCoord, 0xffffff); // White für besetzte Felder
       }
     }
+
     return await spawnTile(this.scene, hexCoord, tile, this.hexSize);
   }
 
@@ -135,6 +161,7 @@ export default class GridManager {
    * @returns {boolean} true, wenn das Tier erfolgreich gesetzt wurde, sonst false
    */
   setAnimal(hexCoord, animal, overrideAnimalRequirements = false) {
+    this.debugTextInWorld.changeColorOfAnimalDebugLabel(hexCoord, 0x00ff00); // Grün für besetzte Tiere
     return this.animalManager.setAnimal(
       hexCoord,
       animal,
@@ -200,12 +227,17 @@ export default class GridManager {
     hexCoord,
     direction,
     onlyDirectNeighbours = false,
+    isOccupied = false,
+    animalIsAllowed = Animal.NONE,
   ) {
-    return getHexCoordInWorldDirectionUtil(// <-- Hovern zeigt ganze Signatur
+    return getHexCoordInWorldDirectionUtil(
+      // <-- Hovern zeigt ganze Signatur
       this,
       hexCoord,
       direction,
-      onlyDirectNeighbours
+      onlyDirectNeighbours,
+      isOccupied,
+      animalIsAllowed,
     );
   }
 
@@ -243,7 +275,6 @@ export default class GridManager {
     maxDistance = 10,
   ) {
     return tryGetHexagonalPositionInHexDirectionUtil(
-     
       this,
       hexCoord,
       hexDirection,
@@ -257,6 +288,55 @@ export default class GridManager {
    */
   getHexagonalMovementForDirection(direction) {
     return getHexagonalMovementForDirectionUtil(direction);
+  }
+
+  /**
+   * Finds the most intuitive movement target for the preview tile.
+   *
+   * @param {HexCoord} originHexCoord - Current preview tile position
+   * @param {THREE.Vector2} worldDirection - Camera-relative movement direction
+   * @returns {HexCoord | null}
+   */
+  getPreviewAnimalMovementTarget(originHexCoord, worldDirection, animal) {
+    const target = getPreviewAnimalMovementTargetUtil(
+      this,
+      originHexCoord,
+      worldDirection,
+      animal,
+    );
+    if (DebugConfig.enabled && DebugConfig.doLogCalculations) {
+      console.log(
+        `Preview movement target for direction ${worldDirection.x}, ${worldDirection.y}: ${target ? target.toString() : "null"}`,
+      );
+    }
+    return target;
+  }
+
+  /**
+   * Wird vom GameplayManager benutzt, um die initiale Position des zu platzierenden preview Tiers zu bestimmen.
+   * @param {HexCoord} origin - Die Hex-Koordinate, von der aus die Suche gestartet wird (z.B. die Position des preview-Tiles).
+   * @param {boolean} isPlaced - Gibt an, ob ein Tile auf dieser Position platziert sein muss.
+   * @param {Animal} occupiedBy - Gibt an, ob die Hex-Koordinate von einem bestimmten Tier besetzt sein muss (z.B. das Tier, das gerade platziert wird).
+   * @param {number} maxDistance - Die maximale Entfernung (in Hex-Schritten), die von der Ausgangskoordinate aus gesucht werden soll.
+   * @returns {HexCoord | null} Die erste Hex-Koordinate, die die angegebenen Kriterien erfüllt, oder null, wenn keine solche Hex-Koordinate gefunden wird.
+   */
+  getFirstHexWithMaxDistance(
+    origin,
+    isPlaced = false,
+    occupiedBy = Animal.NONE,
+    maxDistance = 23,
+  ) {
+    return getFirstHexWithMaxDistanceUtil(
+      this,
+      origin,
+      (isPlaced = false),
+      (occupiedBy = Animal.NONE),
+      (maxDistance = 23),
+    );
+  }
+
+  getClosestHexCoordFromList(hexCoords, originHexCoord) {
+    return getClosestHexCoordFromListUtil(hexCoords, originHexCoord);
   }
 
   /**
@@ -277,7 +357,10 @@ export default class GridManager {
    * Spawnt an jeder Hex-Koordinate ein Text-Mesh, das die Koordinatenwerte anzeigt.
    */
   async paintCoordinates() {
-    return await this.debugTextInWorld.paintCoordinates(this.scene, this.hexSize);
+    return await this.debugTextInWorld.paintCoordinates(
+      this.scene,
+      this.hexSize,
+    );
   }
 
   /**
@@ -293,20 +376,5 @@ export default class GridManager {
    */
   async showAnimalDebugLabels() {
     return await this.debugTextInWorld.showAnimalDebugLabels(this.scene, this); // Übergibt die Szene und den GridManager an die DebugTextInWorld-Instanz
-  }
-
-  debugLogGrid() {
-    if (DebugConfig.enabled && DebugConfig.doLogGrid) {
-      const [hexCoordStr, tileInfo] = [];
-      for (const [key, value] of this.grid.entries()) {
-        hexCoordStr.push(key.toString());
-        tileInfo.push(
-          `Tile(Landscape: ${value.primaryLandscape}, Rotation: ${value.rotation})`,
-        );
-      }
-      console.log(
-        `Grid contents: ${hexCoordStr.join(", ")} => ${tileInfo.join(", ")}`,
-      );
-    }
   }
 }

@@ -21,6 +21,34 @@
   font-weight: 700;
 }
 
+.hand-panel__status {
+  margin: 0 0 0.6rem;
+  font-size: 0.78rem;
+  color: #c7d2e2;
+}
+
+.hand-panel__scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.65rem;
+}
+
+.hand-panel__score-pill {
+  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.7rem;
+  color: #d4dae4;
+}
+
+.hand-panel__score-pill--active {
+  border-color: rgba(125, 199, 255, 0.8);
+  background: rgba(75, 140, 190, 0.25);
+  color: #ecf6ff;
+}
+
 .hand-panel__list {
   display: flex;
   flex-direction: column;
@@ -57,14 +85,59 @@
   cursor: default;
 }
 
-.hand-panel__pair-index {
-  font-size: 0.72rem;
-  color: #b8beca;
-}
-
 .hand-panel__pair-title {
   font-size: 0.87rem;
   font-weight: 700;
+}
+
+.hand-panel__pair-visual-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 1.15rem;
+  margin-left: 0.55rem;
+}
+
+.hand-panel__pair-divider {
+  width: 1px;
+  height: 70%;
+  align-self: center;
+  border-radius: 999px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.32),
+    rgba(255, 255, 255, 0.06)
+  );
+}
+
+.hand-panel__tile-visual {
+  width: 4rem;
+  height: auto;
+  display: block;
+  justify-self: center;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.25));
+}
+
+.hand-panel__drawn-animal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: #e7edf7;
+  justify-self: center;
+  align-self: center;
+  white-space: nowrap;
+}
+
+.hand-panel__animal-avatar {
+  width: 3.15rem;
+  height: 3.15rem;
+  display: block;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .hand-panel__pair-meta {
