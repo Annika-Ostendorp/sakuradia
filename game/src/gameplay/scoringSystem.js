@@ -123,7 +123,7 @@ function calculateScoreFor_Landscape(gridmanager, landscape) {
 }
 
 function calculateScoreFor_Crane(gridmanager) {
-  let score = 0;
+  let craneCount = 0;
 
   // Gehe durch jedes Tile im Grid
   for (const [hexCoord, tile] of gridmanager.grid.entries()) {
@@ -136,7 +136,7 @@ function calculateScoreFor_Crane(gridmanager) {
 
     // Bekomme Liste mit allen Nachbarfeldern des aktuellen Kranichs
     for (const neighborCoord of hexCoord.getNeighbors()) {
-      const neighborTile = getTileAt(gridmanager.grid, neighborCoord);
+      const neighborTile = gridmanager.getTileAt(neighborCoord);
 
       // Prüfe, ob auf einem Nachbarfeld auch ein Kranich liegt
       if (neighborTile && neighborTile.occupiedBy === Animal.CRANE) {
