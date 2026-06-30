@@ -72,7 +72,7 @@ export default class GameScene {
       1,
       1,
       true,
-      0.05
+      0.04
     );
 
     this.gameplayManager = new GameplayManager(
@@ -104,7 +104,6 @@ export default class GameScene {
     }
 
     this.#scene = new THREE.Scene();
-    this.#scene.background = new THREE.Color(0x20242a);
 
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
