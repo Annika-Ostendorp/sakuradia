@@ -64,6 +64,16 @@ export default class GameScene {
       true,
     );
 
+    this.audioManager.play(
+      "assets/audio/music/backgroundmusic.mp3",
+      new THREE.Vector3(0, 0, 0),
+      0,
+      AudioType.MUSIC,
+      1,
+      1,
+      true,
+    );
+
     this.gameplayManager = new GameplayManager(
       this.#scene,
       this.gameConfig,
