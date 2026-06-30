@@ -55,7 +55,7 @@ export default class GameScene {
     this.audioManager.initialize(this.#scene, this.#camera);
 
     this.audioManager.play(
-      "/assets/audio/synth.mp3",
+      "/assets/audio/ambience.wav",
       new THREE.Vector3(0, 0, 0),
       0,
       AudioType.AMBIENCE,
