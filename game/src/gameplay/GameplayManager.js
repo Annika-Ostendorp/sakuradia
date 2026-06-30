@@ -8,6 +8,8 @@ import { calculateScoreForGrid } from "./scoringSystem.js";
 import Tile from "/src/gameplay/Tile.js";
 import { getFirstHexWithMaxDistance } from "/src/gameplay/grid/gridQueryService.js";
 import SmoothAnimator from "/src/utils/SmoothAnimator.js";
+import AudioManager from "/src/audio/AudioManager.js";
+import { AudioType } from "/src/data/AudioType.js";
 import * as THREE from "three";
 
 /**
@@ -35,6 +37,7 @@ export default class GameplayManager {
     this.maxTurns = this.gameLength * this.playerCount;
     this.game = new Game(this.scene, this.modelLoader);
     this.roundState = RoundState.CHOOSE_TILE; // Initial round state
+    this.audioManager = AudioManager.getInstance();
 
     // Index des aktuell in der UI markierten Hand-Paares
     this.selectedHandIndex = 0; // Index des aktuell in der UI markierten Hand-Paares
@@ -111,6 +114,14 @@ export default class GameplayManager {
 
   async onSubmitted() {
     const previousState = this.getCurrentRoundState();
+
+    this.audioManager.play(
+      "/assets/audio/test.mp3",
+      new THREE.Vector3(0, 0, 0),
+      0,
+      AudioType.SFX,
+      0,
+    );
 
     // Je nach State
     switch (previousState) {

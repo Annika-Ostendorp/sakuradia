@@ -323,7 +323,7 @@ export default class ModelLoader {
   }
 }
 
-// 0.4 is default scale for all models, but we can adjust it per landscape if needed.
+// 0.4 is default scale for all models, but we can adjust it per landscape if needed.gr
 const HALF_TILE_MODEL_CORRECTIONS = {
   bambooforest: {
     scale: 0.4,

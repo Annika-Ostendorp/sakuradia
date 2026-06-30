@@ -18,6 +18,7 @@ import ruleImage03 from "../assets/images/rules/Sakura_RulePopup-03.jpg";
 import ruleImage04 from "../assets/images/rules/Sakura_RulePopup-04.jpg";
 import ruleImage07 from "../assets/images/rules/Sakura_RulePopup-07.jpg";
 import ruleImage08 from "../assets/images/rules/Sakura_RulePopup-08.jpg";
+import AudioManager from "/src/audio/AudioManager.js";
 
 const RULE_PAGES = [
   { src: ruleImage01, alt: "Rules page 1" },
@@ -39,6 +40,9 @@ const RULE_PAGES = [
  */
 export default class GameScene {
   #modelLoader = null;
+  #scene = null;
+  #camera = null;
+
   constructor(gameConfig) {
     this.gameConfig = gameConfig;
     this.smoothAnimator = new SmoothAnimator();
@@ -46,17 +50,19 @@ export default class GameScene {
     this.initialization();
     this.timer = new THREE.Timer();
 
+    this.audioManager = AudioManager.getInstance();
+    this.audioManager.initialize(this.#scene, this.#camera);
     this.gameplayManager = new GameplayManager(
-      this.scene,
+      this.#scene,
       this.gameConfig,
       this.#modelLoader,
       this.smoothAnimator,
     );
     this.inputManager = new InputManager(
-      this.scene,
+      this.#scene,
       this.canvas,
       this.gameplayManager,
-      this.camera,
+      this.#camera,
     );
 
     this.rulesPopup = createRulesPopup({ pages: RULE_PAGES });
@@ -74,8 +80,8 @@ export default class GameScene {
       throw new Error("App shell is missing required DOM nodes.");
     }
 
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x20242a);
+    this.#scene = new THREE.Scene();
+    this.#scene.background = new THREE.Color(0x20242a);
 
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
@@ -94,7 +100,8 @@ export default class GameScene {
 
     // Lichter hinzufügen: Ambient + Directional für Schatten
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    this.scene.add(ambientLight);
+
+    this.#scene.add(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
     directionalLight.position.set(10, 20, 10);
@@ -118,32 +125,33 @@ export default class GameScene {
     // Add axis helper
     if (DebugConfig.enabled && DebugConfig.showAxes) {
       const axesHelper = new THREE.AxesHelper(5);
-      this.scene.add(axesHelper);
+      this.#scene.add(axesHelper);
     }
   }
 
   handleResize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.updateProjectionMatrix();
+    this.#camera.aspect = window.innerWidth / window.innerHeight;
+    this.#camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
   setupCamera() {
-    this.camera = createGameCamera();
+    this.#camera = createGameCamera();
     this.controls = createGameOrbitControls(
-      this.camera,
+      this.#camera,
       this.renderer.domElement,
     );
 
-    this.camera.position.set(0, 15, 0);
-    this.camera.lookAt(0, 0, 0);
+    this.#camera.position.set(0, 15, 0);
+    this.#camera.lookAt(0, 0, 0);
   }
 
   // Resets position and rotation of the camera to default values
   resetCamera() {
-    this.scene.remove(this.camera);
+    this.#scene.remove(this.#camera);
     this.setupCamera();
-    this.inputManager.updateCamera(this.camera);
+    this.inputManager.updateCamera(this.#camera);
+    this.audioManager.initialize(this.#scene, this.#camera);
   }
 
   // Render-Loop
@@ -164,7 +172,7 @@ export default class GameScene {
     );
 
     moveOrbitCameraHorizontal(
-      this.camera,
+      this.#camera,
       this.controls,
       this.inputManager.getShoulderInput(),
     );
@@ -177,6 +185,6 @@ export default class GameScene {
 
     this.inputManager.update(deltaTime);
 
-    this.renderer.render(this.scene, this.camera);
+    this.renderer.render(this.#scene, this.#camera);
   }
 }
