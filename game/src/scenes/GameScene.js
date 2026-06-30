@@ -120,7 +120,7 @@ export default class GameScene {
     directionalLight.shadow.bias = -0.0005;
     directionalLight.shadow.normalBias = 0.02;
 
-    this.scene.add(directionalLight);
+    this.#scene.add(directionalLight);
 
     // Add axis helper
     if (DebugConfig.enabled && DebugConfig.showAxes) {
