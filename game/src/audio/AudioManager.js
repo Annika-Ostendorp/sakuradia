@@ -83,6 +83,7 @@ export default class AudioManager {
     fadeInTime = 1,
     fadeOutTime = 1,
     loop = false,
+    volume = 1
   ) {
     if (!this.scene || !this.camera) {
       console.warn("AudioManager.play: AudioManager is not initialized.");
@@ -101,7 +102,7 @@ export default class AudioManager {
     }
 
     const clampedSpatialBlend = THREE.MathUtils.clamp(spatialBlend, 0, 1);
-    const volume = this.getVolume(audioType);
+    volume *= this.getVolume(audioType);
 
     const sound =
       clampedSpatialBlend > 0
@@ -143,7 +144,7 @@ export default class AudioManager {
       this.fadeVolume(sound, 0, volume, fadeInTime);
     }
 
-    this.scheduleSoundEnd(sound, fadeInTime, fadeOutTime);
+    this.scheduleSoundEnd(sound, fadeInTime, fadeOutTime, volume);
 
     return sound;
   }
@@ -165,6 +166,7 @@ export default class AudioManager {
     audioType = AudioType.MUSIC,
     fadeInTime = 1,
     fadeOutTime = 1,
+    volume = 1
   ) {
     return this.play(
       soundPath,
@@ -174,6 +176,7 @@ export default class AudioManager {
       fadeInTime,
       fadeOutTime,
       true,
+      volume
     );
   }
 
@@ -192,6 +195,7 @@ export default class AudioManager {
     spatialBlend = 0,
     fadeInTime = 0,
     fadeOutTime = 0.4,
+    volume = 1
   ) {
     if (this.currentInteractionSound) {
       this.stop(this.currentInteractionSound, fadeOutTime);
@@ -205,6 +209,8 @@ export default class AudioManager {
       AudioType.SFX,
       fadeInTime,
       fadeOutTime,
+      false,
+      volume
     );
 
     return this.currentInteractionSound;
@@ -304,8 +310,9 @@ export default class AudioManager {
    * @param {THREE.Audio | THREE.PositionalAudio} sound
    * @param {number} fadeInTime
    * @param {number} fadeOutTime
+   * @param {number} volume
    */
-  scheduleSoundEnd(sound, fadeInTime, fadeOutTime) {
+  scheduleSoundEnd(sound, fadeInTime, fadeOutTime, volume = 1) {
     const duration = sound.buffer.duration;
 
     if (sound.userData.loop && fadeOutTime > 0) {
@@ -328,6 +335,7 @@ export default class AudioManager {
           fadeInTime,
           fadeOutTime,
           true,
+          volume
         );
       }, nextLoopDelay);
 

@@ -64,6 +64,17 @@ export default class GameScene {
       true,
     );
 
+    this.audioManager.play(
+      "assets/audio/music/backgroundmusic.mp3",
+      new THREE.Vector3(0, 0, 0),
+      0,
+      AudioType.MUSIC,
+      1,
+      1,
+      true,
+      0.04
+    );
+
     this.gameplayManager = new GameplayManager(
       this.#scene,
       this.gameConfig,
@@ -93,7 +104,6 @@ export default class GameScene {
     }
 
     this.#scene = new THREE.Scene();
-    this.#scene.background = new THREE.Color(0x20242a);
 
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
