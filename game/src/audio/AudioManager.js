@@ -209,6 +209,7 @@ export default class AudioManager {
       AudioType.SFX,
       fadeInTime,
       fadeOutTime,
+      false,
       volume
     );
 
