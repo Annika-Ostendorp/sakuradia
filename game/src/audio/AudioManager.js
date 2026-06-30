@@ -144,7 +144,7 @@ export default class AudioManager {
       this.fadeVolume(sound, 0, volume, fadeInTime);
     }
 
-    this.scheduleSoundEnd(sound, fadeInTime, fadeOutTime);
+    this.scheduleSoundEnd(sound, fadeInTime, fadeOutTime, volume);
 
     return sound;
   }
@@ -310,8 +310,9 @@ export default class AudioManager {
    * @param {THREE.Audio | THREE.PositionalAudio} sound
    * @param {number} fadeInTime
    * @param {number} fadeOutTime
+   * @param {number} volume
    */
-  scheduleSoundEnd(sound, fadeInTime, fadeOutTime) {
+  scheduleSoundEnd(sound, fadeInTime, fadeOutTime, volume = 1) {
     const duration = sound.buffer.duration;
 
     if (sound.userData.loop && fadeOutTime > 0) {
@@ -334,6 +335,7 @@ export default class AudioManager {
           fadeInTime,
           fadeOutTime,
           true,
+          volume
         );
       }, nextLoopDelay);
 
