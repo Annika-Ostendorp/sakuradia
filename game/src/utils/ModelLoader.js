@@ -17,6 +17,9 @@ import {
  * - Verwendet `ColorUtils` zur Bestimmung der Landschaftsfarben.
  */
 export default class ModelLoader {
+
+  #doApplyCorrections = true;
+
   /**
    * Konstruktor
    * @param {Object|null} library - Optionales Objekt mit Ressourcenpfaden (nicht zwingend benötigt).
@@ -77,9 +80,11 @@ export default class ModelLoader {
 
     this.enableShadows(model);
 
-    this.normalizeModelToBounds(model, 2.5);
-    this.applyKeystoneCorrection(model, landscape);
-
+    // this.normalizeModelToBounds(model, 2.5);
+    if (this.#doApplyCorrections) {
+      this.applyKeystoneCorrection(model, landscape);
+    }
+    
     return model;
   }
 
@@ -149,7 +154,7 @@ export default class ModelLoader {
 
     box.getSize(size);
 
-    const maxAxis = Math.max(size.x, size.y, size.z);
+    const maxAxis = Math.max(size.x, size.z);
 
     if (maxAxis === 0) {
       console.warn("Model has zero bounds:", model);
@@ -267,8 +272,6 @@ export default class ModelLoader {
 
     model.scale.multiplyScalar(correction.scale);
     model.rotation.y += THREE.MathUtils.degToRad(correction.rotationY);
-
-    // Position is applied later to the final world position.
   }
 
   getCorrectionPosition(landscape, isKeystone = false) {
@@ -294,16 +297,9 @@ export default class ModelLoader {
 
     this.enableShadows(model);
 
-    this.normalizeModelToBounds(model, 2.5);
-
-    if (
-      landscape === Landscape.BAMBOOFOREST ||
-      String(landscape).toLowerCase() === "bambooforest"
-    ) {
-      this.centerModelOnLocalOrigin(model);
+    if (this.#doApplyCorrections) {
+      this.applyHalfTileCorrection(model, landscape);
     }
-
-    this.applyHalfTileCorrection(model, landscape);
 
     return model;
   }
@@ -327,57 +323,60 @@ export default class ModelLoader {
   }
 }
 
+// 0.4 is default scale for all models, but we can adjust it per landscape if needed.
 const HALF_TILE_MODEL_CORRECTIONS = {
   bambooforest: {
-    scale: 0.79,
-    rotationY: 270.075,
+    scale: 0.4,
+    rotationY: 0,
     position: new THREE.Vector3(0, 0, 0),
   },
   mountain: {
-    scale: 0.89,
-    rotationY: 270,
-    position: new THREE.Vector3(0, 0, -0.15),
+    scale: 0.4,
+    rotationY: 0,
+    position: new THREE.Vector3(0, 0, 0),
   },
   pond: {
-    scale: 0.96,
-    rotationY: 269.7,
+    scale: 0.4,
+    rotationY: 0,
     position: new THREE.Vector3(0, 0, 0),
   },
   sakura: {
-    scale: 0.89,
-    rotationY: 90,
-    position: new THREE.Vector3(0, 0, -0.01),
+    scale: 0.4,
+    rotationY: 0,
+    position: new THREE.Vector3(0, 0, 0),
   },
   wetland: {
-    scale: 0.885,
-    rotationY: 270,
-    position: new THREE.Vector3(0, 0, 0.05),
+    scale: 0.4,
+    rotationY: 0,
+    position: new THREE.Vector3(0, 0, 0),
   },
 };
 
+
+// 0.4 is default scale for all models, but we can adjust it per landscape if needed.
 const KEYSTONE_MODEL_CORRECTIONS = {
   bambooforest: {
-    scale: 1.03,
-    rotationY: 30.5,
-    position: new THREE.Vector3(0.01, -0.02, -0.05),
+    scale: 0.4,
+    rotationY: 0,
+    position: new THREE.Vector3(0, 0, 0),
   },
   mountain: {
-    scale: 0.8,
+    scale: 0.4,
     rotationY: 0,
-    position: new THREE.Vector3(0, 0, -0.01),
+    position: new THREE.Vector3(0, 0, 0),
   },
   pond: {
-    scale: 0.85,
-    rotationY: 30,
+    scale: 0.4,
+    rotationY: 0,
     position: new THREE.Vector3(0, 0, 0),
   },
   sakura: {
-    scale: 0.9,
+    scale: 0.4,
     rotationY: 0,
     position: new THREE.Vector3(0, 0, 0),
   },
   wetland: {
-    scale: 0.85,
+    scale: 0.4,
     rotationY: 0,
     position: new THREE.Vector3(0, 0, 0),
   },
