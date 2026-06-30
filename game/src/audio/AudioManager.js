@@ -38,6 +38,18 @@ export default class AudioManager {
     };
 
     AudioManager.instance = this;
+    this.unlocked = false;
+    this.unlockAudio();
+  }
+
+  async unlockAudio() {
+    const context = THREE.AudioContext.getContext();
+
+    if (context.state === "suspended") {
+      await context.resume();
+    }
+
+    this.unlocked = true;
   }
 
   /**
@@ -85,6 +97,11 @@ export default class AudioManager {
     fadeOutTime = 1,
     loop = false,
   ) {
+    if (!this.unlocked) {
+      console.warn("Audio is not unlocked yet.");
+      return;
+    }
+
     if (!this.scene || !this.camera) {
       console.warn("AudioManager.play: AudioManager is not initialized.");
       return null;
@@ -194,6 +211,11 @@ export default class AudioManager {
     fadeInTime = 0,
     fadeOutTime = 0.4,
   ) {
+    if (!this.unlocked) {
+      console.warn("Audio is not unlocked yet.");
+      return;
+    }
+
     if (this.currentInteractionSound) {
       this.stop(this.currentInteractionSound, fadeOutTime);
       this.currentInteractionSound = null;
