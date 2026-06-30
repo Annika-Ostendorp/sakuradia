@@ -32,7 +32,7 @@ export default class AudioManager {
 
     this.masterVolume = 1;
     this.volumes = {
-      [AudioType.AMBIENT]: 1,
+      [AudioType.AMBIENCE]: 1,
       [AudioType.MUSIC]: 1,
       [AudioType.SFX]: 1,
     };
@@ -70,7 +70,7 @@ export default class AudioManager {
    * @param {string} soundPath Example: "/assets/audio/sfx/click1.mp3"
    * @param {THREE.Vector3} position Position for 3D audio.
    * @param {number} spatialBlend 0 = 2D, 1 = 3D.
-   * @param {string} audioType AudioType.AMBIENT, AudioType.MUSIC or AudioType.SFX.
+   * @param {string} audioType AudioType.AMBIENCE, AudioType.MUSIC or AudioType.SFX.
    * @param {number} fadeInTime Fade-in duration in seconds.
    * @param {number} fadeOutTime Fade-out duration in seconds.
    * @returns {Promise<THREE.Audio | THREE.PositionalAudio | null>}
