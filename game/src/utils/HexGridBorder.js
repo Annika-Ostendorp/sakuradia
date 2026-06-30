@@ -18,15 +18,16 @@ export default class HexGridBorder {
    * @param {number} radius - How far the debug grid extends in each axial direction.
    * @param {number | string} color - Border color.
    * @param {number} yOffset - Small vertical offset to avoid z-fighting.
+   * @param {number} alpha - Transparency of the border.
    */
-  show(radius = 8, color = 0xffffff, yOffset = 0.05) {
+  show(radius = 8, color = 0xffffff, yOffset = 0.05, alpha = 1) {
     this.clear();
 
     for (let column = -radius; column <= radius; column++) {
       for (let row = -radius; row <= radius; row++) {
         const hexCoord = new HexCoord(column, row);
-        const border = this.createBorder(hexCoord, color, yOffset);
-
+        const border = this.createBorder(hexCoord, color, yOffset, alpha);
+        border.fog = true;
         this.scene.add(border);
         this.borders.push(border);
       }
@@ -39,8 +40,9 @@ export default class HexGridBorder {
    * @param {HexCoord[]} hexCoords
    * @param {number | string} color
    * @param {number} yOffset
+   * @param {number} alpha
    */
-  showForHexCoords(hexCoords, color = 0xffffff, yOffset = 0.05) {
+  showForHexCoords(hexCoords, color = 0xffffff, yOffset = 0.05, alpha = 1) {
     this.clear();
 
     for (const hexCoord of hexCoords) {
@@ -49,7 +51,7 @@ export default class HexGridBorder {
         continue;
       }
 
-      const border = this.createBorder(hexCoord, color, yOffset);
+      const border = this.createBorder(hexCoord, color, yOffset, alpha);
 
       this.scene.add(border);
       this.borders.push(border);
@@ -62,10 +64,11 @@ export default class HexGridBorder {
    * @param {GridManager} gridManager
    * @param {number | string} color
    * @param {number} yOffset
+   * @param {number} alpha
    */
-  showForGrid(gridManager, color = 0xffffff, yOffset = 0.05) {
+  showForGrid(gridManager, color = 0xffffff, yOffset = 0.05, alpha = 1) {
     const hexCoords = Array.from(gridManager.grid.keys());
-    this.showForHexCoords(hexCoords, color, yOffset);
+    this.showForHexCoords(hexCoords, color, yOffset, alpha);
   }
 
   /**
@@ -74,9 +77,10 @@ export default class HexGridBorder {
    * @param {HexCoord} hexCoord
    * @param {number | string} color
    * @param {number} yOffset
+   * @param {number} alpha
    * @returns {THREE.LineLoop}
    */
-  createBorder(hexCoord, color = 0xffffff, yOffset = 0.05) {
+  createBorder(hexCoord, color = 0xffffff, yOffset = 0.05, alpha = 1) {
     const worldPos = hexCoord.hexToWorld(hexCoord, this.hexSize);
     const points = [];
 
@@ -97,7 +101,7 @@ export default class HexGridBorder {
     const material = new THREE.LineBasicMaterial({
       color,
       transparent: true,
-      opacity: 0.8,
+      opacity: alpha,
     });
 
     return new THREE.LineLoop(geometry, material);

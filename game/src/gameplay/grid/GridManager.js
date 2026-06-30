@@ -65,7 +65,7 @@ export default class GridManager {
     this.blueprintManager = new BlueprintManager(this.scene, this);
 
     this.hexGridBorder = new HexGridBorder(this.scene, this.hexSize);
-    this.hexGridBorder.show(20, 0xffffff, 0.05);
+    this.hexGridBorder.show(20, "#e6e6e6", 0.05, 0.03);
 
     this.paintCoordinates();
 

@@ -72,7 +72,7 @@ export default class GameScene {
       1,
       1,
       true,
-      0.04
+      0.04,
     );
 
     this.gameplayManager = new GameplayManager(
@@ -104,6 +104,20 @@ export default class GameScene {
     }
 
     this.#scene = new THREE.Scene();
+    // this.#scene.background = new THREE.Color("#c9dde7");
+    const cubeTextureLoader = new THREE.CubeTextureLoader();
+
+    const skybox = cubeTextureLoader.load([
+      "assets/images/skybox/sky_32_cubemap_2k/px.png",
+      "assets/images/skybox/sky_32_cubemap_2k/nx.png",
+      "assets/images/skybox/sky_32_cubemap_2k/py.png",
+      "assets/images/skybox/sky_32_cubemap_2k/ny.png",
+      "assets/images/skybox/sky_32_cubemap_2k/pz.png",
+      "assets/images/skybox/sky_32_cubemap_2k/nz.png",
+    ]);
+
+    this.#scene.background = skybox;
+    this.#scene.fog = new THREE.Fog(0xc9dde7, 20, 80);
 
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
