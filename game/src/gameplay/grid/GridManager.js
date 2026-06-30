@@ -6,7 +6,9 @@ import DebugConfig from "/src/debug/DebugConfig.js";
 import DebugTextInWorld from "/src/debug/DebugTextInWorld.js";
 import HexCoord from "/src/utils/HexCoord.js";
 import { spawnTile } from "/src/rendering/tileRenderer.js";
+import ModelLoader from "/src/utils/ModelLoader.js";
 import * as THREE from "three";
+import HexGridBorder from "/src/utils/HexGridBorder.js";
 import Tile from "/src/gameplay/Tile.js";
 import {
   getRandomEmptyHexCoord as getRandomEmptyHexCoordUtil,
@@ -48,9 +50,11 @@ export default class GridManager {
   /**
    * Konstruktor
    * @param {THREE.Scene} scene Die 3D-Szene, zu der u.a. Modelle hinzugefügt werden.
+   * @param {ModelLoader} modelLoader Der ModelLoader zur Instanziierung von 3D-Modellen.
    */
-  constructor(scene) {
+  constructor(scene, modelLoader) {
     this.scene = scene;
+    this.modelLoader = modelLoader;
 
     this.debugTextInWorld = new DebugTextInWorld();
     this.animalManager = new AnimalManager(
@@ -60,7 +64,19 @@ export default class GridManager {
     );
     this.blueprintManager = new BlueprintManager(this.scene, this);
 
+    this.hexGridBorder = new HexGridBorder(this.scene, this.hexSize);
+    this.hexGridBorder.show(20, 0xffffff, 0.05);
+
     this.paintCoordinates();
+
+    // this.spawnLandscapeModelOverviewOnHexGrid();
+  }
+
+  async spawnLandscapeModelOverviewOnHexGrid() {
+    await this.modelLoader.spawnLandscapeModelOverviewOnHexGrid(
+      this,
+      new HexCoord(-3, 1),
+    );
   }
 
   /**
@@ -150,7 +166,17 @@ export default class GridManager {
       }
     }
 
-    return await spawnTile(this.scene, hexCoord, tile, this.hexSize);
+    const model = await this.modelLoader.getModelForTile(
+      hexCoord,
+      tile,
+      this.hexSize,
+    );
+
+    if (model) {
+      this.scene.add(model);
+    }
+
+    return model;
   }
 
   /**

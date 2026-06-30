@@ -32,7 +32,7 @@ export default class DebugTextInWorld {
         const hexCoord = new HexCoord(column, row);
 
         const pos = hexCoord.hexToWorld(hexCoord, hexSize);
-        pos.y = 0.2;
+        pos.y = 1.4;
 
         const textMesh = await TextSpawner.spawn(
           scene,
@@ -175,7 +175,7 @@ export default class DebugTextInWorld {
       }
 
       const worldPos = hexCoord.hexToWorld(hexCoord, gridManager.hexSize);
-      const labelPos = new THREE.Vector3(worldPos.x, 0.3, worldPos.z + zOffset);
+      const labelPos = new THREE.Vector3(worldPos.x, 1, worldPos.z + zOffset);
 
       const label = await TextSpawner.spawnWithShadow(
         scene,

@@ -7,6 +7,7 @@ import { Animal } from "../data/Animal.js";
 import { calculateScoreForGrid } from "./scoringSystem.js";
 import Tile from "/src/gameplay/Tile.js";
 import { getFirstHexWithMaxDistance } from "/src/gameplay/grid/gridQueryService.js";
+import SmoothAnimator from "/src/utils/SmoothAnimator.js";
 import AudioManager from "/src/audio/AudioManager.js";
 import { AudioType } from "/src/data/AudioType.js";
 import * as THREE from "three";
@@ -19,9 +20,14 @@ import * as THREE from "three";
  * - Verwaltung von Runden/Spielablauf
  */
 export default class GameplayManager {
-  constructor(scene, gameConfig) {
+  constructor(scene, gameConfig, modelLoader, smoothAnimator) {
     this.scene = scene;
     this.gameConfig = gameConfig;
+    this.modelLoader = modelLoader;
+    this.smoothAnimator = smoothAnimator;
+    this.useSmoothAnimator = true;
+    this.moveTileSpeed = 20;
+    this.rotateTileSpeed = 20;
     this.playerCount = Math.max(1, Number(this.gameConfig.playerCount || 1));
     this.currentTurn = 1; // Absoluter Zugzähler über alle Spieler
     this.currentRound = 1;
@@ -29,7 +35,7 @@ export default class GameplayManager {
     this.playerScores = Array.from({ length: this.playerCount }, () => 0);
     this.gameLength = this.gameConfig.rounds; // Rounds to be played until game end
     this.maxTurns = this.gameLength * this.playerCount;
-    this.game = new Game(this.scene);
+    this.game = new Game(this.scene, this.modelLoader);
     this.roundState = RoundState.CHOOSE_TILE; // Initial round state
     this.audioManager = AudioManager.getInstance();
 
@@ -370,14 +376,23 @@ export default class GameplayManager {
     }
 
     // Konvertiere HexCoord in Welt-Position für das 3D-Modell.
-    var worldPos = newHexCoord.hexToWorld(
+    const worldPos = newHexCoord.hexToWorld(
       newHexCoord,
       this.game.gridManager.hexSize,
     );
+    const vector = new THREE.Vector3(worldPos.x, worldPos.y, worldPos.z);
 
     // Falls geladener Rückgabewert ein einzelnes Objekt mit `position`
     if (this.previewTileModel.position) {
-      this.previewTileModel.position.set(worldPos.x, worldPos.y, worldPos.z);
+      if (this.useSmoothAnimator) {
+        this.smoothAnimator.moveTo(
+          this.previewTileModel,
+          vector,
+          this.moveTileSpeed,
+        );
+      } else {
+        this.previewTileModel.position.set(vector.x, vector.y, vector.z);
+      }
     }
 
     // Falls Rückgabe ein Objekt mit zwei Hälften
@@ -389,21 +404,39 @@ export default class GameplayManager {
         this.previewTileModel.primaryHalf &&
         this.previewTileModel.primaryHalf.position
       ) {
-        this.previewTileModel.primaryHalf.position.set(
-          worldPos.x,
-          worldPos.y,
-          worldPos.z,
-        );
-      }
-      if (
-        this.previewTileModel.secondaryHalf &&
-        this.previewTileModel.secondaryHalf.position
-      ) {
-        this.previewTileModel.secondaryHalf.position.set(
-          worldPos.x,
-          worldPos.y,
-          worldPos.z,
-        );
+        if (this.useSmoothAnimator) {
+          if (
+            this.previewTileModel.primaryHalf &&
+            this.previewTileModel.primaryHalf.position
+          ) {
+            this.smoothAnimator.moveTo(
+              this.previewTileModel.primaryHalf,
+              vector,
+              this.moveTileSpeed,
+            );
+          }
+          if (
+            this.previewTileModel.secondaryHalf &&
+            this.previewTileModel.secondaryHalf.position
+          ) {
+            this.smoothAnimator.moveTo(
+              this.previewTileModel.secondaryHalf,
+              vector,
+              this.moveTileSpeed,
+            );
+          }
+        } else {
+          this.previewTileModel.primaryHalf.position.set(
+            vector.x,
+            vector.y,
+            vector.z,
+          );
+          this.previewTileModel.secondaryHalf.position.set(
+            vector.x,
+            vector.y,
+            vector.z,
+          );
+        }
       }
     } else {
       console.error(
@@ -441,19 +474,43 @@ export default class GameplayManager {
     // Setze die neue Rotation am Modell (Rotation um Y-Achse)
     const angle = this.previewTileRotation * (Math.PI / 3); // 60° Schritte
     if (this.previewTileModel.rotation) {
-      this.previewTileModel.rotation.y = angle;
+      if (this.useSmoothAnimator) {
+        this.smoothAnimator.rotateTo(
+          this.previewTileModel,
+          new THREE.Euler(0, angle, 0),
+          this.rotateTileSpeed,
+        );
+      } else {
+        this.previewTileModel.rotation.y = angle;
+      }
     } else {
       if (
         this.previewTileModel.primaryHalf &&
         this.previewTileModel.primaryHalf.rotation
       ) {
-        this.previewTileModel.primaryHalf.rotation.y = angle;
+        if (this.useSmoothAnimator) {
+          this.smoothAnimator.rotateTo(
+            this.previewTileModel.primaryHalf,
+            new THREE.Euler(0, angle, 0),
+            this.rotateTileSpeed,
+          );
+        } else {
+          this.previewTileModel.primaryHalf.rotation.y = angle;
+        }
       }
       if (
         this.previewTileModel.secondaryHalf &&
         this.previewTileModel.secondaryHalf.rotation
       ) {
-        this.previewTileModel.secondaryHalf.rotation.y = angle;
+        if (this.useSmoothAnimator) {
+          this.smoothAnimator.rotateTo(
+            this.previewTileModel.secondaryHalf,
+            new THREE.Euler(0, angle, 0),
+            this.rotateTileSpeed,
+          );
+        } else {
+          this.previewTileModel.secondaryHalf.rotation.y = angle;
+        }
       }
     }
   }
