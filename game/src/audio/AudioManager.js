@@ -32,12 +32,24 @@ export default class AudioManager {
 
     this.masterVolume = 1;
     this.volumes = {
-      [AudioType.AMBIENT]: 1,
+      [AudioType.AMBIENCE]: 1,
       [AudioType.MUSIC]: 1,
       [AudioType.SFX]: 1,
     };
 
     AudioManager.instance = this;
+    this.unlocked = false;
+    this.unlockAudio();
+  }
+
+  async unlockAudio() {
+    const context = THREE.AudioContext.getContext();
+
+    if (context.state === "suspended") {
+      await context.resume();
+    }
+
+    this.unlocked = true;
   }
 
   /**
@@ -70,9 +82,10 @@ export default class AudioManager {
    * @param {string} soundPath Example: "/assets/audio/sfx/click1.mp3"
    * @param {THREE.Vector3} position Position for 3D audio.
    * @param {number} spatialBlend 0 = 2D, 1 = 3D.
-   * @param {string} audioType AudioType.AMBIENT, AudioType.MUSIC or AudioType.SFX.
+   * @param {string} audioType AudioType.AMBIENCE, AudioType.MUSIC or AudioType.SFX.
    * @param {number} fadeInTime Fade-in duration in seconds.
    * @param {number} fadeOutTime Fade-out duration in seconds.
+   * @param {boolean} loop Whether the sound should loop.
    * @returns {Promise<THREE.Audio | THREE.PositionalAudio | null>}
    */
   async play(
@@ -82,7 +95,13 @@ export default class AudioManager {
     audioType = AudioType.SFX,
     fadeInTime = 1,
     fadeOutTime = 1,
+    loop = false,
   ) {
+    if (!this.unlocked) {
+      console.warn("Audio is not unlocked yet.");
+      return;
+    }
+
     if (!this.scene || !this.camera) {
       console.warn("AudioManager.play: AudioManager is not initialized.");
       return null;
@@ -108,6 +127,10 @@ export default class AudioManager {
         : new THREE.Audio(this.listener);
 
     sound.setBuffer(buffer);
+
+    // Native looping cannot cross-fade. For fadeOut > 0, looping is scheduled manually.
+    sound.setLoop(loop && fadeOutTime <= 0);
+
     sound.setVolume(fadeInTime > 0 ? 0 : volume);
 
     if (sound instanceof THREE.PositionalAudio) {
@@ -122,6 +145,13 @@ export default class AudioManager {
     sound.userData.audioType = audioType;
     sound.userData.targetVolume = volume;
     sound.userData.fadeOutTime = fadeOutTime;
+    sound.userData.soundPath = soundPath;
+    sound.userData.position = position.clone();
+    sound.userData.spatialBlend = clampedSpatialBlend;
+    sound.userData.loop = loop;
+    sound.userData.fadeId = 0;
+    sound.userData.endTimer = null;
+    sound.userData.nextLoopTimer = null;
 
     this.activeSounds.add(sound);
 
@@ -131,9 +161,38 @@ export default class AudioManager {
       this.fadeVolume(sound, 0, volume, fadeInTime);
     }
 
-    this.cleanupAfterEnd(sound);
+    this.scheduleSoundEnd(sound, fadeInTime, fadeOutTime);
 
     return sound;
+  }
+
+  /**
+   * Plays a looping sound.
+   * @param {string} soundPath Example: "/assets/audio/music/theme.mp3"
+   * @param {THREE.Vector3} position Position for 3D audio.
+   * @param {number} spatialBlend 0 = 2D, 1 = 3D.
+   * @param {string} audioType AudioType.AMBIENCE, AudioType.MUSIC or AudioType.SFX.
+   * @param {number} fadeInTime Fade-in duration in seconds.
+   * @param {number} fadeOutTime Fade-out duration in seconds.
+   * @returns {Promise<THREE.Audio | THREE.PositionalAudio | null>}
+   */
+  async loop(
+    soundPath,
+    position = new THREE.Vector3(0, 0, 0),
+    spatialBlend = 0,
+    audioType = AudioType.MUSIC,
+    fadeInTime = 1,
+    fadeOutTime = 1,
+  ) {
+    return this.play(
+      soundPath,
+      position,
+      spatialBlend,
+      audioType,
+      fadeInTime,
+      fadeOutTime,
+      true,
+    );
   }
 
   /**
@@ -150,8 +209,13 @@ export default class AudioManager {
     position = new THREE.Vector3(0, 0, 0),
     spatialBlend = 0,
     fadeInTime = 0,
-    fadeOutTime = 0.1,
+    fadeOutTime = 0.4,
   ) {
+    if (!this.unlocked) {
+      console.warn("Audio is not unlocked yet.");
+      return;
+    }
+
     if (this.currentInteractionSound) {
       this.stop(this.currentInteractionSound, fadeOutTime);
       this.currentInteractionSound = null;
@@ -177,6 +241,16 @@ export default class AudioManager {
   stop(sound, fadeOutTime = null) {
     if (!sound) {
       return;
+    }
+
+    if (sound.userData.endTimer) {
+      clearTimeout(sound.userData.endTimer);
+      sound.userData.endTimer = null;
+    }
+
+    if (sound.userData.nextLoopTimer) {
+      clearTimeout(sound.userData.nextLoopTimer);
+      sound.userData.nextLoopTimer = null;
     }
 
     const actualFadeOutTime = fadeOutTime ?? sound.userData.fadeOutTime ?? 0;
@@ -249,6 +323,62 @@ export default class AudioManager {
   }
 
   /**
+   * Schedules cleanup, fade-out, or cross-fade looping.
+   * @param {THREE.Audio | THREE.PositionalAudio} sound
+   * @param {number} fadeInTime
+   * @param {number} fadeOutTime
+   */
+  scheduleSoundEnd(sound, fadeInTime, fadeOutTime) {
+    const duration = sound.buffer.duration;
+
+    if (sound.userData.loop && fadeOutTime > 0) {
+      const nextLoopDelay = Math.max(duration - fadeOutTime, 0) * 1000;
+
+      sound.userData.nextLoopTimer = setTimeout(() => {
+        if (!this.activeSounds.has(sound)) {
+          return;
+        }
+
+        this.fadeVolume(sound, sound.getVolume(), 0, fadeOutTime, () => {
+          this.stopImmediately(sound);
+        });
+
+        this.play(
+          sound.userData.soundPath,
+          sound.userData.position,
+          sound.userData.spatialBlend,
+          sound.userData.audioType,
+          fadeInTime,
+          fadeOutTime,
+          true,
+        );
+      }, nextLoopDelay);
+
+      return;
+    }
+
+    if (fadeOutTime > 0 && !sound.userData.loop) {
+      const fadeOutDelay = Math.max(duration - fadeOutTime, 0) * 1000;
+
+      sound.userData.endTimer = setTimeout(() => {
+        if (!this.activeSounds.has(sound)) {
+          return;
+        }
+
+        this.fadeVolume(sound, sound.getVolume(), 0, fadeOutTime, () => {
+          this.stopImmediately(sound);
+        });
+      }, fadeOutDelay);
+
+      return;
+    }
+
+    if (!sound.userData.loop) {
+      this.cleanupAfterEnd(sound);
+    }
+  }
+
+  /**
    * Fades the volume of a sound.
    * @param {THREE.Audio | THREE.PositionalAudio} sound
    * @param {number} from
@@ -257,10 +387,27 @@ export default class AudioManager {
    * @param {Function | null} onComplete
    */
   fadeVolume(sound, from, to, duration, onComplete = null) {
+    if (duration <= 0) {
+      sound.setVolume(to);
+
+      if (onComplete) {
+        onComplete();
+      }
+
+      return;
+    }
+
+    const fadeId = (sound.userData.fadeId ?? 0) + 1;
+    sound.userData.fadeId = fadeId;
+
     const startTime = performance.now();
 
     const update = () => {
       if (!this.activeSounds.has(sound)) {
+        return;
+      }
+
+      if (sound.userData.fadeId !== fadeId) {
         return;
       }
 
@@ -285,6 +432,18 @@ export default class AudioManager {
    * @param {THREE.Audio | THREE.PositionalAudio} sound
    */
   stopImmediately(sound) {
+    if (sound.userData.endTimer) {
+      clearTimeout(sound.userData.endTimer);
+      sound.userData.endTimer = null;
+    }
+
+    if (sound.userData.nextLoopTimer) {
+      clearTimeout(sound.userData.nextLoopTimer);
+      sound.userData.nextLoopTimer = null;
+    }
+
+    sound.userData.fadeId = (sound.userData.fadeId ?? 0) + 1;
+
     if (sound.isPlaying) {
       sound.stop();
     }
@@ -298,13 +457,12 @@ export default class AudioManager {
 
   /**
    * Cleans up a sound after it ended.
-   *
    * @param {THREE.Audio | THREE.PositionalAudio} sound
    */
   cleanupAfterEnd(sound) {
     const duration = sound.buffer.duration;
 
-    setTimeout(
+    sound.userData.endTimer = setTimeout(
       () => {
         if (!sound.isPlaying) {
           this.activeSounds.delete(sound);
