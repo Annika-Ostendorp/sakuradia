@@ -72,6 +72,7 @@ export default class GameScene {
       1,
       1,
       true,
+      0.05
     );
 
     this.gameplayManager = new GameplayManager(
