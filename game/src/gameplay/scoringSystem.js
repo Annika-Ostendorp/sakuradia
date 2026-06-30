@@ -128,7 +128,7 @@ function calculateScoreFor_Crane(gridmanager) {
   // Gehe durch jedes Tile im Grid
   for (const [hexCoord, tile] of gridmanager.grid.entries()) {
     // Prüfe, ob auf dem aktuellen Tile ein Kranich ist
-    if (!tileHasCrane(tile)) {
+    if (tile.occupiedBy !== Animal.CRANE) {
       continue;
     }
 
@@ -139,7 +139,7 @@ function calculateScoreFor_Crane(gridmanager) {
       const neighborTile = getTileAt(gridmanager.grid, neighborCoord);
 
       // Prüfe, ob auf einem Nachbarfeld auch ein Kranich liegt
-      if (tileHasCrane(neighborTile)) {
+      if (neighborTile && neighborTile.occupiedBy === Animal.CRANE) {
         hasCraneNeighbor = true;
         break;
       }
@@ -150,10 +150,6 @@ function calculateScoreFor_Crane(gridmanager) {
       craneCount++;
     }
   }
-
-  // Gebe Punkte basierend auf der Anzahl der Kraniche ohne Nachbarn zurück
-  console.log("Kranich-Anzahl ohne Nachbarn:", craneCount);
-  console.log("Kranich-Punkte:", getPointsForCraneCount(craneCount));
 
   return getPointsForCraneCount(craneCount);
 }
