@@ -38,8 +38,7 @@ export default class AudioManager {
     };
 
     AudioManager.instance = this;
-    this.unlocked = false;
-    this.unlockAudio();
+    this.unlocked = true;
   }
 
   async unlockAudio() {
