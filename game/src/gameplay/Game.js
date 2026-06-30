@@ -1,8 +1,8 @@
-import Library from "../data/Library.js";
-import DeckLogic from "./DeckLogic.js";
-import GridManager from "./grid/GridManager.js";
+import Library from "/src/data/Library.js";
+import DeckLogic from "/src/gameplay/DeckLogic.js";
+import GridManager from "/src/gameplay/grid/GridManager.js";
 import { TileData, StarterTileData } from "../gameplay/Tile.js";
-import HexCoord from "../utils/HexCoord.js";
+import HexCoord from "/src/utils/HexCoord.js";
 
 /**
  * Zentrale Klasse, die die Spielzustände und -ressourcen zusammenhält:
@@ -17,11 +17,12 @@ import HexCoord from "../utils/HexCoord.js";
  * - Bietet `getHandPairs()` um UI/Manager mit synchronisierten Paaren zu versorgen
  */
 export default class Game {
-  constructor(scene) {
+  constructor(scene, modelLoader) {
     this.scene = scene;
+    this.modelLoader = modelLoader;
     this.library = new Library();
     this.deckLogic = new DeckLogic(this.library);
-    this.gridManager = new GridManager(this.scene);
+    this.gridManager = new GridManager(this.scene, this.modelLoader);
     // Parallele Arrays: tilesOnHand[i] gehört zu animalsOnHand[i]
     this.tilesOnHand = [];
     this.animalsOnHand = [];

@@ -6,6 +6,8 @@ import {
   updateOrbitControlsWithRightStick,
   moveOrbitCameraHorizontal,
 } from "../rendering/OrbitalCamera.js";
+import ModelLoader from "/src/utils/ModelLoader.js";
+import SmoothAnimator from "/src/utils/SmoothAnimator.js";
 import GameplayManager from "../gameplay/GameplayManager.js";
 import InputManager from "../input/InputManager.js";
 import DebugConfig from "../debug/DebugConfig.js";
@@ -37,17 +39,25 @@ const RULE_PAGES = [
  * zunächst leer ist und das Rendering weiterhin korrekt arbeitet.
  */
 export default class GameScene {
+  #modelLoader = null;
   #scene = null;
   #camera = null;
 
   constructor(gameConfig) {
     this.gameConfig = gameConfig;
+    this.smoothAnimator = new SmoothAnimator();
+    this.#modelLoader = new ModelLoader();
     this.initialization();
     this.timer = new THREE.Timer();
 
     this.audioManager = AudioManager.getInstance();
     this.audioManager.initialize(this.#scene, this.#camera);
-    this.gameplayManager = new GameplayManager(this.#scene, this.gameConfig);
+    this.gameplayManager = new GameplayManager(
+      this.#scene,
+      this.gameConfig,
+      this.#modelLoader,
+      this.smoothAnimator,
+    );
     this.inputManager = new InputManager(
       this.#scene,
       this.canvas,
@@ -78,25 +88,38 @@ export default class GameScene {
       antialias: true,
     });
 
-    this.setupCamera();
-
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(window.devicePixelRatio);
+
+    this.setupCamera();
 
     this.handleResize = this.handleResize.bind(this);
     window.addEventListener("resize", this.handleResize);
 
     // Lichter hinzufügen: Ambient + Directional für Schatten
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+
     this.#scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
     directionalLight.position.set(10, 20, 10);
     directionalLight.castShadow = true;
-    directionalLight.shadow.camera.left = -50;
-    directionalLight.shadow.camera.right = 50;
-    directionalLight.shadow.camera.top = 50;
-    directionalLight.shadow.camera.bottom = -50;
+
+    directionalLight.shadow.camera.left = -20;
+    directionalLight.shadow.camera.right = 20;
+    directionalLight.shadow.camera.top = 20;
+    directionalLight.shadow.camera.bottom = -20;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 100;
+
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+
+    directionalLight.shadow.bias = -0.0005;
+    directionalLight.shadow.normalBias = 0.02;
+
     this.#scene.add(directionalLight);
 
     // Add axis helper
@@ -138,6 +161,8 @@ export default class GameScene {
     this.timer.update();
     const deltaTime = this.timer.getDelta(); // Die Zeit seit dem letzten Frame
     const elapsed = this.timer.getElapsed(); // Die Zeit seit Start des Timers
+
+    this.smoothAnimator.update(deltaTime);
 
     updateOrbitControlsWithRightStick(
       this.controls,
