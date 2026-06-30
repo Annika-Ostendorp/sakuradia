@@ -3,6 +3,7 @@ import { Animal } from "/src/data/Animal.js";
 import { Landscape } from "/src/data/Landscape.js";
 import { calculateKoiScore } from "./calculations/calculateKoiScore.js";
 import { calculatePandaScore } from "./calculations/calculatePandaScore.js";
+import { calculateJapanmakakScore } from "./calculations/calculateJapanmakakScore.js";
 
 /**
  * Berechnet die Punkte für das gegebene Grid basierend auf den platzierten Tieren und den Landschaften der Tiles.
@@ -179,13 +180,11 @@ function getPointsForCraneCount(count) {
   }
 }
 
-function calculateScoreFor_Japanmakak(grid) {
-  let score = 0;
-
-  // Logic
-
-  return score;
+function calculateScoreFor_Japanmakak(gridmanager) {
+  return calculateJapanmakakScore(gridmanager);
+  
 }
+
 
 function calculateScoreFor_Koi(gridmanager) {
   return calculateKoiScore(gridmanager);
