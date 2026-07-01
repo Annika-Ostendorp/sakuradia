@@ -68,6 +68,9 @@ export default class GameplayManager {
       throw new Error("Could not attach hand panel: #app-shell not found.");
     }
     appShell.append(this.handPanel.element);
+    if (this.handPanel.scorecardElement) {
+      appShell.append(this.handPanel.scorecardElement);
+    }
 
     if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
       console.log(
