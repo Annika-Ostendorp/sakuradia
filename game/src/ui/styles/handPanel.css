@@ -147,9 +147,9 @@
 
 .hand-panel__scorecard-overlay {
   position: fixed;
-  right: 0;
+  right: -0.45rem;
   bottom: 0.9rem;
-  width: clamp(18rem, 34vw, 27rem);
+  width: clamp(20rem, 38vw, 31rem);
   padding: 0;
   border: 0;
   background: transparent;
@@ -159,10 +159,10 @@
 }
 
 .hand-panel__scorecard-image {
-  width: calc(100% - 1rem);
-  margin-right: 1rem;
+  width: 100%;
+  margin-right: 0;
   margin-left: auto;
-  max-height: 22rem;
+  max-height: 26rem;
   display: block;
   object-fit: contain;
   border-radius: 0;
@@ -179,13 +179,13 @@
   }
 
   .hand-panel__scorecard-overlay {
-    right: 0;
+    right: -0.35rem;
     bottom: 0.6rem;
-    width: clamp(13rem, 50vw, 18rem);
+    width: clamp(14.5rem, 56vw, 21rem);
   }
 
   .hand-panel__scorecard-image {
-    width: calc(100% - 0.9rem);
-    margin-right: 0.9rem;
+    width: 100%;
+    margin-right: 0;
   }
 }
