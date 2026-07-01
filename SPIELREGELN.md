@@ -8,12 +8,15 @@
 5. [Spielablauf](#spielablauf)
 6. [Hinweise zur digitalen Umsetzung](#hinweise-zur-digitalen-umsetzung)
 
+
 ## Einleitung
 SAKURADIA ist ein von [CASCADIA](https://www.spiel-des-jahres.de/spiele/cascadia/)
 inspiriertes strategisches Lege-Spiel für 1-4 Spieler. Viele der Regeln und Funktionen bleiben erhalten, jedoch tauchen die Spieler visuell in die japanische Natur ein und interagieren beispielsweise mit Tieren wie Panda, Koi, sowie Sika und finden sich als Verwalter von Bambuswäldern, Teichen und Kirschbaumwiesen wieder.
 
+
 ## Ziel des Spiels
 Wer am Ende des Spiels am meisten Punkte hat - gewinnt.
+
 
 ## Spielmaterial
 - 60x **Doppel-Tile** (Tile mit zwei Landschaften)
@@ -24,13 +27,13 @@ Wer am Ende des Spiels am meisten Punkte hat - gewinnt.
 - 20x **Kranich-Token**
 - 20x **Panda-Token**
 - 20x **Sika-Token**
-- 25x **Nature-Token** (noch nicht implementiert)
 
 
 ## Spielaufbau
 1. Jeder Spieler beginnt mit einem zufällig zugeteilten **Starter-Tile** (bestehend aus **2 Doppel-Tiles** und **1 Keystone-Tile**).
 2. **Landschaft-Tiles** und **Tier-Tokens** werden vermischt.
 3. Es werden 4 Landschaft-Tiles und 4 Tier-Tokens als **Hand** bereitgestellt, um 4 "Tile-Token"-Paare zu bilden.
+
 
 ## Spielablauf
 Das Spiel verläuft in **Zügen** und **Runden**. Es werden üblicherweise **20 Runden** gespielt. *(Alternativ kann man spielen, bis der Nachzieh-Stapel leer ist.)*<br>
