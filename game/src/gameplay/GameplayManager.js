@@ -78,6 +78,7 @@ export default class GameplayManager {
 
     this.handleWindowResize = () => {
       this.alignScoreBoardTopEdgeWithHandPanel();
+      this.alignScorecardBottomEdgeWithHandPanel();
     };
     window.addEventListener("resize", this.handleWindowResize);
 
@@ -102,6 +103,7 @@ export default class GameplayManager {
     this.syncTurnStatus();
     requestAnimationFrame(() => {
       this.alignScoreBoardTopEdgeWithHandPanel();
+      this.alignScorecardBottomEdgeWithHandPanel();
     });
 
     this.game
@@ -330,6 +332,7 @@ export default class GameplayManager {
     this.handPanel.updateStatus(statusPayload);
     this.scoreBoard.update(statusPayload);
     this.alignScoreBoardTopEdgeWithHandPanel();
+    this.alignScorecardBottomEdgeWithHandPanel();
   }
 
   alignScoreBoardTopEdgeWithHandPanel() {
@@ -347,6 +350,24 @@ export default class GameplayManager {
     const handPanelTop = this.handPanel.element.getBoundingClientRect().top;
     this.scoreBoard.element.style.top = `${handPanelTop}px`;
     this.scoreBoard.element.style.transform = "none";
+  }
+
+  alignScorecardBottomEdgeWithHandPanel() {
+    if (!this.handPanel?.element || !this.handPanel?.scorecardElement) {
+      return;
+    }
+
+    const isMobile = window.matchMedia("(max-width: 700px)").matches;
+    if (isMobile) {
+      this.handPanel.scorecardElement.style.bottom = "";
+      this.handPanel.scorecardElement.style.top = "";
+      return;
+    }
+
+    const handPanelRect = this.handPanel.element.getBoundingClientRect();
+    const handPanelBottomOffset = Math.max(0, window.innerHeight - handPanelRect.bottom);
+    this.handPanel.scorecardElement.style.bottom = `${handPanelBottomOffset}px`;
+    this.handPanel.scorecardElement.style.top = "auto";
   }
 
   calculateBoardTotalScore() {
@@ -439,6 +460,7 @@ export default class GameplayManager {
     this.selectedHandIndex = Math.min(this.selectedHandIndex, maxIndex);
     this.handPanel.update(handPairs, this.selectedHandIndex);
     this.alignScoreBoardTopEdgeWithHandPanel();
+    this.alignScorecardBottomEdgeWithHandPanel();
   }
 
   updatePreviewTilePosition(newHexCoord, isMicroMovement = false) {

@@ -170,26 +170,22 @@ export function createHandPanel({ onSelectPair } = {}) {
     <div class="hand-panel__list" role="list"></div>
   `;
 
-  const scorecard = document.createElement('aside');
-  scorecard.className = 'hand-panel__scorecard-overlay';
-  scorecard.setAttribute('aria-live', 'polite');
-  scorecard.setAttribute('aria-label', 'Tier-Scorecard');
-  scorecard.hidden = true;
-
   const scorecardImage = document.createElement('img');
   scorecardImage.className = 'hand-panel__scorecard-image';
   scorecardImage.alt = '';
-  scorecard.append(scorecardImage);
+  scorecardImage.hidden = true;
+  scorecardImage.setAttribute('aria-live', 'polite');
+  scorecardImage.setAttribute('aria-label', 'Tier-Scorecard');
 
   const status = panel.querySelector('.hand-panel__status');
   const scores = panel.querySelector('.hand-panel__scores');
   const list = panel.querySelector('.hand-panel__list');
-  if (!status || !scores || !list || !scorecard || !scorecardImage) {
+  if (!status || !scores || !list || !scorecardImage) {
     throw new Error('Hand panel list could not be created.');
   }
 
   const hideScorecard = () => {
-    scorecard.hidden = true;
+    scorecardImage.hidden = true;
     scorecardImage.removeAttribute('src');
     scorecardImage.alt = '';
   };
@@ -203,7 +199,7 @@ export function createHandPanel({ onSelectPair } = {}) {
 
     scorecardImage.src = scorecardImagePath;
     scorecardImage.alt = `Scorecard für ${toReadableLabel(animal)}`;
-    scorecard.hidden = false;
+    scorecardImage.hidden = false;
   };
 
   let hoveredAnimal = null;
@@ -380,7 +376,7 @@ export function createHandPanel({ onSelectPair } = {}) {
 
   return {
     element: panel,
-    scorecardElement: scorecard,
+    scorecardElement: scorecardImage,
     update: render,
     updateStatus,
   };
