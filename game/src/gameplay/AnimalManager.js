@@ -6,15 +6,14 @@ import AnimalSpawner from "/src/rendering/AnimalSpawner.js";
 import IconSpawner from "/src/rendering/IconSpawner.js";
 
 export default class AnimalManager {
-  /**  Map von HexCoord auf Animal[].
-   * @type {Map<HexCoord, THREE.Sprite[]>} */
-  #previewIcons = new Map();
-
   /**  Map von HexCoord auf THREE.Object3D.
    * @type {Map<HexCoord, THREE.Object3D>} */
   #placedAnimals = new Map();
 
   #animalDict = {};
+
+  #hoveredHexCoord = null;
+  #hoveredAnimal = null;
 
   constructor(scene, gridManager, debugTextInWorld) {
     this.scene = scene;
@@ -36,20 +35,30 @@ export default class AnimalManager {
 
   async updateAnimalsOnGrid() {
     for (const [hexCoord, tile] of this.gridManager.grid) {
-      // Regardless of state, if it's occupied, we need to ensure the animal is present in the scene
       const shouldBeOccupied =
         tile.occupiedBy !== Animal.NONE && tile.occupiedBy !== undefined;
 
       if (shouldBeOccupied) {
+        this.removeAnimalIconsFromScene(hexCoord);
+
         if (!this.isPlacedOnHexCoord(hexCoord)) {
-          this.iconSpawner.clearIcons(hexCoord);
           await this.spawnPlacedAnimalAtCoord(hexCoord, tile.occupiedBy);
-          this.spawnFlatAnimalIconAtCoord(tile.occupiedBy, hexCoord);
+          await this.spawnFlatAnimalIconAtCoord(tile.occupiedBy, hexCoord);
         }
+
         continue;
       }
 
-      await this.spawnAnimalIconsAtCoord(hexCoord, tile.tileData.animals);
+      const highlightedAnimal =
+        this.#hoveredHexCoord && this.#hoveredHexCoord.equals(hexCoord)
+          ? this.#hoveredAnimal
+          : null;
+
+      await this.spawnAnimalIconsAtCoord(
+        hexCoord,
+        tile.tileData.animals,
+        highlightedAnimal,
+      );
     }
   }
 
@@ -68,29 +77,25 @@ export default class AnimalManager {
     this.#placedAnimals.set(hexCoord, spawnedModel);
   }
 
-  async spawnFlatAnimalIconAtCoord(animal, hexCoord){
+  async spawnFlatAnimalIconAtCoord(animal, hexCoord) {
     await this.iconSpawner.spawnFlatIconForAnimal(animal, hexCoord);
   }
 
-  async spawnAnimalIconsAtCoord(hexCoord, animals) {
-    if (this.#previewIcons.has(hexCoord)) {
-      console.warn(
-        `Animal icons already spawned at ${hexCoord.toString()}. Skipping spawn.`,
-      );
-      return;
+  spawnAnimalIconsAtCoord(hexCoord, animals, highlightedAnimal = null) {
+    if (!Array.isArray(animals) || animals.length === 0) {
+      return [];
     }
 
-    const icons = await this.iconSpawner.spawnIconForAnimals(animals, hexCoord, 0.5);
-    this.#previewIcons.set(hexCoord, icons);
+    return this.iconSpawner.spawnIconForAnimals(
+      animals,
+      hexCoord,
+      0.5,
+      highlightedAnimal,
+    );
   }
 
-  async removeAnimalIconsFromScene(hexCoord) {
-    const previewModels = this.#previewIcons.get(hexCoord);
-    icons = this.#previewIcons.get(hexCoord);
-    for (const icon of icons) {
-      this.scene.remove(icon);
-    }
-    this.#previewIcons.delete(hexCoord);
+  removeAnimalIconsFromScene(hexCoord) {
+    this.iconSpawner.clearIcons(hexCoord);
   }
 
   /**
@@ -159,6 +164,50 @@ export default class AnimalManager {
   }
 
   hoverAnimal(hexCoord, animal) {
+    const isSameHover =
+      this.#hoveredHexCoord &&
+      this.#hoveredHexCoord.equals(hexCoord) &&
+      this.#hoveredAnimal === animal;
+
+    if (isSameHover) {
+      return;
+    }
+
+    if (this.#hoveredHexCoord && !this.#hoveredHexCoord.equals(hexCoord)) {
+      const previousTile = this.gridManager.getTileAt(this.#hoveredHexCoord);
+
+      if (
+        previousTile &&
+        (previousTile.occupiedBy === Animal.NONE ||
+          previousTile.occupiedBy === undefined)
+      ) {
+        this.spawnAnimalIconsAtCoord(
+          this.#hoveredHexCoord,
+          previousTile.tileData.animals,
+          null,
+        );
+      }
+    }
+
+    this.#hoveredHexCoord = hexCoord;
+    this.#hoveredAnimal = animal;
+
+    const tile = this.gridManager.getTileAt(hexCoord);
+
+    if (!tile) {
+      console.warn("hoverAnimal: no tile found at", hexCoord);
+      return;
+    }
+
+    const isOccupied =
+      tile.occupiedBy !== Animal.NONE && tile.occupiedBy !== undefined;
+
+    if (isOccupied) {
+      return;
+    }
+
+    this.spawnAnimalIconsAtCoord(hexCoord, tile.tileData.animals, animal);
+
     if (DebugConfig.enabled && DebugConfig.doInWorldDebugInfo) {
       this.debugTextInWorld.showAnimalDebugLabels(
         this.scene,

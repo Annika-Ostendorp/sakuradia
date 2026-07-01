@@ -11,7 +11,7 @@ export default class IconSpawner {
     this.textureLoader = new THREE.TextureLoader();
   }
 
-  spawnIconForAnimals(animals, hexCoord, size = 0.5, hoveringAnimal = null) {
+  spawnIconForAnimals(animals, hexCoord, size = 0.5, highlightedAnimal = null) {
     this.clearIcons(hexCoord);
 
     if (!Array.isArray(animals) || animals.length === 0) {
@@ -39,21 +39,30 @@ export default class IconSpawner {
 
     const sprites = [];
 
-    validIconData.forEach(({ path }, index) => {
+    validIconData.forEach(({ animal, path }, index) => {
+      const isHighlighted = highlightedAnimal === animal;
+
       const texture = this.textureLoader.load(path);
       texture.colorSpace = THREE.SRGBColorSpace;
 
       const material = new THREE.SpriteMaterial({
         map: texture,
-        transparent: hoveringAnimal !== validIconData[index].animal,
+        transparent: true,
         depthWrite: false,
-        opacity: hoveringAnimal === validIconData[index].animal ? 1 : 0.7,
+        opacity: isHighlighted ? 1.0 : 0.35,
       });
 
       const sprite = new THREE.Sprite(material);
 
       sprite.position.copy(positions[index]);
-      sprite.scale.set(size, size, 1);
+
+      const iconSize = isHighlighted ? size * 1.5 : size;
+      sprite.scale.set(iconSize, iconSize, 1);
+
+      // optional, damit Highlight-Icon leicht höher liegt
+      if (isHighlighted) {
+        sprite.position.y += 0.15;
+      }
 
       this.scene.add(sprite);
       sprites.push(sprite);
@@ -216,5 +225,14 @@ export default class IconSpawner {
     }
 
     this.#spawnedIcons.clear();
+  }
+
+  respawnIconsForAnimals(
+    hexCoord,
+    animals,
+    size = 0.5,
+    highlightedAnimal = null,
+  ) {
+    return this.spawnIconForAnimals(animals, hexCoord, size, highlightedAnimal);
   }
 }
