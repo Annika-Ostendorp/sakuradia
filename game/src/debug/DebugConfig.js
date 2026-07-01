@@ -3,10 +3,10 @@ export default class DebugConfig {
 
   static doLogInfoThatIsShownInUI = false;
   static doLogSmallInfo = false;
-  static doInWorldDebugInfo = true;
+  static doInWorldDebugInfo = false;
   static doLogGameplayInfo = true;
   static doShowBlueprints = false;
-  static doLogGrid = true;
+  static doLogGrid = false;
   static doLogCalculations = false;
   static doShowCoordinateText = false;
   static doLogInputs = false;
