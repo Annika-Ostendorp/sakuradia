@@ -7,7 +7,7 @@ Koi, sowie Sika und finden sich als Verwalter von Bambuswäldern, Teichen und
 Kirschbaumwiesen wieder.
 
 ## Aktueller Stand
-- Der aktuelle Stand ist im dev-main-branch einsehbar
+- Der aktuelle Stand ist im main-branch einsehbar
 - Das Hauptmenü beinhaltet
     - Einen Rundenanzahl-Slider (1-20 Runden, Standard auf 85)
     - Spieler-Anzahl-Slider (1-4, Standard auf 1)
