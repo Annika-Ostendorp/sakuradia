@@ -24,6 +24,12 @@ Kirschbaumwiesen wieder.
 - Hand besteht teilweise noch aus Text-Platzhaltern
 - Details zum Spielablauf und Informationen wie Punktestand sind aktuell nur in der Konsole (F12) einsehbar
 
+## Auf Windows starten
+```txt
+Doppelklick auf start-dev.bat
+```
+
+
 ## Manuell starten
 ```txt
 1. Projektordner im Terminal oder in VS Code öffnen
