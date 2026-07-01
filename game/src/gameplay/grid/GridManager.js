@@ -195,6 +195,10 @@ export default class GridManager {
     );
   }
 
+  async updateAnimalsOnGrid(){
+    return await this.animalManager.updateAnimalsOnGrid();
+  }
+
   /// --- Grid-Query-Methoden (Wrapper um gridQueryService) ---
 
   /**
@@ -400,7 +404,7 @@ export default class GridManager {
    * Spawnt über jedem besetzten Tile ein Text-Mesh, das Informationen über das darauf befindliche Tier anzeigt.
    * Diese Methode wird aufgerufen, wenn Tiere auf Tiles gesetzt werden, um die Logik der Tierplatzierung zu veranschaulichen.
    */
-  async showAnimalDebugLabels() {
-    return await this.debugTextInWorld.showAnimalDebugLabels(this.scene, this); // Übergibt die Szene und den GridManager an die DebugTextInWorld-Instanz
-  }
+  // async showAnimalDebugLabels() {
+  //   return await this.debugTextInWorld.showAnimalDebugLabels(this.scene, this); // Übergibt die Szene und den GridManager an die DebugTextInWorld-Instanz
+  // }
 }
