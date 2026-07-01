@@ -84,8 +84,8 @@ export default class DebugTextInWorld {
     this.hideNoValidAnimalPlacementPossible(scene);
 
     const worldPos = hexCoord.hexToWorld(hexCoord, gridManager.hexSize);
-    const labelPos = new THREE.Vector3(worldPos.x, 0.3, worldPos.z+0.125);
-    const text = "INVALID";
+    const labelPos = new THREE.Vector3(worldPos.x, 1, worldPos.z);
+    const text = "Y: Skip\nB: Undo";
     const textColor = "#ff0000";
     const textSize = 0.275;
     const label = await TextSpawner.spawnWithShadow(
