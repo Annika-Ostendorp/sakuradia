@@ -115,7 +115,7 @@ export default class GameplayManager {
   async onSubmitted() {
     const previousState = this.getCurrentRoundState();
 
-    this.audioManager.playInteraction("/assets/audio/test.mp3");
+    this.audioManager.playInteraction("/assets/audio/sfx/Click.mp3");
 
     // Je nach State
     switch (previousState) {
@@ -131,6 +131,8 @@ export default class GameplayManager {
             this.selectedHandIndex,
           );
         }
+
+        this.updateAnimalsOnGrid();
 
         // Spawn preview tile (without updating the grid)
         const previousHexCoord =
@@ -171,6 +173,9 @@ export default class GameplayManager {
         break;
 
       case RoundState.PLACE_TILE:
+
+        this.updateAnimalsOnGrid();
+
         // Setze Tile
         this.currentTurnTileModel = await this.placeTile(
           this.previewTileHexCoord,
@@ -184,6 +189,9 @@ export default class GameplayManager {
         break;
 
       case RoundState.PLACE_ANIMAL:
+
+        this.updateAnimalsOnGrid();
+
         // Platziere Tier
         this.latestPlacedTileHexCoord = this.previewTileHexCoord; // Aktualisiere die Position des zuletzt platzierten Tiles für spätere Referenz
 
@@ -332,6 +340,10 @@ export default class GameplayManager {
 
   async placeAnimal(hexCoord, animal) {
     return await this.game.gridManager.setAnimal(hexCoord, animal);
+  }
+
+  async updateAnimalsOnGrid() {
+    return await this.game.gridManager.updateAnimalsOnGrid();
   }
 
   getRandomUnoccupiedNeighbour(hexCoord) {
@@ -664,6 +676,7 @@ export default class GameplayManager {
     console.group("scores");
     console.log("landscapeScores:", scoreResult.scores.landscapeScores);
     console.log("animalScores:", scoreResult.scores.animalScores);
+    console.groupEnd();
     console.groupEnd();
   }
 }
