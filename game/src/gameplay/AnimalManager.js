@@ -225,7 +225,16 @@ export default class AnimalManager {
       hexCoord,
     );
   }
+
   hideNoValidAnimalPlacementPossible() {
     this.debugTextInWorld.hideNoValidAnimalPlacementPossible(this.scene);
+  }
+  
+  clearPossibleAnimalMarksAtCoord(hexCoord) {
+    if (!hexCoord) {
+      return;
+    }
+
+    this.removeAnimalIconsFromScene(hexCoord);
   }
 }

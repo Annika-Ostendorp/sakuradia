@@ -622,13 +622,21 @@ export default class GameplayManager {
   }
 
   async undoTileChoice() {
-    // Will only undo/be active when animal cannot be placed
     if (this.roundState === RoundState.CANNOT_PLACE_ANIMAL) {
       this.getAnimalManager().hideNoValidAnimalPlacementPossible();
+
+      const undoneHexCoord = this.previewTileHexCoord;
+
+      this.getAnimalManager().clearPossibleAnimalMarksAtCoord(undoneHexCoord);
+
       await this.removePreviewTile();
+
       this.clearCurrentTurnTile();
       this.clearPreviewTile();
       this.clearPreviewAnimal();
+
+      await this.updateAnimalsOnGrid();
+
       this.roundState = RoundState.CHOOSE_TILE;
     }
   }
