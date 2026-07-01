@@ -146,6 +146,30 @@
   color: #633845;
 }
 
+.hand-panel__scorecard-overlay {
+  position: fixed;
+  right: -0.45rem;
+  bottom: 0.9rem;
+  width: clamp(20rem, 38vw, 31rem);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.hand-panel__scorecard-image {
+  width: 100%;
+  margin-right: 0;
+  margin-left: auto;
+  max-height: 26rem;
+  display: block;
+  object-fit: contain;
+  border-radius: 0;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.22));
+}
+
 @media (max-width: 700px) {
   .hand-panel {
     top: auto;
@@ -153,5 +177,16 @@
     transform: none;
     width: calc(100vw - 1.8rem);
     max-width: 24rem;
+  }
+
+  .hand-panel__scorecard-overlay {
+    right: -0.35rem;
+    bottom: 0.6rem;
+    width: clamp(14.5rem, 56vw, 21rem);
+  }
+
+  .hand-panel__scorecard-image {
+    width: 100%;
+    margin-right: 0;
   }
 }

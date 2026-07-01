@@ -72,6 +72,9 @@ export default class GameplayManager {
     }
     appShell.append(this.handPanel.element);
     appShell.append(this.scoreBoard.element);
+    if (this.handPanel.scorecardElement) {
+      appShell.append(this.handPanel.scorecardElement);
+    }
 
     this.handleWindowResize = () => {
       this.alignScoreBoardTopEdgeWithHandPanel();

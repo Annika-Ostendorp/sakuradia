@@ -31,6 +31,14 @@ const ANIMAL_IMAGES = Object.freeze({
   Sika: '/assets/images/animals/SikaAvatar.png',
 });
 
+const SCORECARD_IMAGES = Object.freeze({
+  Japanmakak: '/assets/images/scorecards/JapanmakakScorecard.png',
+  Koi: '/assets/images/scorecards/KoiScorecard.png',
+  Crane: '/assets/images/scorecards/KranichScorecard.png',
+  Panda: '/assets/images/scorecards/PandaScorecard.png',
+  Sika: '/assets/images/scorecards/SikaScorecard.png',
+});
+
 function toReadableLabel(value) {
   if (!value) {
     return '-';
@@ -63,6 +71,10 @@ function getLandscapeImageScale(landscape) {
 
 function getAnimalImagePath(animal) {
   return ANIMAL_IMAGES[animal] || null;
+}
+
+function getScorecardImagePath(animal) {
+  return SCORECARD_IMAGES[animal] || null;
 }
 
 function getAllowedAnimalsText(tileData) {
@@ -158,15 +170,127 @@ export function createHandPanel({ onSelectPair } = {}) {
     <div class="hand-panel__list" role="list"></div>
   `;
 
+  const scorecard = document.createElement('aside');
+  scorecard.className = 'hand-panel__scorecard-overlay';
+  scorecard.setAttribute('aria-live', 'polite');
+  scorecard.setAttribute('aria-label', 'Tier-Scorecard');
+  scorecard.hidden = true;
+
+  const scorecardImage = document.createElement('img');
+  scorecardImage.className = 'hand-panel__scorecard-image';
+  scorecardImage.alt = '';
+  scorecard.append(scorecardImage);
+
   const status = panel.querySelector('.hand-panel__status');
   const scores = panel.querySelector('.hand-panel__scores');
   const list = panel.querySelector('.hand-panel__list');
-  if (!status || !scores || !list) {
+  if (!status || !scores || !list || !scorecard || !scorecardImage) {
     throw new Error('Hand panel list could not be created.');
   }
 
+  const hideScorecard = () => {
+    scorecard.hidden = true;
+    scorecardImage.removeAttribute('src');
+    scorecardImage.alt = '';
+  };
+
+  const showScorecard = (animal) => {
+    const scorecardImagePath = getScorecardImagePath(animal);
+    if (!scorecardImagePath) {
+      hideScorecard();
+      return;
+    }
+
+    scorecardImage.src = scorecardImagePath;
+    scorecardImage.alt = `Scorecard für ${toReadableLabel(animal)}`;
+    scorecard.hidden = false;
+  };
+
+  let hoveredAnimal = null;
+  let selectedAnimal = null;
+
+  const refreshScorecard = () => {
+    const activeAnimal = hoveredAnimal || selectedAnimal;
+    if (activeAnimal) {
+      showScorecard(activeAnimal);
+    } else {
+      hideScorecard();
+    }
+  };
+
+  list.addEventListener('mouseover', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+
+    const pairButton = target.closest('.hand-panel__pair');
+    if (!pairButton || !list.contains(pairButton) || pairButton.disabled) {
+      return;
+    }
+
+    hoveredAnimal = pairButton.dataset.animal || null;
+    refreshScorecard();
+  });
+
+  list.addEventListener('mouseout', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+
+    const fromButton = target.closest('.hand-panel__pair');
+    if (!fromButton || !list.contains(fromButton)) {
+      return;
+    }
+
+    const related = event.relatedTarget;
+    if (related instanceof Element) {
+      const toButton = related.closest('.hand-panel__pair');
+      if (toButton && list.contains(toButton) && !toButton.disabled) {
+        hoveredAnimal = toButton.dataset.animal || null;
+        refreshScorecard();
+        return;
+      }
+    }
+
+    hoveredAnimal = null;
+    refreshScorecard();
+  });
+
+  list.addEventListener('focusin', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+
+    const pairButton = target.closest('.hand-panel__pair');
+    if (!pairButton || !list.contains(pairButton) || pairButton.disabled) {
+      return;
+    }
+
+    hoveredAnimal = pairButton.dataset.animal || null;
+    refreshScorecard();
+  });
+
+  list.addEventListener('focusout', (event) => {
+    const related = event.relatedTarget;
+    if (related instanceof Element && list.contains(related)) {
+      return;
+    }
+
+    hoveredAnimal = null;
+    refreshScorecard();
+  });
+
+  panel.addEventListener('mouseleave', () => {
+    hoveredAnimal = null;
+    refreshScorecard();
+  });
+
   const render = (pairs = [], selectedIndex = 0) => {
     list.textContent = '';
+    selectedAnimal = pairs[selectedIndex]?.animal || null;
 
     for (let index = 0; index < 4; index += 1) {
       const pair = pairs[index] || null;
@@ -203,6 +327,7 @@ export function createHandPanel({ onSelectPair } = {}) {
       const allowedAnimalsText = getAllowedAnimalsText(pair.tileData);
 
       button.classList.toggle('hand-panel__pair--selected', index === selectedIndex);
+      button.dataset.animal = String(pair.animal || '');
       button.innerHTML = `
         <span class="hand-panel__pair-visual-row">
           ${tileVisualSvg}
@@ -217,11 +342,16 @@ export function createHandPanel({ onSelectPair } = {}) {
       `;
 
       button.addEventListener('click', () => {
+        selectedAnimal = pair.animal || null;
+        hoveredAnimal = null;
+        refreshScorecard();
         onSelectPair?.(index);
       });
 
       list.append(button);
     }
+
+    refreshScorecard();
   };
 
   const updateStatus = ({
@@ -250,6 +380,7 @@ export function createHandPanel({ onSelectPair } = {}) {
 
   return {
     element: panel,
+    scorecardElement: scorecard,
     update: render,
     updateStatus,
   };
