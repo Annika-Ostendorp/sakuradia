@@ -72,6 +72,15 @@ export default class GameplayManager {
     }
     appShell.append(this.handPanel.element);
     appShell.append(this.scoreBoard.element);
+    if (this.handPanel.scorecardElement) {
+      appShell.append(this.handPanel.scorecardElement);
+    }
+
+    this.handleWindowResize = () => {
+      this.alignScoreBoardTopEdgeWithHandPanel();
+      this.alignScorecardBottomEdgeWithHandPanel();
+    };
+    window.addEventListener("resize", this.handleWindowResize);
 
     if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
       console.log(
@@ -92,6 +101,10 @@ export default class GameplayManager {
     );
     this.syncHandPanel();
     this.syncTurnStatus();
+    requestAnimationFrame(() => {
+      this.alignScoreBoardTopEdgeWithHandPanel();
+      this.alignScorecardBottomEdgeWithHandPanel();
+    });
 
     this.game
       .start()
@@ -318,6 +331,43 @@ export default class GameplayManager {
 
     this.handPanel.updateStatus(statusPayload);
     this.scoreBoard.update(statusPayload);
+    this.alignScoreBoardTopEdgeWithHandPanel();
+    this.alignScorecardBottomEdgeWithHandPanel();
+  }
+
+  alignScoreBoardTopEdgeWithHandPanel() {
+    if (!this.handPanel?.element || !this.scoreBoard?.element) {
+      return;
+    }
+
+    const isMobile = window.matchMedia("(max-width: 700px)").matches;
+    if (isMobile) {
+      this.scoreBoard.element.style.top = "";
+      this.scoreBoard.element.style.transform = "";
+      return;
+    }
+
+    const handPanelTop = this.handPanel.element.getBoundingClientRect().top;
+    this.scoreBoard.element.style.top = `${handPanelTop}px`;
+    this.scoreBoard.element.style.transform = "none";
+  }
+
+  alignScorecardBottomEdgeWithHandPanel() {
+    if (!this.handPanel?.element || !this.handPanel?.scorecardElement) {
+      return;
+    }
+
+    const isMobile = window.matchMedia("(max-width: 700px)").matches;
+    if (isMobile) {
+      this.handPanel.scorecardElement.style.bottom = "";
+      this.handPanel.scorecardElement.style.top = "";
+      return;
+    }
+
+    const handPanelRect = this.handPanel.element.getBoundingClientRect();
+    const handPanelBottomOffset = Math.max(0, window.innerHeight - handPanelRect.bottom);
+    this.handPanel.scorecardElement.style.bottom = `${handPanelBottomOffset}px`;
+    this.handPanel.scorecardElement.style.top = "auto";
   }
 
   calculateBoardTotalScore() {
@@ -409,6 +459,8 @@ export default class GameplayManager {
     const maxIndex = Math.max(0, handPairs.length - 1);
     this.selectedHandIndex = Math.min(this.selectedHandIndex, maxIndex);
     this.handPanel.update(handPairs, this.selectedHandIndex);
+    this.alignScoreBoardTopEdgeWithHandPanel();
+    this.alignScorecardBottomEdgeWithHandPanel();
   }
 
   updatePreviewTilePosition(newHexCoord, isMicroMovement = false) {

@@ -1,19 +1,21 @@
 .score-board {
   position: absolute;
   right: 1rem;
-  top: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
   width: min(15rem, 38vw);
   padding: 0.85rem;
   border-radius: 0.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(14, 20, 28, 0.9);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.32);
-  color: #eff3f8;
+  border: 1px solid rgba(176, 94, 108, 0.5);
+  background: linear-gradient(165deg, rgba(255, 237, 241, 0.8), rgba(247, 215, 223, 0.76));
+  box-shadow: 0 12px 24px rgba(89, 30, 43, 0.2);
+  color: #341922;
   pointer-events: none;
   z-index: 5;
 }
 
 .score-board__title {
+  font-family: 'Cuppajoe', cursive;
   margin: 0 0 0.6rem;
   font-size: 0.95rem;
   font-weight: 700;
@@ -32,29 +34,30 @@
   align-items: center;
   padding: 0.42rem 0.56rem;
   border-radius: 0.52rem;
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(172, 103, 117, 0.4);
+  background: rgba(255, 255, 255, 0.48);
 }
 
 .score-board__item--active {
-  border-color: rgba(132, 203, 255, 0.86);
-  background: rgba(78, 142, 191, 0.29);
+  border-color: rgba(168, 61, 83, 0.86);
+  background: rgba(239, 174, 190, 0.6);
 }
 
 .score-board__player {
   font-size: 0.78rem;
-  color: #d9e4f1;
+  color: #653643;
 }
 
 .score-board__points {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #f7fbff;
+  color: #4c1f2d;
 }
 
 @media (max-width: 700px) {
   .score-board {
     top: 0.8rem;
+    transform: none;
     right: 0.8rem;
     width: min(13.5rem, 55vw);
   }
