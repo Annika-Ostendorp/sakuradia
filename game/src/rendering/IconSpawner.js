@@ -49,7 +49,7 @@ export default class IconSpawner {
         map: texture,
         transparent: true,
         depthWrite: false,
-        opacity: isHighlighted ? 1.0 : 0.35,
+        opacity: isHighlighted ? 1.0 : 0.7,
       });
 
       const sprite = new THREE.Sprite(material);
