@@ -11,11 +11,12 @@
 }
 
 .round-slider__label {
-  color: rgba(255, 239, 227, 0.82);
+  font-family: 'Cuppajoe', cursive;
+  color: #9d3348;
 }
 
 .round-slider__input {
   width: 100%;
-  accent-color: #f0a943;
+  accent-color: #9d3348;
   cursor: pointer;
 }

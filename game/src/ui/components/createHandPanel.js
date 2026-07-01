@@ -24,7 +24,9 @@ const LANDSCAPE_IMAGE_SCALES = Object.freeze({
 });
 
 const ANIMAL_IMAGES = Object.freeze({
+  Crane: '/assets/images/animals/KranichAvatar.png',
   Japanmakak: '/assets/images/animals/JapanmakakAvatar.png',
+  Koi: '/assets/images/animals/KoiAvatar.png',
   Panda: '/assets/images/animals/PandaAvatar.png',
   Sika: '/assets/images/animals/SikaAvatar.png',
 });
