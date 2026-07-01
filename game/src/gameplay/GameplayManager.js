@@ -1,6 +1,7 @@
 import { RoundState } from "../data/RoundState.js";
 import Game from "./Game.js";
 import { createHandPanel } from "../ui/components/createHandPanel.js";
+import { createScoreBoard } from "../ui/components/createScoreBoard.js";
 import HexCoord from "../utils/HexCoord.js";
 import DebugConfig from "../debug/DebugConfig.js";
 import { Animal } from "../data/Animal.js";
@@ -33,6 +34,7 @@ export default class GameplayManager {
     this.currentRound = 1;
     this.currentPlayer = 1;
     this.playerScores = Array.from({ length: this.playerCount }, () => 0);
+    this.lastBoardTotalScore = 0;
     this.gameLength = this.gameConfig.rounds; // Rounds to be played until game end
     this.maxTurns = this.gameLength * this.playerCount;
     this.game = new Game(this.scene, this.modelLoader);
@@ -62,12 +64,14 @@ export default class GameplayManager {
         this.syncTurnStatus();
       },
     });
+    this.scoreBoard = createScoreBoard({ useDummyData: false });
 
     const appShell = document.querySelector("#app-shell");
     if (!appShell) {
       throw new Error("Could not attach hand panel: #app-shell not found.");
     }
     appShell.append(this.handPanel.element);
+    appShell.append(this.scoreBoard.element);
 
     if (DebugConfig.enabled && DebugConfig.doLogGameplayInfo) {
       console.log(
@@ -87,8 +91,16 @@ export default class GameplayManager {
       this.game.deckLogic.getNextAnimal(),
     );
     this.syncHandPanel();
+    this.syncTurnStatus();
 
-    this.game.start();
+    this.game
+      .start()
+      .then(() => {
+        this.initializeStartingScore();
+      })
+      .catch((error) => {
+        console.error("Failed to initialize starter tiles:", error);
+      });
   }
 
   getCurrentRoundState() {
@@ -251,6 +263,8 @@ export default class GameplayManager {
 
   // Erhöht die Rundenzahl und setzt GAME_OVER, wenn das Spielende erreicht ist.
   onTurnEnd() {
+    this.applyCurrentPlayerTurnGain();
+
     // Entferne das gespielte Paar aus der Hand
     this.game.removePairFromHand(this.selectedHandIndex);
 
@@ -294,13 +308,44 @@ export default class GameplayManager {
   }
 
   syncTurnStatus() {
-    this.handPanel.updateStatus({
+    const statusPayload = {
       currentRound: Math.min(this.currentRound, this.gameLength),
       totalRounds: this.gameLength,
       currentPlayer: this.currentPlayer,
       playerCount: this.playerCount,
       scoresByPlayer: this.playerScores,
-    });
+    };
+
+    this.handPanel.updateStatus(statusPayload);
+    this.scoreBoard.update(statusPayload);
+  }
+
+  calculateBoardTotalScore() {
+    const scoreResult = calculateScoreForGrid(
+      this.game.gridManager,
+      "board",
+      0,
+    );
+
+    return Number(scoreResult.totalScore || 0);
+  }
+
+  applyCurrentPlayerTurnGain() {
+    const scoreAfterTurn = this.calculateBoardTotalScore();
+    const scoreGain = scoreAfterTurn - Number(this.lastBoardTotalScore || 0);
+    const normalizedScoreGain = Number.isFinite(scoreGain)
+      ? Math.max(0, scoreGain)
+      : 0;
+
+    this.playerScores[this.currentPlayer - 1] += normalizedScoreGain;
+    this.lastBoardTotalScore = scoreAfterTurn;
+  }
+
+  initializeStartingScore() {
+    const startingScore = this.calculateBoardTotalScore();
+    this.lastBoardTotalScore = startingScore;
+    this.playerScores[this.currentPlayer - 1] = startingScore;
+    this.syncTurnStatus();
   }
 
   // Platziert ein Tile an einer zufälligen, leeren Nachbar-Position mit zufälliger Rotation.

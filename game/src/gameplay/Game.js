@@ -30,7 +30,7 @@ export default class Game {
 
   // Startet das Spiel.
   start() {
-    this.initializeStarterTile();
+    return this.initializeStarterTile();
   }
 
   // Platziert das Starter-Set auf dem Grid.
