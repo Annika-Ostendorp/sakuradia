@@ -88,10 +88,16 @@ export default class GameplayManager {
       this.game.deckLogic.getNextAnimal(),
     );
     this.syncHandPanel();
-    this.lastBoardTotalScore = this.calculateBoardTotalScore();
     this.syncTurnStatus();
 
-    this.game.start();
+    this.game
+      .start()
+      .then(() => {
+        this.initializeStartingScore();
+      })
+      .catch((error) => {
+        console.error("Failed to initialize starter tiles:", error);
+      });
   }
 
   getCurrentRoundState() {
@@ -320,6 +326,13 @@ export default class GameplayManager {
 
     this.playerScores[this.currentPlayer - 1] += normalizedScoreGain;
     this.lastBoardTotalScore = scoreAfterTurn;
+  }
+
+  initializeStartingScore() {
+    const startingScore = this.calculateBoardTotalScore();
+    this.lastBoardTotalScore = startingScore;
+    this.playerScores[this.currentPlayer - 1] = startingScore;
+    this.syncTurnStatus();
   }
 
   // Platziert ein Tile an einer zufälligen, leeren Nachbar-Position mit zufälliger Rotation.

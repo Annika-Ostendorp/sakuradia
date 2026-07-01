@@ -46,23 +46,23 @@ export function createMainMenu({ initialConfig, onConfigChange, onStart }) {
     },
   });
 
-  const playerSlider = createPlayerSlider({
-    value: currentConfig.playerCount,
-    min: 1,
-    max: 4,
-    onChange: (playerCount) => {
-      currentConfig = {
-        ...currentConfig,
-        playerCount,
-      };
+  // const playerSlider = createPlayerSlider({
+  //   value: currentConfig.playerCount,
+  //   min: 1,
+  //   max: 4,
+  //   onChange: (playerCount) => {
+  //     currentConfig = {
+  //       ...currentConfig,
+  //       playerCount,
+  //     };
 
-      playersValue.textContent = String(playerCount);
-      onConfigChange?.(currentConfig);
-    },
-  });
+  //     playersValue.textContent = String(playerCount);
+  //     onConfigChange?.(currentConfig);
+  //   },
+  // });
 
   sliderSlot.append(roundSlider);
-  playerSliderSlot.append(playerSlider);
+  // playerSliderSlot.append(playerSlider);
 
   startButton.addEventListener('click', () => {
     onStart?.(currentConfig);
