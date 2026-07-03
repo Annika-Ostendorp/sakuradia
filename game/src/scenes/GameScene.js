@@ -173,7 +173,7 @@ export default class GameScene {
     this.#orthographicGround = new THREE.Mesh(
       new THREE.PlaneGeometry(200, 200),
       new THREE.MeshBasicMaterial({
-        color: "#323E6E",
+        color: "#2d3761",
       }),
     );
 
@@ -299,6 +299,18 @@ export default class GameScene {
     }
 
     this.inputManager.update(deltaTime);
+
+    const animalManager = this.gameplayManager.game.gridManager.animalManager;
+
+    animalManager.updateFlatIconOpacity(
+      this.#camera,
+      this.isUsingPerspectiveCamera ? null : this.orthoViewSize,
+    );
+
+    animalManager.updateFloatingIconScale(
+      this.#camera,
+      this.isUsingPerspectiveCamera ? null : this.orthoViewSize,
+    );
 
     this.renderer.render(this.#scene, this.#camera);
   }

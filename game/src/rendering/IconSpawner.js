@@ -41,33 +41,37 @@ export default class IconSpawner {
 
     validIconData.forEach(({ animal, path }, index) => {
       const isHighlighted = highlightedAnimal === animal;
-
-      const texture = this.textureLoader.load(path, (loadedTexture) => {
-        this.applyTextureAspectRatioToSprite(
-          sprite,
-          loadedTexture,
-          iconSize,
-        );
-      });
-
-      texture.colorSpace = THREE.SRGBColorSpace;
+      const iconSize = isHighlighted ? size * 1.5 : size;
+      const baseOpacity = isHighlighted ? 1.0 : 0.7;
 
       const material = new THREE.SpriteMaterial({
-        map: texture,
         transparent: true,
         depthWrite: false,
-        opacity: isHighlighted ? 1.0 : 0.7,
+        opacity: baseOpacity,
       });
 
       const sprite = new THREE.Sprite(material);
 
       sprite.position.copy(positions[index]);
 
-      const iconSize = isHighlighted ? size * 1.5 : size;
+      sprite.userData.baseIconHeight = iconSize;
+      sprite.userData.aspectRatio = 1;
+      sprite.userData.baseOpacity = baseOpacity;
 
       // Fallback, bis die Texture geladen ist.
-      // Danach wird die echte Aspect Ratio angewendet.
       sprite.scale.set(iconSize, iconSize, 1);
+
+      const texture = this.textureLoader.load(path, (loadedTexture) => {
+        loadedTexture.colorSpace = THREE.SRGBColorSpace;
+
+        material.map = loadedTexture;
+        material.needsUpdate = true;
+
+        this.applyTextureAspectRatioToSprite(sprite, loadedTexture, iconSize);
+      });
+
+      texture.colorSpace = THREE.SRGBColorSpace;
+      material.map = texture;
 
       if (isHighlighted) {
         sprite.position.y += 0.15;
@@ -83,6 +87,8 @@ export default class IconSpawner {
   }
 
   spawnFlatIconForAnimal(animal, hexCoord, size = 1, offsetY = 1.15) {
+    this.clearFlatIcon(hexCoord);
+
     const worldPos = hexCoord.hexToWorld(hexCoord, this.gridManager.hexSize);
     const iconPath = getIconPathForAnimal(animal);
 
@@ -109,14 +115,136 @@ export default class IconSpawner {
     const icon = new THREE.Mesh(geometry, material);
 
     icon.position.set(worldPos.x, worldPos.y + offsetY, worldPos.z);
-
     icon.rotation.x = -Math.PI / 2;
+
+    icon.userData.isFlatAnimalIcon = true;
 
     this.scene.add(icon);
 
     this.#spawnedFlatIcons.set(hexCoord, icon);
 
     return icon;
+  }
+
+  updateFlatIconOpacity(camera, options = {}) {
+    if (!camera) {
+      return;
+    }
+
+    const minOpacity = options.minOpacity ?? 0.08;
+    const maxOpacity = options.maxOpacity ?? 0.42;
+
+    const perspectiveFadeStart = options.perspectiveFadeStart ?? 8;
+    const perspectiveFadeEnd = options.perspectiveFadeEnd ?? 24;
+
+    const orthographicViewSize = options.orthographicViewSize ?? null;
+    const orthographicFadeStart = options.orthographicFadeStart ?? 6;
+    const orthographicFadeEnd = options.orthographicFadeEnd ?? 20;
+
+    for (const icon of this.#spawnedFlatIcons.values()) {
+      if (!icon?.material) {
+        continue;
+      }
+
+      let fadeValue;
+
+      if (camera.isOrthographicCamera) {
+        if (orthographicViewSize == null) {
+          continue;
+        }
+
+        fadeValue = this.inverseLerpClamped(
+          orthographicFadeStart,
+          orthographicFadeEnd,
+          orthographicViewSize,
+        );
+      } else {
+        const distance = camera.position.distanceTo(icon.position);
+
+        fadeValue = this.inverseLerpClamped(
+          perspectiveFadeStart,
+          perspectiveFadeEnd,
+          distance,
+        );
+      }
+
+      icon.material.opacity = THREE.MathUtils.lerp(
+        minOpacity,
+        maxOpacity,
+        fadeValue,
+      );
+    }
+  }
+
+  updateFloatingIconScale(camera, options = {}) {
+    if (!camera) {
+      return;
+    }
+
+    const minScaleMultiplier = options.minScaleMultiplier ?? 0.85;
+    const maxScaleMultiplier = options.maxScaleMultiplier ?? 1.6;
+
+    const minOpacityMultiplier = options.minOpacityMultiplier ?? 0.45;
+    const maxOpacityMultiplier = options.maxOpacityMultiplier ?? 1.0;
+
+    const perspectiveScaleStart = options.perspectiveScaleStart ?? 8;
+    const perspectiveScaleEnd = options.perspectiveScaleEnd ?? 24;
+
+    const orthographicViewSize = options.orthographicViewSize ?? null;
+    const orthographicScaleStart = options.orthographicScaleStart ?? 6;
+    const orthographicScaleEnd = options.orthographicScaleEnd ?? 20;
+
+    for (const icons of this.#spawnedIcons.values()) {
+      for (const icon of icons) {
+        if (!icon?.material) {
+          continue;
+        }
+
+        const baseIconHeight = icon.userData.baseIconHeight ?? 0.5;
+        const aspectRatio = icon.userData.aspectRatio ?? 1;
+        const baseOpacity = icon.userData.baseOpacity ?? 0.7;
+
+        let distanceValue;
+
+        if (camera.isOrthographicCamera) {
+          if (orthographicViewSize == null) {
+            continue;
+          }
+
+          distanceValue = this.inverseLerpClamped(
+            orthographicScaleStart,
+            orthographicScaleEnd,
+            orthographicViewSize,
+          );
+        } else {
+          const distance = camera.position.distanceTo(icon.position);
+
+          distanceValue = this.inverseLerpClamped(
+            perspectiveScaleStart,
+            perspectiveScaleEnd,
+            distance,
+          );
+        }
+
+        const scaleMultiplier = THREE.MathUtils.lerp(
+          minScaleMultiplier,
+          maxScaleMultiplier,
+          distanceValue,
+        );
+
+        const opacityMultiplier = THREE.MathUtils.lerp(
+          minOpacityMultiplier,
+          maxOpacityMultiplier,
+          distanceValue,
+        );
+
+        const scaledHeight = baseIconHeight * scaleMultiplier;
+
+        icon.scale.set(scaledHeight * aspectRatio, scaledHeight, 1);
+
+        icon.material.opacity = baseOpacity * opacityMultiplier;
+      }
+    }
   }
 
   applyTextureAspectRatioToSprite(sprite, texture, height) {
@@ -133,7 +261,18 @@ export default class IconSpawner {
 
     const aspectRatio = imageWidth / imageHeight;
 
+    sprite.userData.aspectRatio = aspectRatio;
+    sprite.userData.baseIconHeight = height;
+
     sprite.scale.set(height * aspectRatio, height, 1);
+  }
+
+  inverseLerpClamped(min, max, value) {
+    if (min === max) {
+      return 0;
+    }
+
+    return THREE.MathUtils.clamp((value - min) / (max - min), 0, 1);
   }
 
   hexCoordToWorldVector(hexCoord, offsetY = 0) {
@@ -215,6 +354,36 @@ export default class IconSpawner {
     this.#spawnedIcons.delete(storedHexCoord);
   }
 
+  clearFlatIcon(hexCoord) {
+    const storedHexCoord = this.getStoredFlatIconHexCoord(hexCoord);
+
+    if (!storedHexCoord) {
+      return;
+    }
+
+    const icon = this.#spawnedFlatIcons.get(storedHexCoord);
+
+    if (!icon) {
+      return;
+    }
+
+    this.scene.remove(icon);
+
+    if (icon.geometry) {
+      icon.geometry.dispose();
+    }
+
+    if (icon.material) {
+      if (icon.material.map) {
+        icon.material.map.dispose();
+      }
+
+      icon.material.dispose();
+    }
+
+    this.#spawnedFlatIcons.delete(storedHexCoord);
+  }
+
   getIconsAtHexCoord(hexCoord) {
     const storedHexCoord = this.getStoredHexCoord(hexCoord);
 
@@ -227,6 +396,16 @@ export default class IconSpawner {
 
   getStoredHexCoord(hexCoord) {
     for (const storedHexCoord of this.#spawnedIcons.keys()) {
+      if (storedHexCoord.equals(hexCoord)) {
+        return storedHexCoord;
+      }
+    }
+
+    return null;
+  }
+
+  getStoredFlatIconHexCoord(hexCoord) {
+    for (const storedHexCoord of this.#spawnedFlatIcons.keys()) {
       if (storedHexCoord.equals(hexCoord)) {
         return storedHexCoord;
       }
@@ -251,6 +430,24 @@ export default class IconSpawner {
     }
 
     this.#spawnedIcons.clear();
+
+    for (const icon of this.#spawnedFlatIcons.values()) {
+      this.scene.remove(icon);
+
+      if (icon.geometry) {
+        icon.geometry.dispose();
+      }
+
+      if (icon.material) {
+        if (icon.material.map) {
+          icon.material.map.dispose();
+        }
+
+        icon.material.dispose();
+      }
+    }
+
+    this.#spawnedFlatIcons.clear();
   }
 
   respawnIconsForAnimals(

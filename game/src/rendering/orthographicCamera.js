@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
-export const DEFAULT_ORTHO_VIEW_SIZE = 10;
-export const MIN_ORTHO_VIEW_SIZE = 5;
+export const DEFAULT_ORTHO_VIEW_SIZE = 17;
+export const MIN_ORTHO_VIEW_SIZE = 1;
 export const MAX_ORTHO_VIEW_SIZE = 25;
 
 function clamp(value, min, max) {
