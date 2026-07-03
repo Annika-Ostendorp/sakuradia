@@ -16,14 +16,10 @@ import { calculateLandscapeScore } from "./calculations/calculateLandscapeScore.
  * @returns {Object} Ein Objekt, das die Punktzahl für jede Landschaftsart und Tierart enthält. Die Struktur ist im Issue Punktesystem (Zaehlsystem)#25 beschrieben.
  */
 
-export function calculateScoreForGrid(
-  gridmanager,
-  playerId,
-  remainingNatureTokens,
-) {
+export function calculateScoreForGrid(gridmanager, playerId) {
   const scoreResult = {
     playerId: playerId,
-    totalScore: remainingNatureTokens,
+    totalScore: 0,
     scores: {
       landscapeScores: {
         bambooforest: 0,
@@ -38,8 +34,8 @@ export function calculateScoreForGrid(
         koi: 0,
         panda: 0,
         sika: 0,
-      },
-    },
+      }
+    }
   };
 
   // Landschaften
