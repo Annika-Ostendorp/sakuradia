@@ -6,6 +6,8 @@ die japanische Natur ein und interagieren beispielsweise mit Tieren wie Panda,
 Koi, sowie Sika und finden sich als Verwalter von Bambuswäldern, Teichen und
 Kirschbaumwiesen wieder.
 
+Wir empfehlen das Lesen der SPIELREGELN.md
+
 ## Aktueller Stand
 - Der aktuelle Stand ist im main-branch einsehbar
 - Das Hauptmenü beinhaltet
