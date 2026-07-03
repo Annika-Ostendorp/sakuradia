@@ -75,7 +75,7 @@ export default class GameplayManager {
         window.location.reload();
       },
     });
-    this.scoreBoard = createScoreBoard({ useDummyData: false });
+    // this.scoreBoard = createScoreBoard({ useDummyData: false });
 
     const appShell = document.querySelector("#app-shell");
     if (!appShell) {
@@ -83,7 +83,7 @@ export default class GameplayManager {
     }
     appShell.append(this.handPanel.element);
     appShell.append(this.gameOverScreen.element);
-    appShell.append(this.scoreBoard.element);
+    // appShell.append(this.scoreBoard.element);
     if (this.handPanel.scorecardElement) {
       appShell.append(this.handPanel.scorecardElement);
     }
@@ -365,20 +365,20 @@ export default class GameplayManager {
   }
 
   alignScoreBoardTopEdgeWithHandPanel() {
-    if (!this.handPanel?.element || !this.scoreBoard?.element) {
+    if (!this.handPanel?.element/* || !this.scoreBoard?.element*/) {
       return;
     }
 
     const isMobile = window.matchMedia("(max-width: 700px)").matches;
     if (isMobile) {
-      this.scoreBoard.element.style.top = "";
-      this.scoreBoard.element.style.transform = "";
+      // this.scoreBoard.element.style.top = "";
+      // this.scoreBoard.element.style.transform = "";
       return;
     }
 
     const handPanelTop = this.handPanel.element.getBoundingClientRect().top;
-    this.scoreBoard.element.style.top = `${handPanelTop}px`;
-    this.scoreBoard.element.style.transform = "none";
+    // this.scoreBoard.element.style.top = `${handPanelTop}px`;
+    // this.scoreBoard.element.style.transform = "none";
   }
 
   alignScorecardBottomEdgeWithHandPanel() {
