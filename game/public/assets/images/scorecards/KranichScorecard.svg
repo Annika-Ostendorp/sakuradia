@@ -2,16 +2,16 @@
 <svg id="Ebene_2" data-name="Ebene 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 424.77 535.12">
   <defs>
     <style>
-      .cls-1, .cls-2, .cls-3, .cls-4 {
+      .cls-1, .cls-2, .cls-3 {
         fill: #fff;
-      }
-
-      .cls-1, .cls-3 {
-        font-size: 25.19px;
       }
 
       .cls-1, .cls-3, .cls-4 {
         font-family: CuppaJoe, CuppaJoe;
+      }
+
+      .cls-1, .cls-4 {
+        font-size: 25.19px;
       }
 
       .cls-5 {
@@ -19,23 +19,19 @@
       }
 
       .cls-6 {
-        stroke: #fff;
         stroke-width: .75px;
       }
 
-      .cls-6, .cls-3, .cls-7 {
+      .cls-6, .cls-4 {
+        stroke: #fff;
+      }
+
+      .cls-6, .cls-4, .cls-7 {
+        fill: none;
         stroke-miterlimit: 10;
       }
 
-      .cls-6, .cls-7 {
-        fill: none;
-      }
-
       .cls-3 {
-        stroke: #ce736a;
-      }
-
-      .cls-4 {
         filter: url(#drop-shadow-1);
         font-size: 60px;
       }
@@ -64,7 +60,7 @@
   <g id="Ebene_1-2" data-name="Ebene 1">
     <g>
       <rect class="cls-5" width="424.77" height="535.12" rx="43.2" ry="43.2"/>
-      <text class="cls-4" transform="translate(68.07 85.87)"><tspan x="0" y="0">KRANICH</tspan></text>
+      <text class="cls-3" transform="translate(68.07 85.87)"><tspan x="0" y="0">KRANICH</tspan></text>
       <line class="cls-6" x1="358.36" y1="410.88" x2="358.36" y2="484.55"/>
       <line class="cls-6" x1="309.4" y1="410.88" x2="309.4" y2="484.55"/>
       <line class="cls-6" x1="260.44" y1="410.88" x2="260.44" y2="484.55"/>
@@ -81,14 +77,14 @@
       <text class="cls-1" transform="translate(276.86 436.74)"><tspan x="0" y="0">6</tspan></text>
       <text class="cls-1" transform="translate(326.96 436.74)"><tspan x="0" y="0">7</tspan></text>
       <text class="cls-1" transform="translate(375.76 436.74)"><tspan x="0" y="0">8</tspan></text>
-      <text class="cls-3" transform="translate(80.5 479.79)"><tspan x="0" y="0">5</tspan></text>
-      <text class="cls-3" transform="translate(34.3 479.79)"><tspan x="0" y="0">2</tspan></text>
-      <text class="cls-3" transform="translate(129.49 479.79) scale(.87 1)"><tspan x="0" y="0">8</tspan></text>
-      <text class="cls-3" transform="translate(177.05 479.79)"><tspan x="0" y="0">11</tspan></text>
-      <text class="cls-3" transform="translate(223.92 479.79)"><tspan x="0" y="0">14</tspan></text>
-      <text class="cls-3" transform="translate(272.66 479.79)"><tspan x="0" y="0">18</tspan></text>
-      <text class="cls-3" transform="translate(320.67 479.79)"><tspan x="0" y="0">22</tspan></text>
-      <text class="cls-3" transform="translate(371.57 479.79)"><tspan x="0" y="0">26</tspan></text>
+      <text class="cls-4" transform="translate(80.5 479.79)"><tspan x="0" y="0">5</tspan></text>
+      <text class="cls-4" transform="translate(34.3 479.79)"><tspan x="0" y="0">2</tspan></text>
+      <text class="cls-4" transform="translate(129.49 479.79) scale(.87 1)"><tspan x="0" y="0">8</tspan></text>
+      <text class="cls-4" transform="translate(177.05 479.79)"><tspan x="0" y="0">11</tspan></text>
+      <text class="cls-4" transform="translate(223.92 479.79)"><tspan x="0" y="0">14</tspan></text>
+      <text class="cls-4" transform="translate(272.66 479.79)"><tspan x="0" y="0">18</tspan></text>
+      <text class="cls-4" transform="translate(320.67 479.79)"><tspan x="0" y="0">22</tspan></text>
+      <text class="cls-4" transform="translate(371.57 479.79)"><tspan x="0" y="0">26</tspan></text>
       <rect class="cls-8" x="15.17" y="126.05" width="395.36" height="240.31" rx="32.25" ry="32.25"/>
       <g>
         <polygon class="cls-5" points="214.28 158.84 187.91 174.06 187.91 204.52 214.28 219.74 240.66 204.52 240.66 174.06 214.28 158.84"/>
