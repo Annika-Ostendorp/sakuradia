@@ -157,8 +157,17 @@
   border-radius: 0;
   filter: drop-shadow(0 6px 12px rgba(18, 8, 12, 0.18));
   transform: translateY(var(--scorecard-offset-y));
+  opacity: 1;
+  visibility: visible;
+  transition: transform 140ms ease, opacity 140ms ease, visibility 140ms step-end;
   z-index: 8;
   pointer-events: none;
+}
+
+.hand-panel__scorecard-image--hidden {
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 140ms ease, opacity 140ms ease, visibility 0ms linear 140ms;
 }
 
 .hand-panel__scorecard-image[data-animal="Japanmakak"] {
