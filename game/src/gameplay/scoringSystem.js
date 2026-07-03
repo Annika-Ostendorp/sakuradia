@@ -6,6 +6,7 @@ import { calculatePandaScore } from "./calculations/calculatePandaScore.js";
 import { calculateJapanmakakScore } from "./calculations/calculateJapanmakakScore.js";
 import { calculateSikaScore } from "./calculations/calculateSikaScore.js";
 import { calculateCraneScore } from "./calculations/calculateCraneScore.js";
+import { calculateLandscapeScore } from "./calculations/calculateLandscapeScore.js";
 
 /**
  * Berechnet die Punkte für das gegebene Grid basierend auf den platzierten Tieren und den Landschaften der Tiles.
@@ -15,14 +16,10 @@ import { calculateCraneScore } from "./calculations/calculateCraneScore.js";
  * @returns {Object} Ein Objekt, das die Punktzahl für jede Landschaftsart und Tierart enthält. Die Struktur ist im Issue Punktesystem (Zaehlsystem)#25 beschrieben.
  */
 
-export function calculateScoreForGrid(
-  gridmanager,
-  playerId,
-  remainingNatureTokens,
-) {
+export function calculateScoreForGrid(gridmanager, playerId) {
   const scoreResult = {
     playerId: playerId,
-    totalScore: remainingNatureTokens,
+    totalScore: 0,
     scores: {
       landscapeScores: {
         bambooforest: 0,
@@ -37,8 +34,8 @@ export function calculateScoreForGrid(
         koi: 0,
         panda: 0,
         sika: 0,
-      },
-    },
+      }
+    }
   };
 
   // Landschaften
@@ -102,27 +99,13 @@ function calculateScoreForLandscapes(gridmanager) {
   for (const landscape of Object.values(Landscape)) {
     if (landscape === Landscape.UNDEFINED) continue;
 
-    landscapeScores[landscape] = calculateScoreFor_Landscape(
+    landscapeScores[landscape] = calculateLandscapeScore(
       gridmanager,
       landscape,
     );
   }
 
   return landscapeScores;
-}
-
-// PLACEHOLDER: Gibt 1 Punkt pro Tile mit der Landschaft
-function calculateScoreFor_Landscape(gridmanager, landscape) {
-  let score = 0;
-
-  // Erstmal simple Logik, erhalte 1 Punkt pro Tile mit der Landschaft
-  for (const [hexCoord, tile] of gridmanager.grid.entries()) {
-    if (tile.hasLandscape(landscape)) {
-      score += 1;
-    }
-  }
-
-  return score;
 }
 
 function calculateScoreFor_Crane(gridmanager) {

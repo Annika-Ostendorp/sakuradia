@@ -1,54 +1,67 @@
 import { Animal } from "/src/data/Animal.js";
 import { Landscape } from "/src/data/Landscape.js";
+import DebugConfig from "/src/debug/DebugConfig.js";
 
 /**
- * Repräsentiert eine platzierbare Kachel im Spiel. Enthält:
- * - `tileData`: die statische Definition (`TileData`) der Landschaften/Tiere
- * - `rotation`: Index 0-5 für 60°-Schritte (darauf basieren Render-Rotationen)
- * - `hexCoord`: optional die Logik-Koordinate, auf der das Tile sitzt
- * - `occupiedBy`: das Tier, das auf der Kachel sitzt (oder `Animal.NONE` wenn leer)
+ * Repräsentiert eine platzierbare Kachel im Spiel.
  */
 export default class Tile {
   constructor(tileData, rotation = 0) {
     this.tileData = tileData;
-    this.occupiedBy = Animal.NONE; // Standardmäßig kein Tier auf der Kachel
+    this.occupiedBy = Animal.NONE;
     this.rotation = rotation;
   }
 
-  // Setzt die Rotation (schützt mit Modulo 6)
-  setRotation(rotation) {
-    this.rotation = rotation % 6;
-  }
-
-  // bool: ist dieses Tile ein Keystone (nur eine Landschaftsseite)?
-  get isKeystone() {
-    if (!this.tileData) {
-      console.error(
-        "Tile Data is undefined. Cannot determine if it's a keystone.",
-      );
-      return false;
-    }
-    return this.tileData.isKeystone;
-  }
-
-  // Interne Rotation-Property: sorgt dafür, dass Rotation immer 0..5 ist.
   set rotation(value) {
-    this._rotation = value % 6;
+    this._rotation = normalizeRotation(value);
   }
 
   get rotation() {
-    return this._rotation || 0;
+    return this._rotation ?? 0;
+  }
+
+  setRotation(rotation) {
+    this.rotation = rotation;
+  }
+
+  updateRotation(newRotation) {
+    this.rotation = newRotation;
+
+    if (DebugConfig.enabled && DebugConfig.doLogTileRotations) {
+      console.log(`Tile rotation updated: ${this.rotation}`, {
+        primaryDirections: this.getLandscapeDirections(
+          this.tileData.primaryLandscape,
+        ),
+        secondaryDirections: this.tileData.isKeystone
+          ? []
+          : this.getLandscapeDirections(this.tileData.secondaryLandscape),
+      });
+    }
   }
 
   rotateClockwise() {
-    this.rotation = (this.rotation + 1) % 6; // +60°
+    this.rotation = this.rotation + 1;
   }
 
   rotateCounterClockwise() {
-    this.rotation = (this.rotation + 5) % 6; // -60° (oder +300°)
+    this.rotation = this.rotation - 1;
+  }
+
+  get isKeystone() {
+    if (!this.tileData) {
+      console.error("Tile Data is undefined. Cannot determine keystone state.");
+      return false;
+    }
+
+    return this.tileData.isKeystone;
   }
 
   animalIsAllowed(animal) {
+    if (!this.tileData) {
+      console.error("Tile Data is undefined. Cannot check animal.");
+      return false;
+    }
+
     return this.tileData.animalIsAllowed(animal);
   }
 
@@ -57,19 +70,54 @@ export default class Tile {
       console.error("Tile Data is undefined. Cannot check landscapes.");
       return false;
     }
+
     return this.tileData.hasLandscape(landscape);
+  }
+
+  /**
+   * Gibt zurück, an welchen Seiten diese Landschaft nach aktueller Rotation liegt.
+   *
+   * Side order assumption:
+   * 0 = right
+   * 1 = top-right
+   * 2 = top-left
+   * 3 = left
+   * 4 = bottom-left
+   * 5 = bottom-right
+   */
+  getLandscapeDirections(landscape) {
+    if (!this.tileData) {
+      console.error("Tile Data is undefined. Cannot get landscape directions.");
+      return [];
+    }
+
+    if (!this.tileData.hasLandscape(landscape)) {
+      return [];
+    }
+
+    if (this.tileData.isKeystone) {
+      if (this.tileData.primaryLandscape === landscape) {
+        return [0, 1, 2, 3, 4, 5];
+      }
+
+      return [];
+    }
+
+    const primaryDirections = [2, 3, 4];
+    const secondaryDirections = [5, 0, 1];
+
+    if (this.tileData.primaryLandscape === landscape) {
+      return rotateDirections(primaryDirections, this.rotation);
+    }
+
+    if (this.tileData.secondaryLandscape === landscape) {
+      return rotateDirections(secondaryDirections, this.rotation);
+    }
+
+    return [];
   }
 }
 
-/**
- * TileData
- *
- * Statische Definition einer Kachel-Hälfte bzw. einer Keystone-Teilung.
- * - `primaryLandscape`: zwingend gesetzt
- * - `secondaryLandscape`: optional; bei `Landscape.UNDEFINED` ist es ein Keystone
- * - `animals`: Liste möglicher Tiere auf dieser Kachelhälfte
- * - `count`: wie oft dieses Tile in der Library vorhanden ist
- */
 export class TileData {
   constructor(
     primaryLandscape,
@@ -99,12 +147,6 @@ export class TileData {
   }
 }
 
-/**
- * StarterTileData
- *
- * Hilfsklasse, die ein Starter-Set aus genau 3 `TileData`-Objekten validiert.
- * Reihenfolge: [keystone, leftTile, rightTile].
- */
 export class StarterTileData {
   constructor(tileDataArray) {
     if (!Array.isArray(tileDataArray)) {
@@ -125,17 +167,22 @@ export class StarterTileData {
   }
 
   get keystone() {
-    const keystone = new Tile(this.tiles[0]);
-    return keystone;
+    return new Tile(this.tiles[0]);
   }
 
   get leftTile() {
-    const leftTile = new Tile(this.tiles[1]);
-    return leftTile;
+    return new Tile(this.tiles[1]);
   }
 
   get rightTile() {
-    const rightTile = new Tile(this.tiles[2]);
-    return rightTile;
+    return new Tile(this.tiles[2]);
   }
+}
+
+function rotateDirections(directions, rotation) {
+  return directions.map((direction) => normalizeRotation(direction - rotation));
+}
+
+function normalizeRotation(value) {
+  return ((value % 6) + 6) % 6;
 }
