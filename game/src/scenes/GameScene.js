@@ -102,8 +102,8 @@ export default class GameScene {
       this.#camera,
     );
 
-    this.rulesPopup = createRulesPopup({ pages: RULE_PAGES });
-    this.appShell.append(this.rulesPopup.element);
+    // this.rulesPopup = createRulesPopup({ pages: RULE_PAGES });
+    // this.appShell.append(this.rulesPopup.element);
 
     this.animate = this.animate.bind(this);
     this.animate();
