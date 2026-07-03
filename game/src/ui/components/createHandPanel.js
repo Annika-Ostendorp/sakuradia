@@ -32,11 +32,11 @@ const ANIMAL_IMAGES = Object.freeze({
 });
 
 const SCORECARD_IMAGES = Object.freeze({
-  Japanmakak: '/assets/images/scorecards/JapanmakakScorecard.png',
-  Koi: '/assets/images/scorecards/KoiScorecard.png',
-  Crane: '/assets/images/scorecards/KranichScorecard.png',
-  Panda: '/assets/images/scorecards/PandaScorecard.png',
-  Sika: '/assets/images/scorecards/SikaScorecard.png',
+  Japanmakak: '/assets/images/scorecards/JapanmakakScorecard.svg',
+  Koi: '/assets/images/scorecards/KoiScorecard.svg',
+  Crane: '/assets/images/scorecards/KranichScorecard.svg',
+  Panda: '/assets/images/scorecards/PandaScorecard.svg',
+  Sika: '/assets/images/scorecards/SikaScorecard.svg',
 });
 
 function toReadableLabel(value) {
@@ -188,6 +188,8 @@ export function createHandPanel({ onSelectPair } = {}) {
     scorecardImage.hidden = true;
     scorecardImage.removeAttribute('src');
     scorecardImage.alt = '';
+    scorecardImage.onload = null;
+    scorecardImage.removeAttribute('data-animal');
   };
 
   const showScorecard = (animal) => {
@@ -199,6 +201,7 @@ export function createHandPanel({ onSelectPair } = {}) {
 
     scorecardImage.src = scorecardImagePath;
     scorecardImage.alt = `Scorecard für ${toReadableLabel(animal)}`;
+    scorecardImage.dataset.animal = String(animal || '');
     scorecardImage.hidden = false;
   };
 

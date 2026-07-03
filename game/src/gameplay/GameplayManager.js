@@ -358,20 +358,10 @@ export default class GameplayManager {
       return;
     }
 
-    const isMobile = window.matchMedia("(max-width: 700px)").matches;
-    if (isMobile) {
-      this.handPanel.scorecardElement.style.bottom = "";
-      this.handPanel.scorecardElement.style.top = "";
-      return;
-    }
-
-    const handPanelRect = this.handPanel.element.getBoundingClientRect();
-    const handPanelBottomOffset = Math.max(
-      0,
-      window.innerHeight - handPanelRect.bottom,
-    );
-    this.handPanel.scorecardElement.style.bottom = `${handPanelBottomOffset}px`;
-    this.handPanel.scorecardElement.style.top = "auto";
+    // Positioning and spacing are defined in CSS to keep a consistent edge offset.
+    this.handPanel.scorecardElement.style.bottom = "";
+    this.handPanel.scorecardElement.style.top = "";
+    this.handPanel.scorecardElement.style.right = "";
   }
 
   calculateBoardTotalScore() {
