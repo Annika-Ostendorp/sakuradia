@@ -1,6 +1,7 @@
 import { RoundState } from "../data/RoundState.js";
 import Game from "./Game.js";
 import { createHandPanel } from "../ui/components/createHandPanel.js";
+import { createGameOverScreen } from "../ui/components/createGameOverScreen.js";
 import { createScoreBoard } from "../ui/components/createScoreBoard.js";
 import HexCoord from "../utils/HexCoord.js";
 import DebugConfig from "../debug/DebugConfig.js";
@@ -66,6 +67,11 @@ export default class GameplayManager {
         this.syncTurnStatus();
       },
     });
+    this.gameOverScreen = createGameOverScreen({
+      onReplay: () => {
+        window.location.reload();
+      },
+    });
     this.scoreBoard = createScoreBoard({ useDummyData: false });
 
     const appShell = document.querySelector("#app-shell");
@@ -73,6 +79,7 @@ export default class GameplayManager {
       throw new Error("Could not attach hand panel: #app-shell not found.");
     }
     appShell.append(this.handPanel.element);
+    appShell.append(this.gameOverScreen.element);
     appShell.append(this.scoreBoard.element);
     if (this.handPanel.scorecardElement) {
       appShell.append(this.handPanel.scorecardElement);
@@ -101,6 +108,9 @@ export default class GameplayManager {
       this.game.deckLogic.getNextTile(),
       this.game.deckLogic.getNextAnimal(),
     );
+    if (this.roundState === RoundState.GAME_OVER) {
+      return;
+    }
     this.syncHandPanel();
     this.syncTurnStatus();
     requestAnimationFrame(() => {
@@ -249,6 +259,7 @@ export default class GameplayManager {
       console.warn("No more tiles or animals to draw. Ending game.");
       this.roundState = RoundState.GAME_OVER;
       this.syncHandPanel();
+      this.showGameOverScreen();
       return;
     }
 
@@ -313,6 +324,7 @@ export default class GameplayManager {
       console.log("Game Over");
       this.roundState = RoundState.GAME_OVER;
       this.syncTurnStatus();
+      this.showGameOverScreen();
       return;
     }
 
@@ -334,6 +346,11 @@ export default class GameplayManager {
     this.scoreBoard.update(statusPayload);
     this.alignScoreBoardTopEdgeWithHandPanel();
     this.alignScorecardBottomEdgeWithHandPanel();
+  }
+
+  showGameOverScreen() {
+    const scoreResult = calculateScoreForGrid(this.game.gridManager, "player1");
+    this.gameOverScreen.show(scoreResult);
   }
 
   alignScoreBoardTopEdgeWithHandPanel() {
