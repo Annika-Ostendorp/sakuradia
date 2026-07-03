@@ -8,7 +8,7 @@ export function getModelPathForKeystone(landscape) {
     case Landscape.MOUNTAIN:
       return "/assets/models/full_tiles/mountain/mountain_keystone_sprint3_pointY.glb";
     case Landscape.POND:
-      return "/assets/models/full_tiles/pond/pond_keystone_sprint3_pointY.glb";
+      return "/assets/models/full_tiles/pond/pond_lower.glb";
     case Landscape.SAKURA:
       return "/assets/models/full_tiles/sakura/sakura_keystone_sprint3_pointY.glb";
     case Landscape.WETLAND:
@@ -23,7 +23,7 @@ export function getModelPathForHalfTile(landscape) {
     case Landscape.MOUNTAIN:
       return "/assets/models/half_tiles/mountain/mountain_half_sprint3.glb";
     case Landscape.POND:
-      return "/assets/models/half_tiles/pond/pond_half_sprint3.glb";
+      return "/assets/models/half_tiles/pond/pond_half_lower.glb";
     case Landscape.SAKURA:
       return "/assets/models/half_tiles/sakura/sakura_half_sprint3.glb";
     case Landscape.WETLAND:
