@@ -42,7 +42,14 @@ export default class IconSpawner {
     validIconData.forEach(({ animal, path }, index) => {
       const isHighlighted = highlightedAnimal === animal;
 
-      const texture = this.textureLoader.load(path);
+      const texture = this.textureLoader.load(path, (loadedTexture) => {
+        this.applyTextureAspectRatioToSprite(
+          sprite,
+          loadedTexture,
+          iconSize,
+        );
+      });
+
       texture.colorSpace = THREE.SRGBColorSpace;
 
       const material = new THREE.SpriteMaterial({
@@ -57,9 +64,11 @@ export default class IconSpawner {
       sprite.position.copy(positions[index]);
 
       const iconSize = isHighlighted ? size * 1.5 : size;
+
+      // Fallback, bis die Texture geladen ist.
+      // Danach wird die echte Aspect Ratio angewendet.
       sprite.scale.set(iconSize, iconSize, 1);
 
-      // optional, damit Highlight-Icon leicht höher liegt
       if (isHighlighted) {
         sprite.position.y += 0.15;
       }
@@ -108,6 +117,23 @@ export default class IconSpawner {
     this.#spawnedFlatIcons.set(hexCoord, icon);
 
     return icon;
+  }
+
+  applyTextureAspectRatioToSprite(sprite, texture, height) {
+    if (!sprite || !texture?.image) {
+      return;
+    }
+
+    const imageWidth = texture.image.width;
+    const imageHeight = texture.image.height;
+
+    if (!imageWidth || !imageHeight) {
+      return;
+    }
+
+    const aspectRatio = imageWidth / imageHeight;
+
+    sprite.scale.set(height * aspectRatio, height, 1);
   }
 
   hexCoordToWorldVector(hexCoord, offsetY = 0) {
