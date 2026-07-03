@@ -47,6 +47,8 @@ const SCORECARD_IMAGES = Object.freeze({
   Sika: '/assets/images/scorecards/SikaScorecard.png',
 });
 
+let areScorecardsPreloaded = false;
+
 function toReadableLabel(value) {
   if (!value) {
     return '-';
@@ -172,6 +174,15 @@ function buildHexagonSvg({ index, primaryLandscape, secondaryLandscape, primaryC
 }
 
 export function createHandPanel({ onSelectPair } = {}) {
+  if (!areScorecardsPreloaded) {
+    Object.values(SCORECARD_IMAGES).forEach((path) => {
+      const preloadedImage = new Image();
+      preloadedImage.decoding = 'async';
+      preloadedImage.src = path;
+    });
+    areScorecardsPreloaded = true;
+  }
+
   const panel = document.createElement('aside');
   panel.className = 'hand-panel';
   panel.setAttribute('aria-label', 'Hand mit Tile-Tier-Paaren');
@@ -184,9 +195,9 @@ export function createHandPanel({ onSelectPair } = {}) {
   `;
 
   const scorecardImage = document.createElement('img');
-  scorecardImage.className = 'hand-panel__scorecard-image';
+  scorecardImage.className = 'hand-panel__scorecard-image hand-panel__scorecard-image--hidden';
   scorecardImage.alt = '';
-  scorecardImage.hidden = true;
+  scorecardImage.setAttribute('aria-hidden', 'true');
   scorecardImage.setAttribute('aria-live', 'polite');
   scorecardImage.setAttribute('aria-label', 'Tier-Scorecard');
 
@@ -198,9 +209,9 @@ export function createHandPanel({ onSelectPair } = {}) {
   }
 
   const hideScorecard = () => {
-    scorecardImage.hidden = true;
-    scorecardImage.removeAttribute('src');
-    scorecardImage.alt = '';
+    scorecardImage.classList.add('hand-panel__scorecard-image--hidden');
+    scorecardImage.setAttribute('aria-hidden', 'true');
+    scorecardImage.removeAttribute('data-animal');
   };
 
   const showScorecard = (animal) => {
@@ -210,9 +221,15 @@ export function createHandPanel({ onSelectPair } = {}) {
       return;
     }
 
-    scorecardImage.src = scorecardImagePath;
+    if (scorecardImage.dataset.path !== scorecardImagePath) {
+      scorecardImage.src = scorecardImagePath;
+      scorecardImage.dataset.path = scorecardImagePath;
+    }
+
     scorecardImage.alt = `Scorecard für ${toReadableLabel(animal)}`;
-    scorecardImage.hidden = false;
+    scorecardImage.dataset.animal = String(animal || '');
+    scorecardImage.classList.remove('hand-panel__scorecard-image--hidden');
+    scorecardImage.setAttribute('aria-hidden', 'false');
   };
 
   let hoveredAnimal = null;
@@ -226,46 +243,6 @@ export function createHandPanel({ onSelectPair } = {}) {
       hideScorecard();
     }
   };
-
-  list.addEventListener('mouseover', (event) => {
-    const target = event.target;
-    if (!(target instanceof Element)) {
-      return;
-    }
-
-    const pairButton = target.closest('.hand-panel__pair');
-    if (!pairButton || !list.contains(pairButton) || pairButton.disabled) {
-      return;
-    }
-
-    hoveredAnimal = pairButton.dataset.animal || null;
-    refreshScorecard();
-  });
-
-  list.addEventListener('mouseout', (event) => {
-    const target = event.target;
-    if (!(target instanceof Element)) {
-      return;
-    }
-
-    const fromButton = target.closest('.hand-panel__pair');
-    if (!fromButton || !list.contains(fromButton)) {
-      return;
-    }
-
-    const related = event.relatedTarget;
-    if (related instanceof Element) {
-      const toButton = related.closest('.hand-panel__pair');
-      if (toButton && list.contains(toButton) && !toButton.disabled) {
-        hoveredAnimal = toButton.dataset.animal || null;
-        refreshScorecard();
-        return;
-      }
-    }
-
-    hoveredAnimal = null;
-    refreshScorecard();
-  });
 
   list.addEventListener('focusin', (event) => {
     const target = event.target;
@@ -337,6 +314,27 @@ export function createHandPanel({ onSelectPair } = {}) {
 
       button.classList.toggle('hand-panel__pair--selected', index === selectedIndex);
       button.dataset.animal = String(pair.animal || '');
+      button.addEventListener('mouseenter', () => {
+        if (button.disabled) {
+          return;
+        }
+        hoveredAnimal = button.dataset.animal || null;
+        refreshScorecard();
+      });
+      button.addEventListener('mouseleave', (event) => {
+        const related = event.relatedTarget;
+        if (related instanceof Element) {
+          const toButton = related.closest('.hand-panel__pair');
+          if (toButton && list.contains(toButton) && !toButton.disabled) {
+            hoveredAnimal = toButton.dataset.animal || null;
+            refreshScorecard();
+            return;
+          }
+        }
+
+        hoveredAnimal = null;
+        refreshScorecard();
+      });
       button.innerHTML = `
         <span class="hand-panel__pair-visual-row">
           ${tileVisualSvg}

@@ -169,17 +169,35 @@
 }
 
 .hand-panel__scorecard-image {
+  --scorecard-offset-y: 0px;
   position: fixed;
   right: 1rem;
-  bottom: 0.9rem;
-  width: clamp(20rem, 38vw, 31rem);
-  max-height: 26rem;
+  bottom: 1rem;
+  width: min(18rem, 42vw);
+  height: auto;
   display: block;
-  object-fit: contain;
   border-radius: 0;
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.22));
+  filter: drop-shadow(0 6px 12px rgba(18, 8, 12, 0.18));
+  transform: translateY(var(--scorecard-offset-y));
+  opacity: 1;
+  visibility: visible;
+  transition: transform 140ms ease, opacity 140ms ease, visibility 140ms step-end;
   z-index: 8;
   pointer-events: none;
+}
+
+.hand-panel__scorecard-image--hidden {
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 140ms ease, opacity 140ms ease, visibility 0ms linear 140ms;
+}
+
+.hand-panel__scorecard-image[data-animal="Japanmakak"] {
+  --scorecard-offset-y: 18px;
+}
+
+.hand-panel__scorecard-image[data-animal="Sika"] {
+  --scorecard-offset-y: 27px;
 }
 
 @media (max-width: 700px) {
@@ -192,8 +210,9 @@
   }
 
   .hand-panel__scorecard-image {
-    right: 0.8rem;
-    bottom: 0.6rem;
-    width: clamp(14.5rem, 56vw, 21rem);
+    right: 1rem;
+    bottom: 1rem;
+    width: min(24rem, calc(100vw - 2rem));
+    height: auto;
   }
 }
