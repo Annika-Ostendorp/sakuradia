@@ -102,8 +102,8 @@ export default class GameScene {
       this.#camera,
     );
 
-    this.rulesPopup = createRulesPopup({ pages: RULE_PAGES });
-    this.appShell.append(this.rulesPopup.element);
+    // this.rulesPopup = createRulesPopup({ pages: RULE_PAGES });
+    // this.appShell.append(this.rulesPopup.element);
 
     this.animate = this.animate.bind(this);
     this.animate();
@@ -178,7 +178,7 @@ export default class GameScene {
     );
 
     this.#orthographicGround.rotation.x = -Math.PI / 2;
-    this.#orthographicGround.position.y = -0.05;
+    this.#orthographicGround.position.y = -2;
     this.#orthographicGround.visible = false;
     this.#orthographicGround.name = "OrthographicGround";
     this.#orthographicGround.userData.ignoreRaycast = true;

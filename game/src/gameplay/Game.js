@@ -17,9 +17,10 @@ import HexCoord from "/src/utils/HexCoord.js";
  * - Bietet `getHandPairs()` um UI/Manager mit synchronisierten Paaren zu versorgen
  */
 export default class Game {
-  constructor(scene, modelLoader) {
+  constructor(scene, modelLoader, gameplayManager) {
     this.scene = scene;
     this.modelLoader = modelLoader;
+    this.gameplayManager = gameplayManager;
     this.library = new Library();
     this.deckLogic = new DeckLogic(this.library);
     this.gridManager = new GridManager(this.scene, this.modelLoader);
@@ -58,6 +59,8 @@ export default class Game {
       starterTileData.rightTile,
       1,
     );
+    
+    await this.gameplayManager.updateAnimalsOnGrid();
   }
 
   // --- Hand-Queue API ---

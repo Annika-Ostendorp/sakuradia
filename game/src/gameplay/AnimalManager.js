@@ -225,6 +225,7 @@ export default class AnimalManager {
   }
 
   async showNoValidAnimalPlacementPossible(hexCoord) {
+    return;
     await this.debugTextInWorld.showNoValidAnimalPlacementPossible(
       this.scene,
       this.gridManager,

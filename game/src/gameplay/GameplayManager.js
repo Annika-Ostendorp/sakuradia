@@ -38,7 +38,7 @@ export default class GameplayManager {
     this.lastBoardTotalScore = 0;
     this.gameLength = this.gameConfig.rounds; // Rounds to be played until game end
     this.maxTurns = this.gameLength * this.playerCount;
-    this.game = new Game(this.scene, this.modelLoader);
+    this.game = new Game(this.scene, this.modelLoader, this);
 
     this.roundState = RoundState.CHOOSE_TILE; // Initial round state
     this.roundStateLabel = this.getRoundStateLabel(this.roundState);
@@ -56,6 +56,7 @@ export default class GameplayManager {
     this.previewTileHexCoord = null; // HexCoord, an der das preview-Modell aktuell positioniert ist oder positioniert werden soll
     this.previewTileRotation = 0; // Rotation des preview-Modells in 60°-Schritten (Index 0-5)
     this.previewTile = null;
+    this.previewTileAnimalIconsHexCoord = null;
 
     this.previewAnimalModel = null; // Referenz zum animal model, welches nur im preview angezeigt wird
     this.previewAnimalModelPromise = null; // Promise, das auf die Fertigstellung des Ladens des preview animal Modells wartet
@@ -75,7 +76,7 @@ export default class GameplayManager {
         window.location.reload();
       },
     });
-    this.scoreBoard = createScoreBoard({ useDummyData: false });
+    // this.scoreBoard = createScoreBoard({ useDummyData: false });
 
     const appShell = document.querySelector("#app-shell");
     if (!appShell) {
@@ -83,7 +84,7 @@ export default class GameplayManager {
     }
     appShell.append(this.handPanel.element);
     appShell.append(this.gameOverScreen.element);
-    appShell.append(this.scoreBoard.element);
+    // appShell.append(this.scoreBoard.element);
     if (this.handPanel.scorecardElement) {
       appShell.append(this.handPanel.scorecardElement);
     }
@@ -200,7 +201,7 @@ export default class GameplayManager {
 
                 if (this.useSmoothAnimator) {
                   this.smoothAnimator.startAttention(model, {
-                    radius: 0,
+                    radius: 0.033,
                     height: 0.3,
                     speed: 2,
                   });
@@ -209,6 +210,7 @@ export default class GameplayManager {
                 console.warn("Failed to position preview model after load", e);
               }
               this.updateRoundState(RoundState.PLACE_TILE);
+              this.updatePreviewTileAnimalIcons();
             }
           })
           .catch((err) => {
@@ -219,6 +221,8 @@ export default class GameplayManager {
         break;
 
       case RoundState.PLACE_TILE:
+        this.clearPreviewTileAnimalIcons();
+
         this.updateAnimalsOnGrid();
 
         // Setze Tile
@@ -365,20 +369,20 @@ export default class GameplayManager {
   }
 
   alignScoreBoardTopEdgeWithHandPanel() {
-    if (!this.handPanel?.element || !this.scoreBoard?.element) {
+    if (!this.handPanel?.element /* || !this.scoreBoard?.element*/) {
       return;
     }
 
     const isMobile = window.matchMedia("(max-width: 700px)").matches;
     if (isMobile) {
-      this.scoreBoard.element.style.top = "";
-      this.scoreBoard.element.style.transform = "";
+      // this.scoreBoard.element.style.top = "";
+      // this.scoreBoard.element.style.transform = "";
       return;
     }
 
     const handPanelTop = this.handPanel.element.getBoundingClientRect().top;
-    this.scoreBoard.element.style.top = `${handPanelTop}px`;
-    this.scoreBoard.element.style.transform = "none";
+    // this.scoreBoard.element.style.top = `${handPanelTop}px`;
+    // this.scoreBoard.element.style.transform = "none";
   }
 
   alignScorecardBottomEdgeWithHandPanel() {
@@ -497,6 +501,10 @@ export default class GameplayManager {
 
     // Aktualisiere preview Werte
     this.previewTileHexCoord = newHexCoord;
+
+    if (this.roundState === RoundState.PLACE_TILE) {
+      this.updatePreviewTileAnimalIcons();
+    }
 
     // Wenn Modell noch nicht geladen, warten bis Promise aufgelöst wird
     if (!this.previewTileModel) {
@@ -672,6 +680,8 @@ export default class GameplayManager {
   }
 
   clearPreviewTile() {
+    this.clearPreviewTileAnimalIcons();
+
     this.previewTile = null;
     this.previewTileHexCoord = null;
     this.previewTileRotation = 0;
@@ -879,5 +889,46 @@ export default class GameplayManager {
       default:
         return "";
     }
+  }
+
+  updatePreviewTileAnimalIcons() {
+    if (!this.previewTileHexCoord) {
+      return;
+    }
+
+    const tileData = this.game.tilesOnHand[this.selectedHandIndex];
+
+    if (!tileData || !Array.isArray(tileData.animals)) {
+      return;
+    }
+
+    if (
+      this.previewTileAnimalIconsHexCoord &&
+      !this.previewTileAnimalIconsHexCoord.equals(this.previewTileHexCoord)
+    ) {
+      this.getAnimalManager().removeAnimalIconsFromScene(
+        this.previewTileAnimalIconsHexCoord,
+      );
+    }
+
+    this.previewTileAnimalIconsHexCoord = this.previewTileHexCoord;
+
+    this.getAnimalManager().spawnAnimalIconsAtCoord(
+      this.previewTileHexCoord,
+      tileData.animals,
+      null,
+    );
+  }
+
+  clearPreviewTileAnimalIcons() {
+    if (!this.previewTileAnimalIconsHexCoord) {
+      return;
+    }
+
+    this.getAnimalManager().removeAnimalIconsFromScene(
+      this.previewTileAnimalIconsHexCoord,
+    );
+
+    this.previewTileAnimalIconsHexCoord = null;
   }
 }

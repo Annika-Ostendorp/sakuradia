@@ -6,7 +6,7 @@
  */
 const DEFAULT_GAME_CONFIG = Object.freeze({
   // Standardwert: Anzahl Runden im Spiel
-  rounds: 85,
+  rounds: 20,
   playerCount: 1,
   // Flag ob das Spiel bereits gestartet wurde
   gameStarted: false,
@@ -14,9 +14,9 @@ const DEFAULT_GAME_CONFIG = Object.freeze({
 
 // Minimale und maximale erlaubte Rundenzahl (Inclusive)
 const MIN_ROUNDS = 1;
-const MAX_ROUNDS = 85;
+const MAX_ROUNDS = 20;
 const MIN_PLAYERS = 1;
-const MAX_PLAYERS = 4;
+const MAX_PLAYERS = 1;
 
 // Laufende (mutable) Spielkonfiguration, initialisiert mit den Standardwerten. Alle Funktionen in diesem Modul
 let gameConfig = { ...DEFAULT_GAME_CONFIG };
