@@ -32,11 +32,11 @@ const ANIMAL_IMAGES = Object.freeze({
 });
 
 const SCORECARD_IMAGES = Object.freeze({
-  Japanmakak: '/assets/images/scorecards/JapanmakakScorecard.svg',
-  Koi: '/assets/images/scorecards/KoiScorecard.svg',
-  Crane: '/assets/images/scorecards/KranichScorecard.svg',
-  Panda: '/assets/images/scorecards/PandaScorecard.svg',
-  Sika: '/assets/images/scorecards/SikaScorecard.svg',
+  Japanmakak: '/assets/images/scorecards/JapanmakakScorecard.png',
+  Koi: '/assets/images/scorecards/KoiScorecard.png',
+  Crane: '/assets/images/scorecards/KranichScorecard.png',
+  Panda: '/assets/images/scorecards/PandaScorecard.png',
+  Sika: '/assets/images/scorecards/SikaScorecard.png',
 });
 
 let areScorecardsPreloaded = false;
