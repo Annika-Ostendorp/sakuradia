@@ -336,6 +336,7 @@ export default class GameplayManager {
       scoresByPlayer: this.playerScores,
       roundStateLabel: this.roundStateLabel,
       roundStateDescription: this.getRoundStateDescription(this.roundState),
+      isSpecialState: this.roundState === RoundState.CANNOT_PLACE_ANIMAL,
     };
 
     this.handPanel.updateStatus(statusPayload);
@@ -839,7 +840,7 @@ export default class GameplayManager {
         return "Platziere jetzt dein Tier auf einem freien Tile.";
 
       case RoundState.CANNOT_PLACE_ANIMAL:
-        return `Y: Überspringe die Tierplatzierung\n B: Setze den Zug zurück`;
+        return `Y: Überspringe die Tierplatzierung\nB: Setze den Zug zurück`;
 
       case RoundState.DRAW:
         return "Es wird nachgezogen.";

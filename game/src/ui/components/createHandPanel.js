@@ -184,9 +184,10 @@ export function createHandPanel({ onSelectPair } = {}) {
   const status = panel.querySelector('.hand-panel__status');
   const state = panel.querySelector('.hand-panel__state');
   const stateDescription = panel.querySelector('.hand-panel__state-description');
+  const stateBlock = panel.querySelector('.hand-panel__state-block');
   const scores = panel.querySelector('.hand-panel__scores');
   const list = panel.querySelector('.hand-panel__list');
-  if (!status || !state || !stateDescription || !scores || !list || !scorecardImage) {
+  if (!status || !state || !stateDescription || !stateBlock || !scores || !list || !scorecardImage) {
     throw new Error('Hand panel list could not be created.');
   }
 
@@ -364,10 +365,13 @@ export function createHandPanel({ onSelectPair } = {}) {
     scoresByPlayer = [],
     roundStateLabel = 'Tile auswählen',
     roundStateDescription = 'Wähle ein Tile aus deiner Hand aus.',
+    isSpecialState = false,
   } = {}) => {
     status.textContent = `Runde ${currentRound}/${totalRounds}`;
     state.textContent = roundStateLabel;
     stateDescription.textContent = roundStateDescription;
+    panel.classList.toggle('hand-panel--state-special', Boolean(isSpecialState));
+    stateBlock.classList.toggle('hand-panel__state-block--special', Boolean(isSpecialState));
 
     scores.textContent = '';
     for (let index = 0; index < playerCount; index += 1) {
@@ -380,8 +384,7 @@ export function createHandPanel({ onSelectPair } = {}) {
       }
 
       scoreRow.innerHTML = `
-        <span class="hand-panel__score-player">Punktzahl</span>
-        <span class="hand-panel__score-points">${score} P</span>
+        <span class="hand-panel__score-points">${score} Punkte</span>
       `;
       scores.append(scoreRow);
     }
