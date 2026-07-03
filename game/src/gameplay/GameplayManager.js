@@ -56,6 +56,7 @@ export default class GameplayManager {
     this.previewTileHexCoord = null; // HexCoord, an der das preview-Modell aktuell positioniert ist oder positioniert werden soll
     this.previewTileRotation = 0; // Rotation des preview-Modells in 60°-Schritten (Index 0-5)
     this.previewTile = null;
+    this.previewTileAnimalIconsHexCoord = null;
 
     this.previewAnimalModel = null; // Referenz zum animal model, welches nur im preview angezeigt wird
     this.previewAnimalModelPromise = null; // Promise, das auf die Fertigstellung des Ladens des preview animal Modells wartet
@@ -209,6 +210,7 @@ export default class GameplayManager {
                 console.warn("Failed to position preview model after load", e);
               }
               this.updateRoundState(RoundState.PLACE_TILE);
+              this.updatePreviewTileAnimalIcons();
             }
           })
           .catch((err) => {
@@ -219,6 +221,8 @@ export default class GameplayManager {
         break;
 
       case RoundState.PLACE_TILE:
+        this.clearPreviewTileAnimalIcons();
+
         this.updateAnimalsOnGrid();
 
         // Setze Tile
@@ -365,7 +369,7 @@ export default class GameplayManager {
   }
 
   alignScoreBoardTopEdgeWithHandPanel() {
-    if (!this.handPanel?.element/* || !this.scoreBoard?.element*/) {
+    if (!this.handPanel?.element /* || !this.scoreBoard?.element*/) {
       return;
     }
 
@@ -497,6 +501,10 @@ export default class GameplayManager {
 
     // Aktualisiere preview Werte
     this.previewTileHexCoord = newHexCoord;
+
+    if (this.roundState === RoundState.PLACE_TILE) {
+      this.updatePreviewTileAnimalIcons();
+    }
 
     // Wenn Modell noch nicht geladen, warten bis Promise aufgelöst wird
     if (!this.previewTileModel) {
@@ -672,6 +680,8 @@ export default class GameplayManager {
   }
 
   clearPreviewTile() {
+    this.clearPreviewTileAnimalIcons();
+
     this.previewTile = null;
     this.previewTileHexCoord = null;
     this.previewTileRotation = 0;
@@ -879,5 +889,46 @@ export default class GameplayManager {
       default:
         return "";
     }
+  }
+
+  updatePreviewTileAnimalIcons() {
+    if (!this.previewTileHexCoord) {
+      return;
+    }
+
+    const tileData = this.game.tilesOnHand[this.selectedHandIndex];
+
+    if (!tileData || !Array.isArray(tileData.animals)) {
+      return;
+    }
+
+    if (
+      this.previewTileAnimalIconsHexCoord &&
+      !this.previewTileAnimalIconsHexCoord.equals(this.previewTileHexCoord)
+    ) {
+      this.getAnimalManager().removeAnimalIconsFromScene(
+        this.previewTileAnimalIconsHexCoord,
+      );
+    }
+
+    this.previewTileAnimalIconsHexCoord = this.previewTileHexCoord;
+
+    this.getAnimalManager().spawnAnimalIconsAtCoord(
+      this.previewTileHexCoord,
+      tileData.animals,
+      null,
+    );
+  }
+
+  clearPreviewTileAnimalIcons() {
+    if (!this.previewTileAnimalIconsHexCoord) {
+      return;
+    }
+
+    this.getAnimalManager().removeAnimalIconsFromScene(
+      this.previewTileAnimalIconsHexCoord,
+    );
+
+    this.previewTileAnimalIconsHexCoord = null;
   }
 }
