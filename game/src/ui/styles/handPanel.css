@@ -93,10 +93,9 @@
 
 .hand-panel__pair-visual-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+  grid-template-columns: auto auto 1px minmax(0, 1fr);
   align-items: center;
-  column-gap: 1.15rem;
-  margin-left: 0.55rem;
+  column-gap: 0.85rem;
 }
 
 .hand-panel__pair-divider {
@@ -113,7 +112,7 @@
 }
 
 .hand-panel__tile-visual {
-  width: 4rem;
+  width: 5.2rem;
   height: auto;
   display: block;
   justify-self: center;
@@ -132,17 +131,40 @@
 }
 
 .hand-panel__animal-avatar {
-  width: 3.15rem;
-  height: 3.15rem;
+  width: 3.45rem;
+  height: 3.45rem;
   display: block;
   object-fit: cover;
   border-radius: 50%;
   border: 1px solid rgba(157, 90, 109, 0.52);
   background: rgba(255, 255, 255, 0.6);
+  filter: drop-shadow(0 3px 6px rgba(38, 18, 24, 0.2));
 }
 
 .hand-panel__pair-meta {
   font-size: 0.78rem;
+  color: #633845;
+}
+
+.hand-panel__pair-meta--icons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 0;
+}
+
+.hand-panel__allowed-animal-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  display: block;
+  object-fit: contain;
+}
+
+.hand-panel__allowed-animal-fallback,
+.hand-panel__allowed-animals-empty {
+  font-size: 0.72rem;
   color: #633845;
 }
 

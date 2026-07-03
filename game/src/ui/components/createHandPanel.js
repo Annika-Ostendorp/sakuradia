@@ -23,12 +23,20 @@ const LANDSCAPE_IMAGE_SCALES = Object.freeze({
   Sakura: 1.7,
 });
 
-const ANIMAL_IMAGES = Object.freeze({
-  Crane: '/assets/images/animals/KranichAvatar.png',
-  Japanmakak: '/assets/images/animals/JapanmakakAvatar.png',
-  Koi: '/assets/images/animals/KoiAvatar.png',
-  Panda: '/assets/images/animals/PandaAvatar.png',
-  Sika: '/assets/images/animals/SikaAvatar.png',
+const DRAWN_ANIMAL_IMAGES = Object.freeze({
+  Crane: '/assets/images/animals/CraneAvatar.svg',
+  Japanmakak: '/assets/images/animals/JapanmakakAvatar.svg',
+  Koi: '/assets/images/animals/KoiAvatar.svg',
+  Panda: '/assets/images/animals/PandaAvatar.svg',
+  Sika: '/assets/images/animals/SikaAvatar.svg',
+});
+
+const ALLOWED_ANIMAL_ICONS = Object.freeze({
+  Crane: '/assets/images/animals/CraneIcon.png',
+  Japanmakak: '/assets/images/animals/JapanmakakIcon.png',
+  Koi: '/assets/images/animals/KoiIcon.png',
+  Panda: '/assets/images/animals/PandaIcon.png',
+  Sika: '/assets/images/animals/SikaIcon.png',
 });
 
 const SCORECARD_IMAGES = Object.freeze({
@@ -70,19 +78,34 @@ function getLandscapeImageScale(landscape) {
 }
 
 function getAnimalImagePath(animal) {
-  return ANIMAL_IMAGES[animal] || null;
+  return DRAWN_ANIMAL_IMAGES[animal] || null;
+}
+
+function getAllowedAnimalIconPath(animal) {
+  return ALLOWED_ANIMAL_ICONS[animal] || null;
 }
 
 function getScorecardImagePath(animal) {
   return SCORECARD_IMAGES[animal] || null;
 }
 
-function getAllowedAnimalsText(tileData) {
+function buildAllowedAnimalsMarkup(tileData) {
   if (!tileData || !Array.isArray(tileData.animals) || tileData.animals.length === 0) {
-    return 'Keine';
+    return '<span class="hand-panel__allowed-animals-empty">Keine</span>';
   }
 
-  return tileData.animals.map((animal) => toReadableLabel(animal)).join(', ');
+  return tileData.animals
+    .map((animal) => {
+      const animalLabel = toReadableLabel(animal);
+      const animalImagePath = getAllowedAnimalIconPath(animal);
+
+      if (animalImagePath) {
+        return `<img src="${animalImagePath}" alt="${animalLabel}" class="hand-panel__allowed-animal-icon" />`;
+      }
+
+      return `<span class="hand-panel__allowed-animal-fallback">${animalLabel}</span>`;
+    })
+    .join('');
 }
 
 function sanitizeForSvgId(value) {
@@ -320,13 +343,16 @@ export function createHandPanel({ onSelectPair } = {}) {
       });
       const drawnAnimalText = toReadableLabel(pair.animal);
       const drawnAnimalImagePath = getAnimalImagePath(pair.animal);
-      const allowedAnimalsText = getAllowedAnimalsText(pair.tileData);
+      const allowedAnimalsMarkup = buildAllowedAnimalsMarkup(pair.tileData);
 
       button.classList.toggle('hand-panel__pair--selected', index === selectedIndex);
       button.dataset.animal = String(pair.animal || '');
       button.innerHTML = `
         <span class="hand-panel__pair-visual-row">
           ${tileVisualSvg}
+          <span class="hand-panel__pair-meta hand-panel__pair-meta--icons" aria-label="Erlaubte Tiere">
+            ${allowedAnimalsMarkup}
+          </span>
           <span class="hand-panel__pair-divider" aria-hidden="true"></span>
           <span class="hand-panel__drawn-animal" aria-label="Gezogenes Tier">
             ${drawnAnimalImagePath
@@ -334,7 +360,6 @@ export function createHandPanel({ onSelectPair } = {}) {
     : drawnAnimalText}
           </span>
         </span>
-        <span class="hand-panel__pair-meta">Erlaubte Tiere: ${allowedAnimalsText}</span>
       `;
 
       button.addEventListener('click', () => {
