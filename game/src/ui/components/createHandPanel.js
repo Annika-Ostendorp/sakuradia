@@ -95,8 +95,8 @@ function buildHexagonSvg({ index, primaryLandscape, secondaryLandscape, primaryC
   const primaryScale = getLandscapeImageScale(primaryLandscape);
   const secondaryScale = getLandscapeImageScale(secondaryLandscape);
 
-  const viewWidth = 100;
-  const viewHeight = 86.60254;
+  const viewWidth = 86.60254;
+  const viewHeight = 100;
   const primaryScaledWidth = viewWidth * primaryScale;
   const primaryScaledHeight = viewHeight * primaryScale;
   const primaryOffsetX = (viewWidth - primaryScaledWidth) / 2;
@@ -109,47 +109,37 @@ function buildHexagonSvg({ index, primaryLandscape, secondaryLandscape, primaryC
 
   const primaryPatternId = `tile-pattern-primary-${index}-${sanitizeForSvgId(primaryLandscape)}`;
   const secondaryPatternId = `tile-pattern-secondary-${index}-${sanitizeForSvgId(secondaryLandscape || 'none')}`;
-  const leftClipId = `tile-left-clip-${index}`;
-  const rightClipId = `tile-right-clip-${index}`;
 
   const primaryFill = primaryImagePath ? `url(#${primaryPatternId})` : primaryColor;
   const secondaryFill = secondaryImagePath ? `url(#${secondaryPatternId})` : secondaryColor;
 
   const splitPolygons = isKeystone
     ? `<polygon
-        points="0,43.30127 25,0 75,0 100,43.30127 75,86.60254 25,86.60254"
+        points="43.30127,0 86.60254,25 86.60254,75 43.30127,100 0,75 0,25"
         fill="${primaryFill}"
       ></polygon>`
     : `<polygon
-        points="0,43.30127 25,0 75,0 100,43.30127 75,86.60254 25,86.60254"
+        points="43.30127,0 43.30127,100 0,75 0,25"
         fill="${primaryFill}"
-        clip-path="url(#${leftClipId})"
       ></polygon>
       <polygon
-        points="0,43.30127 25,0 75,0 100,43.30127 75,86.60254 25,86.60254"
+        points="43.30127,0 86.60254,25 86.60254,75 43.30127,100"
         fill="${secondaryFill}"
-        clip-path="url(#${rightClipId})"
       ></polygon>`;
 
   return `
-    <svg class="hand-panel__tile-visual" viewBox="0 0 100 86.60254" aria-hidden="true" focusable="false">
+    <svg class="hand-panel__tile-visual" viewBox="0 0 86.60254 100" aria-hidden="true" focusable="false">
       <defs>
-        <pattern id="${primaryPatternId}" patternUnits="userSpaceOnUse" width="100" height="86.60254">
+        <pattern id="${primaryPatternId}" patternUnits="userSpaceOnUse" width="86.60254" height="100">
           <image href="${primaryImagePath || ''}" x="${primaryOffsetX}" y="${primaryOffsetY}" width="${primaryScaledWidth}" height="${primaryScaledHeight}" preserveAspectRatio="xMidYMid slice"></image>
         </pattern>
-        <pattern id="${secondaryPatternId}" patternUnits="userSpaceOnUse" width="100" height="86.60254">
+        <pattern id="${secondaryPatternId}" patternUnits="userSpaceOnUse" width="86.60254" height="100">
           <image href="${secondaryImagePath || ''}" x="${secondaryOffsetX}" y="${secondaryOffsetY}" width="${secondaryScaledWidth}" height="${secondaryScaledHeight}" preserveAspectRatio="xMidYMid slice"></image>
         </pattern>
-        <clipPath id="${leftClipId}">
-          <rect x="0" y="0" width="50" height="86.60254"></rect>
-        </clipPath>
-        <clipPath id="${rightClipId}">
-          <rect x="50" y="0" width="50" height="86.60254"></rect>
-        </clipPath>
       </defs>
       ${splitPolygons}
       <polygon
-        points="0,43.30127 25,0 75,0 100,43.30127 75,86.60254 25,86.60254"
+        points="43.30127,0 86.60254,25 86.60254,75 43.30127,100 0,75 0,25"
         fill="none"
         stroke="rgba(255,255,255,0.35)"
         stroke-width="2"
