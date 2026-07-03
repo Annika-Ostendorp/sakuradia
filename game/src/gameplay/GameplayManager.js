@@ -1,6 +1,8 @@
 import { RoundState } from "../data/RoundState.js";
 import Game from "./Game.js";
 import { createHandPanel } from "../ui/components/createHandPanel.js";
+import { createGameOverScreen } from "../ui/components/createGameOverScreen.js";
+import { createScoreBoard } from "../ui/components/createScoreBoard.js";
 import HexCoord from "../utils/HexCoord.js";
 import DebugConfig from "../debug/DebugConfig.js";
 import { Animal } from "../data/Animal.js";
@@ -62,17 +64,26 @@ export default class GameplayManager {
     // Hand-Panel UI: Callback aktualisiert die Auswahl und synchronisiert das UI
     this.handPanel = createHandPanel({
       onSelectPair: (index) => {
+        if (this.roundState !== RoundState.CHOOSE_TILE) return;
         this.selectedHandIndex = index;
         this.syncHandPanel();
         this.syncTurnStatus();
       },
     });
+    this.gameOverScreen = createGameOverScreen({
+      onReplay: () => {
+        window.location.reload();
+      },
+    });
+    this.scoreBoard = createScoreBoard({ useDummyData: false });
 
     const appShell = document.querySelector("#app-shell");
     if (!appShell) {
       throw new Error("Could not attach hand panel: #app-shell not found.");
     }
     appShell.append(this.handPanel.element);
+    appShell.append(this.gameOverScreen.element);
+    appShell.append(this.scoreBoard.element);
     if (this.handPanel.scorecardElement) {
       appShell.append(this.handPanel.scorecardElement);
     }
@@ -99,6 +110,9 @@ export default class GameplayManager {
       this.game.deckLogic.getNextTile(),
       this.game.deckLogic.getNextAnimal(),
     );
+    if (this.roundState === RoundState.GAME_OVER) {
+      return;
+    }
     this.syncHandPanel();
     this.syncTurnStatus();
     requestAnimationFrame(() => {
@@ -255,6 +269,7 @@ export default class GameplayManager {
       console.warn("No more tiles or animals to draw. Ending game.");
       this.updateRoundState(RoundState.GAME_OVER);
       this.syncHandPanel();
+      this.showGameOverScreen();
       return;
     }
 
@@ -319,6 +334,7 @@ export default class GameplayManager {
       console.log("Game Over");
       this.updateRoundState(RoundState.GAME_OVER);
       this.syncTurnStatus();
+      this.showGameOverScreen();
       return;
     }
 
@@ -341,6 +357,28 @@ export default class GameplayManager {
 
     this.handPanel.updateStatus(statusPayload);
     this.alignScorecardBottomEdgeWithHandPanel();
+  }
+
+  showGameOverScreen() {
+    const scoreResult = calculateScoreForGrid(this.game.gridManager, "player1");
+    this.gameOverScreen.show(scoreResult);
+  }
+
+  alignScoreBoardTopEdgeWithHandPanel() {
+    if (!this.handPanel?.element || !this.scoreBoard?.element) {
+      return;
+    }
+
+    const isMobile = window.matchMedia("(max-width: 700px)").matches;
+    if (isMobile) {
+      this.scoreBoard.element.style.top = "";
+      this.scoreBoard.element.style.transform = "";
+      return;
+    }
+
+    const handPanelTop = this.handPanel.element.getBoundingClientRect().top;
+    this.scoreBoard.element.style.top = `${handPanelTop}px`;
+    this.scoreBoard.element.style.transform = "none";
   }
 
   alignScorecardBottomEdgeWithHandPanel() {

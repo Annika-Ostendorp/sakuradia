@@ -23,12 +23,20 @@ const LANDSCAPE_IMAGE_SCALES = Object.freeze({
   Sakura: 1.7,
 });
 
-const ANIMAL_IMAGES = Object.freeze({
-  Crane: '/assets/images/animals/KranichAvatar.png',
-  Japanmakak: '/assets/images/animals/JapanmakakAvatar.png',
-  Koi: '/assets/images/animals/KoiAvatar.png',
-  Panda: '/assets/images/animals/PandaAvatar.png',
-  Sika: '/assets/images/animals/SikaAvatar.png',
+const DRAWN_ANIMAL_IMAGES = Object.freeze({
+  Crane: '/assets/images/animals/CraneAvatar.svg',
+  Japanmakak: '/assets/images/animals/JapanmakakAvatar.svg',
+  Koi: '/assets/images/animals/KoiAvatar.svg',
+  Panda: '/assets/images/animals/PandaAvatar.svg',
+  Sika: '/assets/images/animals/SikaAvatar.svg',
+});
+
+const ALLOWED_ANIMAL_ICONS = Object.freeze({
+  Crane: '/assets/images/animals/CraneIcon.png',
+  Japanmakak: '/assets/images/animals/JapanmakakIcon.png',
+  Koi: '/assets/images/animals/KoiIcon.png',
+  Panda: '/assets/images/animals/PandaIcon.png',
+  Sika: '/assets/images/animals/SikaIcon.png',
 });
 
 const SCORECARD_IMAGES = Object.freeze({
@@ -70,19 +78,34 @@ function getLandscapeImageScale(landscape) {
 }
 
 function getAnimalImagePath(animal) {
-  return ANIMAL_IMAGES[animal] || null;
+  return DRAWN_ANIMAL_IMAGES[animal] || null;
+}
+
+function getAllowedAnimalIconPath(animal) {
+  return ALLOWED_ANIMAL_ICONS[animal] || null;
 }
 
 function getScorecardImagePath(animal) {
   return SCORECARD_IMAGES[animal] || null;
 }
 
-function getAllowedAnimalsText(tileData) {
+function buildAllowedAnimalsMarkup(tileData) {
   if (!tileData || !Array.isArray(tileData.animals) || tileData.animals.length === 0) {
-    return 'Keine';
+    return '<span class="hand-panel__allowed-animals-empty">Keine</span>';
   }
 
-  return tileData.animals.map((animal) => toReadableLabel(animal)).join(', ');
+  return tileData.animals
+    .map((animal) => {
+      const animalLabel = toReadableLabel(animal);
+      const animalImagePath = getAllowedAnimalIconPath(animal);
+
+      if (animalImagePath) {
+        return `<img src="${animalImagePath}" alt="${animalLabel}" class="hand-panel__allowed-animal-icon" />`;
+      }
+
+      return `<span class="hand-panel__allowed-animal-fallback">${animalLabel}</span>`;
+    })
+    .join('');
 }
 
 function sanitizeForSvgId(value) {
@@ -95,8 +118,8 @@ function buildHexagonSvg({ index, primaryLandscape, secondaryLandscape, primaryC
   const primaryScale = getLandscapeImageScale(primaryLandscape);
   const secondaryScale = getLandscapeImageScale(secondaryLandscape);
 
-  const viewWidth = 100;
-  const viewHeight = 86.60254;
+  const viewWidth = 86.60254;
+  const viewHeight = 100;
   const primaryScaledWidth = viewWidth * primaryScale;
   const primaryScaledHeight = viewHeight * primaryScale;
   const primaryOffsetX = (viewWidth - primaryScaledWidth) / 2;
@@ -109,47 +132,37 @@ function buildHexagonSvg({ index, primaryLandscape, secondaryLandscape, primaryC
 
   const primaryPatternId = `tile-pattern-primary-${index}-${sanitizeForSvgId(primaryLandscape)}`;
   const secondaryPatternId = `tile-pattern-secondary-${index}-${sanitizeForSvgId(secondaryLandscape || 'none')}`;
-  const leftClipId = `tile-left-clip-${index}`;
-  const rightClipId = `tile-right-clip-${index}`;
 
   const primaryFill = primaryImagePath ? `url(#${primaryPatternId})` : primaryColor;
   const secondaryFill = secondaryImagePath ? `url(#${secondaryPatternId})` : secondaryColor;
 
   const splitPolygons = isKeystone
     ? `<polygon
-        points="0,43.30127 25,0 75,0 100,43.30127 75,86.60254 25,86.60254"
+        points="43.30127,0 86.60254,25 86.60254,75 43.30127,100 0,75 0,25"
         fill="${primaryFill}"
       ></polygon>`
     : `<polygon
-        points="0,43.30127 25,0 75,0 100,43.30127 75,86.60254 25,86.60254"
+        points="43.30127,0 43.30127,100 0,75 0,25"
         fill="${primaryFill}"
-        clip-path="url(#${leftClipId})"
       ></polygon>
       <polygon
-        points="0,43.30127 25,0 75,0 100,43.30127 75,86.60254 25,86.60254"
+        points="43.30127,0 86.60254,25 86.60254,75 43.30127,100"
         fill="${secondaryFill}"
-        clip-path="url(#${rightClipId})"
       ></polygon>`;
 
   return `
-    <svg class="hand-panel__tile-visual" viewBox="0 0 100 86.60254" aria-hidden="true" focusable="false">
+    <svg class="hand-panel__tile-visual" viewBox="0 0 86.60254 100" aria-hidden="true" focusable="false">
       <defs>
-        <pattern id="${primaryPatternId}" patternUnits="userSpaceOnUse" width="100" height="86.60254">
+        <pattern id="${primaryPatternId}" patternUnits="userSpaceOnUse" width="86.60254" height="100">
           <image href="${primaryImagePath || ''}" x="${primaryOffsetX}" y="${primaryOffsetY}" width="${primaryScaledWidth}" height="${primaryScaledHeight}" preserveAspectRatio="xMidYMid slice"></image>
         </pattern>
-        <pattern id="${secondaryPatternId}" patternUnits="userSpaceOnUse" width="100" height="86.60254">
+        <pattern id="${secondaryPatternId}" patternUnits="userSpaceOnUse" width="86.60254" height="100">
           <image href="${secondaryImagePath || ''}" x="${secondaryOffsetX}" y="${secondaryOffsetY}" width="${secondaryScaledWidth}" height="${secondaryScaledHeight}" preserveAspectRatio="xMidYMid slice"></image>
         </pattern>
-        <clipPath id="${leftClipId}">
-          <rect x="0" y="0" width="50" height="86.60254"></rect>
-        </clipPath>
-        <clipPath id="${rightClipId}">
-          <rect x="50" y="0" width="50" height="86.60254"></rect>
-        </clipPath>
       </defs>
       ${splitPolygons}
       <polygon
-        points="0,43.30127 25,0 75,0 100,43.30127 75,86.60254 25,86.60254"
+        points="43.30127,0 86.60254,25 86.60254,75 43.30127,100 0,75 0,25"
         fill="none"
         stroke="rgba(255,255,255,0.35)"
         stroke-width="2"
@@ -327,13 +340,16 @@ export function createHandPanel({ onSelectPair } = {}) {
       });
       const drawnAnimalText = toReadableLabel(pair.animal);
       const drawnAnimalImagePath = getAnimalImagePath(pair.animal);
-      const allowedAnimalsText = getAllowedAnimalsText(pair.tileData);
+      const allowedAnimalsMarkup = buildAllowedAnimalsMarkup(pair.tileData);
 
       button.classList.toggle('hand-panel__pair--selected', index === selectedIndex);
       button.dataset.animal = String(pair.animal || '');
       button.innerHTML = `
         <span class="hand-panel__pair-visual-row">
           ${tileVisualSvg}
+          <span class="hand-panel__pair-meta hand-panel__pair-meta--icons" aria-label="Erlaubte Tiere">
+            ${allowedAnimalsMarkup}
+          </span>
           <span class="hand-panel__pair-divider" aria-hidden="true"></span>
           <span class="hand-panel__drawn-animal" aria-label="Gezogenes Tier">
             ${drawnAnimalImagePath
@@ -341,7 +357,6 @@ export function createHandPanel({ onSelectPair } = {}) {
     : drawnAnimalText}
           </span>
         </span>
-        <span class="hand-panel__pair-meta">Erlaubte Tiere: ${allowedAnimalsText}</span>
       `;
 
       button.addEventListener('click', () => {
