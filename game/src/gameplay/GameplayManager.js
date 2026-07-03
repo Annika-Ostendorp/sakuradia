@@ -795,4 +795,38 @@ export default class GameplayManager {
     console.groupEnd();
     console.groupEnd();
   }
+
+  onRoundStateChanged(newState) {
+    this.setNewRoundStateText(newState);
+  }
+
+  setNewRoundStateText(newState) {
+    let text = "";
+    
+    switch (newState) {
+      case RoundState.CHOOSE_TILE:
+        text = "Wähle ein Landschafts-Tile aus deiner Hand.";
+        break;
+
+      case RoundState.PLACE_TILE:
+        text = "Platziere das Landschafts-Tile auf dem Spielfeld.";
+        break;
+
+      case RoundState.PLACE_ANIMAL:
+        text = "Platziere das Tier auf dem Spielfeld.";
+        break;
+
+      case RoundState.CANNOT_PLACE_ANIMAL:
+        text = `Es gibt keine erlaubten Positionen für die Platzierung des Tieres.\n
+        Y: Überspringe die Tierplatzierung (skip).\n
+        B: Neues Tile wählen (undo).`;
+        break;
+
+      default:
+        text = "";
+        break;
+    }
+
+    // updateRoundInfo(text);
+  }
 }
