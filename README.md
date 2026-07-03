@@ -41,7 +41,7 @@ Doppelklick auf start-dev.bat
 ```
 
 ## Steuerung
-Wir empfehlen das Spielen von SAKURADIA mit Maus und Tastatur.
+Wir empfehlen das Spielen von SAKURADIA mit Maus und Tastatur, da nicht alle Funktionen am Controller möglich sind.
 
 ### Maus/Tastatur-Steuerung
 - WASD / Pfeiltasten: Tile wählen, Tile bewegen
