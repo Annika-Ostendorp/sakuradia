@@ -200,7 +200,7 @@ export default class GameplayManager {
 
                 if (this.useSmoothAnimator) {
                   this.smoothAnimator.startAttention(model, {
-                    radius: 0,
+                    radius: 0.033,
                     height: 0.3,
                     speed: 2,
                   });
