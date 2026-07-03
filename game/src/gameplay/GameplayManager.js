@@ -60,6 +60,7 @@ export default class GameplayManager {
     // Hand-Panel UI: Callback aktualisiert die Auswahl und synchronisiert das UI
     this.handPanel = createHandPanel({
       onSelectPair: (index) => {
+        if (this.roundState !== RoundState.CHOOSE_TILE) return;
         this.selectedHandIndex = index;
         this.syncHandPanel();
         this.syncTurnStatus();

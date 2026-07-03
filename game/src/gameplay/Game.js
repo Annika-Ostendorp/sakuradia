@@ -56,7 +56,7 @@ export default class Game {
     await this.gridManager.setTile(
       new HexCoord(1, -1),
       starterTileData.rightTile,
-      0,
+      1,
     );
   }
 
