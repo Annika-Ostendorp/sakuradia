@@ -24,13 +24,14 @@ Kirschbaumwiesen wieder.
 - Hand besteht teilweise noch aus Text-Platzhaltern
 - Details zum Spielablauf und Informationen wie Punktestand sind aktuell nur in der Konsole (F12) einsehbar
 
-## Auf Windows starten
+## SAKURADIA spielen
+### Auf Windows starten
 ```txt
 Doppelklick auf start-dev.bat
 ```
 
 
-## Manuell starten
+### Manuell starten
 ```txt
 1. Projektordner im Terminal oder in VS Code öffnen
 2. Konsole: cd game
@@ -39,7 +40,20 @@ Doppelklick auf start-dev.bat
 5. Öffne http://localhost:5173/ (in deinem Browser)
 ```
 
-## Controller-Steuerung
+## Steuerung
+Wir empfehlen das Spielen von SAKURADIA mit Maus und Tastatur.
+
+### Maus/Tastatur-Steuerung
+- WASD / Pfeiltasten: Tile wählen, Tile bewegen
+- Space / Enter: Bestätigen
+- Q+E: Tile drehen
+- B: Tile Auswahl rückgängig machen
+- LMB: Kamera drehen
+- RMB: Kamera schieben
+- Mausrad: Zoom einstellen
+- R: Kamera zwischen perspektiv- und orthographisch wechseln
+
+### Controller-Steuerung
 - Left-Stick / D-Pad: Navigieren
 - Right-Stick: Kamera drehen
 - Button-Süd: Bestätigen
@@ -48,17 +62,7 @@ Doppelklick auf start-dev.bat
 - LT+RT: Tile wählen, Tile drehen
 - LB+RB: Kamera nach links/rechts bewegen
 
-## Maus/Tastatur-Steuerung
-- WASD / Pfeiltasten: Tile wählen, Tile bewegen
-- Space / Enter: Bestätigen
-- Q+E: Tile drehen
-- B: Tile Auswahl rückgängig machen
-- LMB: Kamera drehen
-- RMB: Kamera schieben
-- Mausrad: Zoom einstellen
-- R: Kamera zurücksetzen
-
-## Abkürzungen erklärt
+### Abkürzungen erklärt
 - LMB: Linke Maustaste
 - RMB: Rechte Maustaste
 - Left-Stick: Linker Analog-Stick am Controller
