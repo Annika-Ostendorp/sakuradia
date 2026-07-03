@@ -1,30 +1,22 @@
 # SAKURADIA
 SAKURADIA ist ein von [CASCADIA](https://www.spiel-des-jahres.de/spiele/cascadia/)
-inspiriertes strategisches Lege-Spiel für 1-4 Spieler. Viele der
-Regeln und Funktionen bleiben erhalten, jedoch tauchen die Spieler visuell in
-die japanische Natur ein und interagieren beispielsweise mit Tieren wie Panda,
-Koi, sowie Sika und finden sich als Verwalter von Bambuswäldern, Teichen und
-Kirschbaumwiesen wieder.
+inspiriertes strategisches Lege-Spiel für einen Spieler.<br>
+Viele Regeln und Funktionen bleiben erhalten, jedoch taucht der Spielende visuell in die japanische Natur ein und interagiert mit Tieren wie Panda, Koi, Sika, Kranich und Japanmakak.<br>
+Dabei verwaltet er Bambuswälder, Teiche, Kirschbaumwiesen und weitere Landschaften.
 
-Wir empfehlen das Lesen der SPIELREGELN.md
+Wir empfehlen das Lesen der SPIELREGELN.md für das vollständige Verstehen des Spielflusses.
 
 ## Aktueller Stand
 - Der aktuelle Stand ist im main-branch einsehbar
 - Das Hauptmenü beinhaltet
-    - Einen Rundenanzahl-Slider (1-20 Runden, Standard auf 85)
-    - Spieler-Anzahl-Slider (1-4, Standard auf 1)
+    - Einen Rundenanzahl-Slider (1-20 Runden, Standard auf 20)
     - Start-Button
-    - Hintergrundbild (KI-Platzhalter)
+    - Hintergrundbild
 - Tiles können mit Tastatur oder Controller ausgewählt, platziert und gedreht werden
-- Tiles werden als Blender Modelle aus Sprint 2 dargestellt
+- Tiles werden als Blender Modelle aus Sprint 3 dargestellt
 - Tiere können nach Platzierung der Tiles manuell platziert werden
-- Tiere werden visuell als farb-codierter Text dargestellt
-    - Grün: Aktuelle Position
-    - Blau: Wählbare Position
-    - Gelb: Bereits besetze Position
-    - Rot: Unbesetze, aber invalide Position (Tier darf nicht platziert werden)
-- Hand besteht teilweise noch aus Text-Platzhaltern
-- Details zum Spielablauf und Informationen wie Punktestand sind aktuell nur in der Konsole (F12) einsehbar
+- Tiere werden sowohl mithilfe von Icons, aber nach Platzierung auch als 3D Modell in der Umgebung dargestellt
+- Details zum Spielablauf und Informationen wie Punktestand sind in der UI vollständig einsehbar
 
 ## SAKURADIA spielen
 ### Auf Windows starten
@@ -43,7 +35,7 @@ Doppelklick auf start-dev.bat
 ```
 
 ## Steuerung
-Wir empfehlen das Spielen von SAKURADIA mit Maus und Tastatur, da nicht alle Funktionen am Controller möglich sind.
+Wir empfehlen das Spielen von SAKURADIA mit Maus und Tastatur, da in der aktuellen Implementation nicht alle Funktionen am Controller möglich sind.
 
 ### Maus/Tastatur-Steuerung
 - WASD / Pfeiltasten: Tile wählen, Tile bewegen
@@ -59,7 +51,7 @@ Wir empfehlen das Spielen von SAKURADIA mit Maus und Tastatur, da nicht alle Fun
 - Left-Stick / D-Pad: Navigieren
 - Right-Stick: Kamera drehen
 - Button-Süd: Bestätigen
-- Button-West: Kamera zurücksetzen
+- Button-West: Kamera zwischen perspektiv- und orthographisch wechseln
 - Button-Ost: Tile Auswahl rückgängig machen
 - LT+RT: Tile wählen, Tile drehen
 - LB+RB: Kamera nach links/rechts bewegen
