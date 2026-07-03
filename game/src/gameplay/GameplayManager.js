@@ -814,7 +814,7 @@ export default class GameplayManager {
         return "Tier platzieren";
 
       case RoundState.CANNOT_PLACE_ANIMAL:
-        return "Tierplatzierung überspringen oder zurücksetzen";
+        return "Kein freier Platz für dein gewähltes Tier!";
 
       case RoundState.DRAW:
         return "Nachziehen";
@@ -830,19 +830,19 @@ export default class GameplayManager {
   getRoundStateDescription(state) {
     switch (state) {
       case RoundState.CHOOSE_TILE:
-        return "Wähle ein Tile aus deiner Hand aus.";
+        return "Wähle ein Tile/Tier-Paar in deiner Hand aus.";
 
       case RoundState.PLACE_TILE:
-        return "Bewege und platziere das Tile auf dem Spielfeld.";
+        return "Bewege und platziere dein Tile auf dem Spielfeld.";
 
       case RoundState.PLACE_ANIMAL:
-        return "Platziere jetzt das Tier auf dem gewählten Tile.";
+        return "Platziere jetzt dein Tier auf einem freien Tile.";
 
       case RoundState.CANNOT_PLACE_ANIMAL:
-        return "Y überspringt die Tierplatzierung, B geht zurück zur Tile-Auswahl.";
+        return `Y: Überspringe die Tierplatzierung\n B: Setze den Zug zurück`;
 
       case RoundState.DRAW:
-        return "Es wird ein neues Tile gezogen.";
+        return "Es wird nachgezogen.";
 
       case RoundState.GAME_OVER:
         return "Das Spiel ist vorbei.";
