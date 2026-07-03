@@ -1,0 +1,157 @@
+.game-over-screen {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  pointer-events: auto;
+  z-index: 30;
+}
+
+.game-over-screen--hidden {
+  display: none;
+}
+
+.game-over-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(27, 12, 17, 0.62);
+  backdrop-filter: blur(0.18rem);
+}
+
+.game-over-screen__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(46rem, calc(100vw - 1.5rem));
+  max-height: min(92vh, 60rem);
+  overflow: auto;
+  display: grid;
+  gap: 1rem;
+  padding: 1.2rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(177, 94, 108, 0.58);
+  background: linear-gradient(168deg, rgba(255, 236, 240, 0.88), rgba(246, 213, 220, 0.82));
+  box-shadow: 0 1.5rem 4rem rgba(88, 30, 43, 0.28);
+  color: #341922;
+}
+
+.game-over-screen__header {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.game-over-screen__eyebrow {
+  font-family: 'Cuppajoe', cursive;
+  margin: 0;
+  color: #8b3346;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.24rem;
+  text-transform: uppercase;
+}
+
+.game-over-screen__title {
+  font-family: 'Cuppajoe', cursive;
+  margin: 0;
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  line-height: 0.95;
+}
+
+.game-over-screen__summary {
+  margin: 0.4rem 0 0;
+  color: #5a2b38;
+  font-size: 0.95rem;
+}
+
+.game-over-screen__total {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(173, 98, 113, 0.34);
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #4c1f2d;
+}
+
+.game-over-screen__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.game-over-screen__section {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.95rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(173, 98, 113, 0.24);
+}
+
+.game-over-screen__section-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #4c1f2d;
+}
+
+.game-over-screen__list {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.game-over-screen__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(173, 98, 113, 0.24);
+  color: #663544;
+  font-size: 0.82rem;
+}
+
+.game-over-screen__row-label,
+.game-over-screen__row-score {
+  font-weight: 700;
+}
+
+.game-over-screen__replay-button {
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 1rem 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #c45467, #9d3348);
+  color: #fff5f6;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.game-over-screen__replay-button:hover {
+  filter: brightness(1.08);
+}
+
+.game-over-screen__replay-button:focus-visible {
+  outline: 3px solid rgba(173, 73, 93, 0.72);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .game-over-screen__dialog {
+    width: calc(100vw - 1rem);
+    padding: 0.95rem;
+  }
+
+  .game-over-screen__grid {
+    grid-template-columns: 1fr;
+  }
+}
