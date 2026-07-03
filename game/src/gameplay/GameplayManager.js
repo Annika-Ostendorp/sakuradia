@@ -186,6 +186,14 @@ export default class GameplayManager {
             if (this.previewTileHexCoord) {
               try {
                 this.updatePreviewTilePosition(this.previewTileHexCoord);
+
+                if (this.useSmoothAnimator) {
+                  this.smoothAnimator.startAttention(model, {
+                    radius: 0,
+                    height: 0.3,
+                    speed: 2,
+                  });
+                }
               } catch (e) {
                 console.warn("Failed to position preview model after load", e);
               }
@@ -211,6 +219,8 @@ export default class GameplayManager {
 
         // Check animal placement
         this.checkAnimalPlacement();
+
+        this.removeModelFromScene(this.previewTileModel);
 
         break;
 
@@ -628,10 +638,7 @@ export default class GameplayManager {
     }
   }
 
-  clearPreviewTile() {
-    this.previewTile = null;
-    this.previewTileHexCoord = null;
-    this.previewTileRotation = 0;
+  removeModelFromScene(model) {
     const removeModelFromScene = (model) => {
       if (!model) return;
 
@@ -655,6 +662,12 @@ export default class GameplayManager {
         })
         .catch(() => {});
     }
+  }
+
+  clearPreviewTile() {
+    this.previewTile = null;
+    this.previewTileHexCoord = null;
+    this.previewTileRotation = 0;
   }
 
   clearCurrentTurnTile() {
@@ -802,7 +815,7 @@ export default class GameplayManager {
 
   setNewRoundStateText(newState) {
     let text = "";
-    
+
     switch (newState) {
       case RoundState.CHOOSE_TILE:
         text = "Wähle ein Landschafts-Tile aus deiner Hand.";
