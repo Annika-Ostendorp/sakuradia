@@ -74,6 +74,7 @@ export default class AnimalManager {
       hexCoord,
       animal,
     );
+
     this.#placedAnimals.set(hexCoord, spawnedModel);
   }
 
@@ -109,32 +110,36 @@ export default class AnimalManager {
     const tile = this.gridManager.getTileAt(hexCoord);
     if (!tile) return;
 
-    // Override für Score Testing (Jedes Tier kann auf jedes Tile gesetzt werden)
     if (overrideAnimalRequirements) {
       tile.occupiedBy = animal;
+
       if (DebugConfig.enabled && DebugConfig.doInWorldDebugInfo) {
         this.debugTextInWorld.showAnimalDebugLabels(
           this.scene,
           this.gridManager,
         );
       }
+
       return true;
     }
 
     if (tile.animalIsAllowed(animal)) {
       tile.occupiedBy = animal;
+
       if (DebugConfig.enabled && DebugConfig.doInWorldDebugInfo) {
         this.debugTextInWorld.showAnimalDebugLabels(
           this.scene,
           this.gridManager,
         );
       }
+
       return true;
     }
 
     if (DebugConfig.enabled && DebugConfig.doInWorldDebugInfo) {
       this.debugTextInWorld.showAnimalDebugLabels(this.scene, this.gridManager);
     }
+
     return false;
   }
 
@@ -160,6 +165,7 @@ export default class AnimalManager {
         );
       }
     }
+
     return allowedPositions;
   }
 
@@ -229,12 +235,53 @@ export default class AnimalManager {
   hideNoValidAnimalPlacementPossible() {
     this.debugTextInWorld.hideNoValidAnimalPlacementPossible(this.scene);
   }
-  
+
   clearPossibleAnimalMarksAtCoord(hexCoord) {
     if (!hexCoord) {
       return;
     }
 
     this.removeAnimalIconsFromScene(hexCoord);
+  }
+
+  updateFlatIconOpacity(camera, orthographicViewSize = null) {
+    if (!this.iconSpawner) {
+      return;
+    }
+
+    this.iconSpawner.updateFlatIconOpacity(camera, {
+      orthographicViewSize,
+
+      minOpacity: 0,
+      maxOpacity: 1,
+
+      perspectiveFadeStart: 6,
+      perspectiveFadeEnd: 16,
+
+      orthographicFadeStart: 10,
+      orthographicFadeEnd: 18,
+    });
+  }
+
+  updateFloatingIconScale(camera, orthographicViewSize = null) {
+    if (!this.iconSpawner) {
+      return;
+    }
+
+    this.iconSpawner.updateFloatingIconScale(camera, {
+      orthographicViewSize,
+
+      minScaleMultiplier: 0.75,
+      maxScaleMultiplier: 1.5,
+
+      minOpacityMultiplier: 0.6,
+      maxOpacityMultiplier: 1.0,
+
+      perspectiveScaleStart: 6,
+      perspectiveScaleEnd: 16,
+
+      orthographicScaleStart: 6,
+      orthographicScaleEnd: 12,
+    });
   }
 }

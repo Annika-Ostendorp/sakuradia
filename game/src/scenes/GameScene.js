@@ -5,7 +5,15 @@ import {
   createGameOrbitControls,
   updateOrbitControlsWithRightStick,
   moveOrbitCameraHorizontal,
-} from "../rendering/OrbitalCamera.js";
+} from "/src/rendering/OrbitalCamera.js";
+import {
+  createOrthographicCamera,
+  createOrthographicDragControls,
+  updateOrthographicCameraSize,
+  DEFAULT_ORTHO_VIEW_SIZE,
+  MIN_ORTHO_VIEW_SIZE,
+  MAX_ORTHO_VIEW_SIZE,
+} from "/src/rendering/OrthographicCamera.js";
 import ModelLoader from "/src/utils/ModelLoader.js";
 import SmoothAnimator from "/src/utils/SmoothAnimator.js";
 import GameplayManager from "../gameplay/GameplayManager.js";
@@ -43,13 +51,18 @@ export default class GameScene {
   #modelLoader = null;
   #scene = null;
   #camera = null;
+  #orthographicGround = null;
 
   constructor(gameConfig) {
     this.gameConfig = gameConfig;
     this.smoothAnimator = new SmoothAnimator();
     this.#modelLoader = new ModelLoader();
+
     this.initialization();
+
     this.timer = new THREE.Timer();
+    this.isUsingPerspectiveCamera = true;
+    this.orthoViewSize = DEFAULT_ORTHO_VIEW_SIZE;
 
     this.audioManager = AudioManager.getInstance();
     this.audioManager.initialize(this.#scene, this.#camera);
@@ -81,6 +94,7 @@ export default class GameScene {
       this.#modelLoader,
       this.smoothAnimator,
     );
+
     this.inputManager = new InputManager(
       this.#scene,
       this.canvas,
@@ -104,7 +118,7 @@ export default class GameScene {
     }
 
     this.#scene = new THREE.Scene();
-    // this.#scene.background = new THREE.Color("#c9dde7");
+
     const cubeTextureLoader = new THREE.CubeTextureLoader();
 
     const skybox = cubeTextureLoader.load([
@@ -117,7 +131,7 @@ export default class GameScene {
     ]);
 
     this.#scene.background = skybox;
-    this.#scene.fog = new THREE.Fog(0xc9dde7, 20, 80);
+    this.#scene.fog = new THREE.Fog("#323E6E", 20, 80);
 
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
@@ -129,14 +143,12 @@ export default class GameScene {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(window.devicePixelRatio);
 
-    this.setupCamera();
+    this.setupPerspectiveCamera();
 
     this.handleResize = this.handleResize.bind(this);
     window.addEventListener("resize", this.handleResize);
 
-    // Lichter hinzufügen: Ambient + Directional für Schatten
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-
     this.#scene.add(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
@@ -158,7 +170,21 @@ export default class GameScene {
 
     this.#scene.add(directionalLight);
 
-    // Add axis helper
+    this.#orthographicGround = new THREE.Mesh(
+      new THREE.PlaneGeometry(200, 200),
+      new THREE.MeshBasicMaterial({
+        color: "#2d3761",
+      }),
+    );
+
+    this.#orthographicGround.rotation.x = -Math.PI / 2;
+    this.#orthographicGround.position.y = -0.05;
+    this.#orthographicGround.visible = false;
+    this.#orthographicGround.name = "OrthographicGround";
+    this.#orthographicGround.userData.ignoreRaycast = true;
+
+    this.#scene.add(this.#orthographicGround);
+
     if (DebugConfig.enabled && DebugConfig.showAxes) {
       const axesHelper = new THREE.AxesHelper(5);
       this.#scene.add(axesHelper);
@@ -166,13 +192,25 @@ export default class GameScene {
   }
 
   handleResize() {
-    this.#camera.aspect = window.innerWidth / window.innerHeight;
-    this.#camera.updateProjectionMatrix();
+    const aspect = window.innerWidth / window.innerHeight;
+
+    if (this.isUsingPerspectiveCamera) {
+      this.#camera.aspect = aspect;
+      this.#camera.updateProjectionMatrix();
+    } else {
+      updateOrthographicCameraSize(this.#camera, this.orthoViewSize);
+    }
+
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  setupCamera() {
+  setupPerspectiveCamera() {
     this.#camera = createGameCamera();
+
+    if (this.#orthographicGround) {
+      this.#orthographicGround.visible = false;
+    }
+
     this.controls = createGameOrbitControls(
       this.#camera,
       this.renderer.domElement,
@@ -182,44 +220,97 @@ export default class GameScene {
     this.#camera.lookAt(0, 0, 0);
   }
 
-  // Resets position and rotation of the camera to default values
+  setupOrthographicCamera() {
+    this.orthoViewSize = DEFAULT_ORTHO_VIEW_SIZE;
+    this.#camera = createOrthographicCamera(this.orthoViewSize);
+
+    if (this.#orthographicGround) {
+      this.#orthographicGround.visible = true;
+    }
+
+    this.#camera.up.set(0, 0, -1);
+    this.#camera.position.set(0, 15, 0);
+    this.#camera.lookAt(0, 0, 0);
+
+    this.controls = createOrthographicDragControls(
+      this.#camera,
+      this.renderer.domElement,
+      {
+        dragButton: 2,
+
+        minViewSize: MIN_ORTHO_VIEW_SIZE,
+        maxViewSize: MAX_ORTHO_VIEW_SIZE,
+        zoomSpeed: 0.12,
+
+        getViewSize: () => this.orthoViewSize,
+
+        setViewSize: (nextViewSize) => {
+          this.orthoViewSize = nextViewSize;
+          updateOrthographicCameraSize(this.#camera, this.orthoViewSize);
+        },
+      },
+    );
+  }
   resetCamera() {
-    this.#scene.remove(this.#camera);
-    this.setupCamera();
+    if (this.controls) {
+      this.controls.dispose();
+      this.controls = null;
+    }
+
+    if (this.isUsingPerspectiveCamera) {
+      this.setupPerspectiveCamera();
+    } else {
+      this.setupOrthographicCamera();
+    }
+
     this.inputManager.updateCamera(this.#camera);
     this.audioManager.initialize(this.#scene, this.#camera);
   }
 
-  // Render-Loop
   animate() {
     requestAnimationFrame(this.animate);
 
     this.timer.update();
-    const deltaTime = this.timer.getDelta(); // Die Zeit seit dem letzten Frame
-    const elapsed = this.timer.getElapsed(); // Die Zeit seit Start des Timers
+
+    const deltaTime = this.timer.getDelta();
 
     this.smoothAnimator.update(deltaTime);
 
-    updateOrbitControlsWithRightStick(
-      this.controls,
-      deltaTime,
-      this.inputManager.getInvertPan(),
-      this.inputManager.getInvertTilt(),
-    );
+    if (this.isUsingPerspectiveCamera) {
+      updateOrbitControlsWithRightStick(
+        this.controls,
+        deltaTime,
+        this.inputManager.getInvertPan(),
+        this.inputManager.getInvertTilt(),
+      );
 
-    moveOrbitCameraHorizontal(
-      this.#camera,
-      this.controls,
-      this.inputManager.getShoulderInput(),
-    );
+      moveOrbitCameraHorizontal(
+        this.#camera,
+        this.controls,
+        this.inputManager.getShoulderInput(),
+      );
+
+      this.controls.update();
+    }
 
     if (this.inputManager.doResetCamera()) {
+      this.isUsingPerspectiveCamera = !this.isUsingPerspectiveCamera;
       this.resetCamera();
     }
 
-    this.controls.update();
-
     this.inputManager.update(deltaTime);
+
+    const animalManager = this.gameplayManager.game.gridManager.animalManager;
+
+    animalManager.updateFlatIconOpacity(
+      this.#camera,
+      this.isUsingPerspectiveCamera ? null : this.orthoViewSize,
+    );
+
+    animalManager.updateFloatingIconScale(
+      this.#camera,
+      this.isUsingPerspectiveCamera ? null : this.orthoViewSize,
+    );
 
     this.renderer.render(this.#scene, this.#camera);
   }
