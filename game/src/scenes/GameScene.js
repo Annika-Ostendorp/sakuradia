@@ -178,7 +178,7 @@ export default class GameScene {
     );
 
     this.#orthographicGround.rotation.x = -Math.PI / 2;
-    this.#orthographicGround.position.y = -0.05;
+    this.#orthographicGround.position.y = -2;
     this.#orthographicGround.visible = false;
     this.#orthographicGround.name = "OrthographicGround";
     this.#orthographicGround.userData.ignoreRaycast = true;
