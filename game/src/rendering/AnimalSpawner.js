@@ -18,6 +18,7 @@ export default class AnimalSpawner {
     try {
       const animalModel = await this.loadModel(modelPath);
       const position = this.hexCoordToWorldVector(hexCoord, this.gridManager);
+      position.y = 0.12;
       animalModel.position.copy(position);
       animalModel.scale.setScalar(getScaleForAnimal(animal));
       this.scene.add(animalModel);
