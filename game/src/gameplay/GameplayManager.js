@@ -51,6 +51,7 @@ export default class GameplayManager {
     this.previewTileModelPromise = null; // Promise, das auf die Fertigstellung des Ladens des preview-Modells wartet
     this.previewTileHexCoord = null; // HexCoord, an der das preview-Modell aktuell positioniert ist oder positioniert werden soll
     this.previewTileRotation = 0; // Rotation des preview-Modells in 60°-Schritten (Index 0-5)
+    this.previewTile = null;
 
     this.previewAnimalModel = null; // Referenz zum animal model, welches nur im preview angezeigt wird
     this.previewAnimalModelPromise = null; // Promise, das auf die Fertigstellung des Ladens des preview animal Modells wartet
@@ -168,6 +169,7 @@ export default class GameplayManager {
         this.previewTileHexCoord =
           this.getRandomUnoccupiedNeighbour(previousHexCoord);
 
+        console.log(this.previewTileHexCoord);
         this.previewTileRotation = this.getRandomRotation();
         this.previewTileModel = null;
         this.previewTileModelPromise = this.placePreviewTile(
@@ -198,7 +200,6 @@ export default class GameplayManager {
         break;
 
       case RoundState.PLACE_TILE:
-
         this.updateAnimalsOnGrid();
 
         // Setze Tile
@@ -214,7 +215,6 @@ export default class GameplayManager {
         break;
 
       case RoundState.PLACE_ANIMAL:
-
         this.updateAnimalsOnGrid();
 
         // Platziere Tier
@@ -365,7 +365,10 @@ export default class GameplayManager {
     }
 
     const handPanelRect = this.handPanel.element.getBoundingClientRect();
-    const handPanelBottomOffset = Math.max(0, window.innerHeight - handPanelRect.bottom);
+    const handPanelBottomOffset = Math.max(
+      0,
+      window.innerHeight - handPanelRect.bottom,
+    );
     this.handPanel.scorecardElement.style.bottom = `${handPanelBottomOffset}px`;
     this.handPanel.scorecardElement.style.top = "auto";
   }
@@ -402,23 +405,28 @@ export default class GameplayManager {
   // Hinweis: Rotation ist ein Index (0-5) für 60° Schritte.
   // Returnt das model
   async placePreviewTile(hexCoord, tileData, rotation = 0, setToGrid = false) {
-    const tile = new Tile(tileData, rotation);
+    this.previewTile = new Tile(tileData, rotation);
+    console.log(hexCoord);
     return await this.game.gridManager.setTile(
       hexCoord,
-      tile,
+      this.previewTile,
       rotation,
       setToGrid,
     );
   }
 
   async removePreviewTile() {
-    const response = await this.game.gridManager.removeTileAt(
-      this.previewTileHexCoord,
-    );
+    const hexCoord = this.previewTileHexCoord;
+
+    if (!hexCoord) {
+      this.clearPreviewTile();
+      return false;
+    }
+
+    const response = await this.game.gridManager.removeTileAt(hexCoord);
+
     if (!response) {
-      console.warn(
-        `Failed to remove tile at ${this.previewTileHexCoord}. No tile found.`,
-      );
+      console.warn(`Failed to remove tile at ${hexCoord}. No tile found.`);
     }
 
     this.clearPreviewTile();
@@ -574,6 +582,8 @@ export default class GameplayManager {
     this.previewTileRotation =
       (this.previewTileRotation + (clockwise ? 5 : 1)) % 6;
 
+    this.previewTile.updateRotation(this.previewTileRotation);
+
     // Setze die neue Rotation am Modell (Rotation um Y-Achse)
     const angle = this.previewTileRotation * (Math.PI / 3); // 60° Schritte
     if (this.previewTileModel.rotation) {
@@ -619,6 +629,7 @@ export default class GameplayManager {
   }
 
   clearPreviewTile() {
+    this.previewTile = null;
     this.previewTileHexCoord = null;
     this.previewTileRotation = 0;
     const removeModelFromScene = (model) => {
