@@ -36,7 +36,7 @@ export function getModelForAnimal(animal) {
     case Animal.CRANE:
       return "/assets/models/animals/crane/07-01_Crane.glb";
     case Animal.JAPANMAKAK:
-      return "/assets/models/animals/japanmakak/05-19_Japanmakak.glb";
+      return "/assets/models/animals/japanmakak/07-03_Japanmakak.glb";
     case Animal.KOI:
       return "/assets/models/animals/koi/07-01_Koi.glb";
     case Animal.PANDA:
