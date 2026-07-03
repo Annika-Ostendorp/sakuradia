@@ -9,11 +9,11 @@ const ANIMAL_LABELS = [
 ];
 
 const LANDSCAPE_LABELS = [
-  ['bambooforest', 'Bamboo Forest'],
-  ['mountain', 'Mountain'],
-  ['pond', 'Pond'],
-  ['sakura', 'Sakura'],
-  ['wetland', 'Wetland'],
+  ['bambooforest', 'Bambuswald'],
+  ['mountain', 'Berglandschaft'],
+  ['pond', 'Teichkette'],
+  ['sakura', 'Sakura-Wiese'],
+  ['wetland', 'Grassland'],
 ];
 
 function toRows(entries = [], scores = {}) {
@@ -55,12 +55,12 @@ export function createGameOverScreen({ onReplay } = {}) {
 
       <div class="game-over-screen__grid">
         <section class="game-over-screen__section">
-          <h3 class="game-over-screen__section-title">Punkte pro Tierart</h3>
+          <h3 class="game-over-screen__section-title">Deine Tierwelt</h3>
           <div class="game-over-screen__list game-over-screen__list--animals" role="list"></div>
         </section>
 
         <section class="game-over-screen__section">
-          <h3 class="game-over-screen__section-title">Punkte pro Landschaft</h3>
+          <h3 class="game-over-screen__section-title">Deine größten Landschaften</h3>
           <div class="game-over-screen__list game-over-screen__list--landscapes" role="list"></div>
         </section>
       </div>
