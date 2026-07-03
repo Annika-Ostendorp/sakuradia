@@ -38,7 +38,7 @@ export default class GameplayManager {
     this.lastBoardTotalScore = 0;
     this.gameLength = this.gameConfig.rounds; // Rounds to be played until game end
     this.maxTurns = this.gameLength * this.playerCount;
-    this.game = new Game(this.scene, this.modelLoader);
+    this.game = new Game(this.scene, this.modelLoader, this);
 
     this.roundState = RoundState.CHOOSE_TILE; // Initial round state
     this.roundStateLabel = this.getRoundStateLabel(this.roundState);
