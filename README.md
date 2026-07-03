@@ -15,10 +15,11 @@ Für ein vollständiges Verständnis des Spielflusses empfehlen wir das Lesen de
   - Start-Button
   - Hintergrundbild
 - Tiles können mit Tastatur oder Controller ausgewählt, platziert und gedreht werden.
-- Tiles werden als Blender-Modelle aus Sprint 3 dargestellt.
 - Tiere können nach Platzierung der Tiles manuell platziert werden.
-- Tiere werden mithilfe von Icons und nach der Platzierung auch als 3D-Modelle in der Umgebung dargestellt.
+- Tiles und Tiere werden als vollständige Blender-Modelle dargestellt.
+- Tiere werden zusätzlich mithilfe von Icons dargestellt.
 - Details zum Spielablauf und Informationen wie der Punktestand sind vollständig in der UI einsehbar.
+- Mithilfe des Wechsels zwischen perspektivischer und orthografischer Kamera, sowie dem Zoomen und der Distanzberechnung für visuelle Icons, können Spielende die Übersicht über das Spielfeld behalten.
 
 ## SAKURADIA spielen
 
