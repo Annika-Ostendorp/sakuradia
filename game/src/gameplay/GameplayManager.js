@@ -38,7 +38,10 @@ export default class GameplayManager {
     this.gameLength = this.gameConfig.rounds; // Rounds to be played until game end
     this.maxTurns = this.gameLength * this.playerCount;
     this.game = new Game(this.scene, this.modelLoader);
+
     this.roundState = RoundState.CHOOSE_TILE; // Initial round state
+    this.setNewRoundStateText(this.roundState);
+
     this.audioManager = AudioManager.getInstance();
 
     // Index des aktuell in der UI markierten Hand-Paares
@@ -169,7 +172,6 @@ export default class GameplayManager {
         this.previewTileHexCoord =
           this.getRandomUnoccupiedNeighbour(previousHexCoord);
 
-        console.log(this.previewTileHexCoord);
         this.previewTileRotation = this.getRandomRotation();
         this.previewTileModel = null;
         this.previewTileModelPromise = this.placePreviewTile(
@@ -197,7 +199,7 @@ export default class GameplayManager {
               } catch (e) {
                 console.warn("Failed to position preview model after load", e);
               }
-              this.roundState = RoundState.PLACE_TILE;
+              this.updateRoundState(RoundState.PLACE_TILE);
             }
           })
           .catch((err) => {
@@ -256,7 +258,7 @@ export default class GameplayManager {
   onPairDrawn(tileData, animal) {
     if (!tileData || !animal) {
       console.warn("No more tiles or animals to draw. Ending game.");
-      this.roundState = RoundState.GAME_OVER;
+      this.updateRoundState(RoundState.GAME_OVER);
       this.syncHandPanel();
       return;
     }
@@ -320,14 +322,14 @@ export default class GameplayManager {
 
     if (this.currentRound > this.gameLength) {
       console.log("Game Over");
-      this.roundState = RoundState.GAME_OVER;
+      this.updateRoundState(RoundState.GAME_OVER);
       this.syncTurnStatus();
       return;
     }
 
     this.syncTurnStatus();
 
-    this.roundState = RoundState.CHOOSE_TILE;
+    this.updateRoundState(RoundState.CHOOSE_TILE);
   }
 
   syncTurnStatus() {
@@ -416,7 +418,6 @@ export default class GameplayManager {
   // Returnt das model
   async placePreviewTile(hexCoord, tileData, rotation = 0, setToGrid = false) {
     this.previewTile = new Tile(tileData, rotation);
-    console.log(hexCoord);
     return await this.game.gridManager.setTile(
       hexCoord,
       this.previewTile,
@@ -710,7 +711,7 @@ export default class GameplayManager {
     const allowedPositions = this.getAllowedAnimalPlacements(animal);
 
     if (allowedPositions.length === 0) {
-      this.roundState = RoundState.CANNOT_PLACE_ANIMAL;
+      this.updateRoundState(RoundState.CANNOT_PLACE_ANIMAL);
       this.getAnimalManager().showNoValidAnimalPlacementPossible(
         this.previewTileHexCoord,
       );
@@ -729,7 +730,7 @@ export default class GameplayManager {
         allowedPositions,
         this.previewTileHexCoord,
       );
-    this.roundState = RoundState.PLACE_ANIMAL;
+    this.updateRoundState(RoundState.PLACE_ANIMAL);
 
     this.updatePreviewAnimalPosition(this.previewAnimalHexCoord);
   }
@@ -758,7 +759,7 @@ export default class GameplayManager {
 
       await this.updateAnimalsOnGrid();
 
-      this.roundState = RoundState.CHOOSE_TILE;
+      this.updateRoundState(RoundState.CHOOSE_TILE);
     }
   }
 
@@ -809,6 +810,12 @@ export default class GameplayManager {
     console.groupEnd();
   }
 
+  updateRoundState(newState) {
+    if (this.roundState === newState) return;
+    this.roundState = newState;
+    this.onRoundStateChanged(newState);
+  }
+
   onRoundStateChanged(newState) {
     this.setNewRoundStateText(newState);
   }
@@ -840,6 +847,7 @@ export default class GameplayManager {
         break;
     }
 
+    console.log(`LÖSCH DIES NACH DEINEN TESTS:\nRound state changed to ${newState}.\nMessage: ${text}`);
     // updateRoundInfo(text);
   }
 }
