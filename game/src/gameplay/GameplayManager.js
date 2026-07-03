@@ -830,7 +830,7 @@ export default class GameplayManager {
   getRoundStateDescription(state) {
     switch (state) {
       case RoundState.CHOOSE_TILE:
-        return "Wähle ein Tile/Tier-Paar in deiner Hand aus.";
+        return "Wähle ein Tile/Tier-Paar von deiner Hand aus.";
 
       case RoundState.PLACE_TILE:
         return "Bewege und platziere dein Tile auf dem Spielfeld.";
