@@ -39,7 +39,10 @@ export default class GameplayManager {
     this.gameLength = this.gameConfig.rounds; // Rounds to be played until game end
     this.maxTurns = this.gameLength * this.playerCount;
     this.game = new Game(this.scene, this.modelLoader);
+
     this.roundState = RoundState.CHOOSE_TILE; // Initial round state
+    this.roundStateLabel = this.getRoundStateLabel(this.roundState);
+
     this.audioManager = AudioManager.getInstance();
 
     // Index des aktuell in der UI markierten Hand-Paares
@@ -86,7 +89,6 @@ export default class GameplayManager {
     }
 
     this.handleWindowResize = () => {
-      this.alignScoreBoardTopEdgeWithHandPanel();
       this.alignScorecardBottomEdgeWithHandPanel();
     };
     window.addEventListener("resize", this.handleWindowResize);
@@ -114,7 +116,6 @@ export default class GameplayManager {
     this.syncHandPanel();
     this.syncTurnStatus();
     requestAnimationFrame(() => {
-      this.alignScoreBoardTopEdgeWithHandPanel();
       this.alignScorecardBottomEdgeWithHandPanel();
     });
 
@@ -180,7 +181,6 @@ export default class GameplayManager {
         this.previewTileHexCoord =
           this.getRandomUnoccupiedNeighbour(previousHexCoord);
 
-        console.log(this.previewTileHexCoord);
         this.previewTileRotation = this.getRandomRotation();
         this.previewTileModel = null;
         this.previewTileModelPromise = this.placePreviewTile(
@@ -197,10 +197,18 @@ export default class GameplayManager {
             if (this.previewTileHexCoord) {
               try {
                 this.updatePreviewTilePosition(this.previewTileHexCoord);
+
+                if (this.useSmoothAnimator) {
+                  this.smoothAnimator.startAttention(model, {
+                    radius: 0,
+                    height: 0.3,
+                    speed: 2,
+                  });
+                }
               } catch (e) {
                 console.warn("Failed to position preview model after load", e);
               }
-              this.roundState = RoundState.PLACE_TILE;
+              this.updateRoundState(RoundState.PLACE_TILE);
             }
           })
           .catch((err) => {
@@ -222,6 +230,8 @@ export default class GameplayManager {
 
         // Check animal placement
         this.checkAnimalPlacement();
+
+        this.removeModelFromScene(this.previewTileModel);
 
         break;
 
@@ -257,7 +267,7 @@ export default class GameplayManager {
   onPairDrawn(tileData, animal) {
     if (!tileData || !animal) {
       console.warn("No more tiles or animals to draw. Ending game.");
-      this.roundState = RoundState.GAME_OVER;
+      this.updateRoundState(RoundState.GAME_OVER);
       this.syncHandPanel();
       this.showGameOverScreen();
       return;
@@ -322,7 +332,7 @@ export default class GameplayManager {
 
     if (this.currentRound > this.gameLength) {
       console.log("Game Over");
-      this.roundState = RoundState.GAME_OVER;
+      this.updateRoundState(RoundState.GAME_OVER);
       this.syncTurnStatus();
       this.showGameOverScreen();
       return;
@@ -330,7 +340,7 @@ export default class GameplayManager {
 
     this.syncTurnStatus();
 
-    this.roundState = RoundState.CHOOSE_TILE;
+    this.updateRoundState(RoundState.CHOOSE_TILE);
   }
 
   syncTurnStatus() {
@@ -340,11 +350,12 @@ export default class GameplayManager {
       currentPlayer: this.currentPlayer,
       playerCount: this.playerCount,
       scoresByPlayer: this.playerScores,
+      roundStateLabel: this.roundStateLabel,
+      roundStateDescription: this.getRoundStateDescription(this.roundState),
+      isSpecialState: this.roundState === RoundState.CANNOT_PLACE_ANIMAL,
     };
 
     this.handPanel.updateStatus(statusPayload);
-    this.scoreBoard.update(statusPayload);
-    this.alignScoreBoardTopEdgeWithHandPanel();
     this.alignScorecardBottomEdgeWithHandPanel();
   }
 
@@ -414,7 +425,6 @@ export default class GameplayManager {
   // Returnt das model
   async placePreviewTile(hexCoord, tileData, rotation = 0, setToGrid = false) {
     this.previewTile = new Tile(tileData, rotation);
-    console.log(hexCoord);
     return await this.game.gridManager.setTile(
       hexCoord,
       this.previewTile,
@@ -475,7 +485,6 @@ export default class GameplayManager {
     const maxIndex = Math.max(0, handPairs.length - 1);
     this.selectedHandIndex = Math.min(this.selectedHandIndex, maxIndex);
     this.handPanel.update(handPairs, this.selectedHandIndex);
-    this.alignScoreBoardTopEdgeWithHandPanel();
     this.alignScorecardBottomEdgeWithHandPanel();
   }
 
@@ -636,10 +645,7 @@ export default class GameplayManager {
     }
   }
 
-  clearPreviewTile() {
-    this.previewTile = null;
-    this.previewTileHexCoord = null;
-    this.previewTileRotation = 0;
+  removeModelFromScene(model) {
     const removeModelFromScene = (model) => {
       if (!model) return;
 
@@ -663,6 +669,12 @@ export default class GameplayManager {
         })
         .catch(() => {});
     }
+  }
+
+  clearPreviewTile() {
+    this.previewTile = null;
+    this.previewTileHexCoord = null;
+    this.previewTileRotation = 0;
   }
 
   clearCurrentTurnTile() {
@@ -705,7 +717,7 @@ export default class GameplayManager {
     const allowedPositions = this.getAllowedAnimalPlacements(animal);
 
     if (allowedPositions.length === 0) {
-      this.roundState = RoundState.CANNOT_PLACE_ANIMAL;
+      this.updateRoundState(RoundState.CANNOT_PLACE_ANIMAL);
       this.getAnimalManager().showNoValidAnimalPlacementPossible(
         this.previewTileHexCoord,
       );
@@ -724,7 +736,7 @@ export default class GameplayManager {
         allowedPositions,
         this.previewTileHexCoord,
       );
-    this.roundState = RoundState.PLACE_ANIMAL;
+    this.updateRoundState(RoundState.PLACE_ANIMAL);
 
     this.updatePreviewAnimalPosition(this.previewAnimalHexCoord);
   }
@@ -753,7 +765,7 @@ export default class GameplayManager {
 
       await this.updateAnimalsOnGrid();
 
-      this.roundState = RoundState.CHOOSE_TILE;
+      this.updateRoundState(RoundState.CHOOSE_TILE);
     }
   }
 
@@ -802,5 +814,70 @@ export default class GameplayManager {
     console.log("animalScores:", scoreResult.scores.animalScores);
     console.groupEnd();
     console.groupEnd();
+  }
+
+  updateRoundState(newState) {
+    if (this.roundState === newState) return;
+    this.roundState = newState;
+    this.onRoundStateChanged(newState);
+  }
+
+  onRoundStateChanged(newState) {
+    this.setNewRoundStateText(newState);
+    this.syncTurnStatus();
+  }
+
+  setNewRoundStateText(newState) {
+    this.roundStateLabel = this.getRoundStateLabel(newState);
+  }
+
+  getRoundStateLabel(state) {
+    switch (state) {
+      case RoundState.CHOOSE_TILE:
+        return "Tile auswählen";
+
+      case RoundState.PLACE_TILE:
+        return "Tile platzieren";
+
+      case RoundState.PLACE_ANIMAL:
+        return "Tier platzieren";
+
+      case RoundState.CANNOT_PLACE_ANIMAL:
+        return "Kein freier Platz für dein gewähltes Tier!";
+
+      case RoundState.DRAW:
+        return "Nachziehen";
+
+      case RoundState.GAME_OVER:
+        return "Spiel vorbei";
+
+      default:
+        return "";
+    }
+  }
+
+  getRoundStateDescription(state) {
+    switch (state) {
+      case RoundState.CHOOSE_TILE:
+        return "Wähle ein Tile/Tier-Paar von deiner Hand aus.";
+
+      case RoundState.PLACE_TILE:
+        return "Bewege und platziere dein Tile auf dem Spielfeld.";
+
+      case RoundState.PLACE_ANIMAL:
+        return "Platziere jetzt dein Tier auf einem freien Tile.";
+
+      case RoundState.CANNOT_PLACE_ANIMAL:
+        return `Y: Überspringe die Tierplatzierung\nB: Setze den Zug zurück`;
+
+      case RoundState.DRAW:
+        return "Es wird nachgezogen.";
+
+      case RoundState.GAME_OVER:
+        return "Das Spiel ist vorbei.";
+
+      default:
+        return "";
+    }
   }
 }

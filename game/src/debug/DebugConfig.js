@@ -13,5 +13,5 @@ export default class DebugConfig {
   static doShowAxes = false;
   static doDrawRays = false;
   static doShowTileChecks = false;
-  static doLogTileRotations = true;
+  static doLogTileRotations = false;
 }
