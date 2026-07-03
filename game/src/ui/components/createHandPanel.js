@@ -165,8 +165,12 @@ export function createHandPanel({ onSelectPair } = {}) {
 
   panel.innerHTML = `
     <h2 class="hand-panel__title">Hand</h2>
-    <p class="hand-panel__status" aria-live="polite">Runde 1 | Spieler 1</p>
+    <p class="hand-panel__status" aria-live="polite">Runde 1</p>
     <div class="hand-panel__scores" aria-label="Spielerübersicht"></div>
+    <div class="hand-panel__state-block" aria-live="polite">
+      <div class="hand-panel__state">Tile auswählen</div>
+      <div class="hand-panel__state-description">Wähle ein Tile aus deiner Hand aus.</div>
+    </div>
     <div class="hand-panel__list" role="list"></div>
   `;
 
@@ -178,9 +182,11 @@ export function createHandPanel({ onSelectPair } = {}) {
   scorecardImage.setAttribute('aria-label', 'Tier-Scorecard');
 
   const status = panel.querySelector('.hand-panel__status');
+  const state = panel.querySelector('.hand-panel__state');
+  const stateDescription = panel.querySelector('.hand-panel__state-description');
   const scores = panel.querySelector('.hand-panel__scores');
   const list = panel.querySelector('.hand-panel__list');
-  if (!status || !scores || !list || !scorecardImage) {
+  if (!status || !state || !stateDescription || !scores || !list || !scorecardImage) {
     throw new Error('Hand panel list could not be created.');
   }
 
@@ -356,21 +362,28 @@ export function createHandPanel({ onSelectPair } = {}) {
     currentPlayer = 1,
     playerCount = 1,
     scoresByPlayer = [],
+    roundStateLabel = 'Tile auswählen',
+    roundStateDescription = 'Wähle ein Tile aus deiner Hand aus.',
   } = {}) => {
-    status.textContent = `Runde ${currentRound}/${totalRounds} | Spieler ${currentPlayer}/${playerCount}`;
+    status.textContent = `Runde ${currentRound}/${totalRounds}`;
+    state.textContent = roundStateLabel;
+    stateDescription.textContent = roundStateDescription;
 
     scores.textContent = '';
     for (let index = 0; index < playerCount; index += 1) {
       const score = Number(scoresByPlayer[index] ?? 0);
-      const scorePill = document.createElement('span');
-      scorePill.className = 'hand-panel__score-pill';
+      const scoreRow = document.createElement('div');
+      scoreRow.className = 'hand-panel__score-row';
 
       if (index + 1 === currentPlayer) {
-        scorePill.classList.add('hand-panel__score-pill--active');
+        scoreRow.classList.add('hand-panel__score-row--active');
       }
 
-      scorePill.textContent = `S${index + 1}: ${score}`;
-      scores.append(scorePill);
+      scoreRow.innerHTML = `
+        <span class="hand-panel__score-player">Punktzahl</span>
+        <span class="hand-panel__score-points">${score} P</span>
+      `;
+      scores.append(scoreRow);
     }
   };
 

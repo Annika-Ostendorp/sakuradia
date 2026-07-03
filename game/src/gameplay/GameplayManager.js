@@ -1,7 +1,6 @@
 import { RoundState } from "../data/RoundState.js";
 import Game from "./Game.js";
 import { createHandPanel } from "../ui/components/createHandPanel.js";
-import { createScoreBoard } from "../ui/components/createScoreBoard.js";
 import HexCoord from "../utils/HexCoord.js";
 import DebugConfig from "../debug/DebugConfig.js";
 import { Animal } from "../data/Animal.js";
@@ -40,7 +39,7 @@ export default class GameplayManager {
     this.game = new Game(this.scene, this.modelLoader);
 
     this.roundState = RoundState.CHOOSE_TILE; // Initial round state
-    this.setNewRoundStateText(this.roundState);
+    this.roundStateLabel = this.getRoundStateLabel(this.roundState);
 
     this.audioManager = AudioManager.getInstance();
 
@@ -68,20 +67,17 @@ export default class GameplayManager {
         this.syncTurnStatus();
       },
     });
-    this.scoreBoard = createScoreBoard({ useDummyData: false });
 
     const appShell = document.querySelector("#app-shell");
     if (!appShell) {
       throw new Error("Could not attach hand panel: #app-shell not found.");
     }
     appShell.append(this.handPanel.element);
-    appShell.append(this.scoreBoard.element);
     if (this.handPanel.scorecardElement) {
       appShell.append(this.handPanel.scorecardElement);
     }
 
     this.handleWindowResize = () => {
-      this.alignScoreBoardTopEdgeWithHandPanel();
       this.alignScorecardBottomEdgeWithHandPanel();
     };
     window.addEventListener("resize", this.handleWindowResize);
@@ -106,7 +102,6 @@ export default class GameplayManager {
     this.syncHandPanel();
     this.syncTurnStatus();
     requestAnimationFrame(() => {
-      this.alignScoreBoardTopEdgeWithHandPanel();
       this.alignScorecardBottomEdgeWithHandPanel();
     });
 
@@ -339,29 +334,12 @@ export default class GameplayManager {
       currentPlayer: this.currentPlayer,
       playerCount: this.playerCount,
       scoresByPlayer: this.playerScores,
+      roundStateLabel: this.roundStateLabel,
+      roundStateDescription: this.getRoundStateDescription(this.roundState),
     };
 
     this.handPanel.updateStatus(statusPayload);
-    this.scoreBoard.update(statusPayload);
-    this.alignScoreBoardTopEdgeWithHandPanel();
     this.alignScorecardBottomEdgeWithHandPanel();
-  }
-
-  alignScoreBoardTopEdgeWithHandPanel() {
-    if (!this.handPanel?.element || !this.scoreBoard?.element) {
-      return;
-    }
-
-    const isMobile = window.matchMedia("(max-width: 700px)").matches;
-    if (isMobile) {
-      this.scoreBoard.element.style.top = "";
-      this.scoreBoard.element.style.transform = "";
-      return;
-    }
-
-    const handPanelTop = this.handPanel.element.getBoundingClientRect().top;
-    this.scoreBoard.element.style.top = `${handPanelTop}px`;
-    this.scoreBoard.element.style.transform = "none";
   }
 
   alignScorecardBottomEdgeWithHandPanel() {
@@ -478,7 +456,6 @@ export default class GameplayManager {
     const maxIndex = Math.max(0, handPairs.length - 1);
     this.selectedHandIndex = Math.min(this.selectedHandIndex, maxIndex);
     this.handPanel.update(handPairs, this.selectedHandIndex);
-    this.alignScoreBoardTopEdgeWithHandPanel();
     this.alignScorecardBottomEdgeWithHandPanel();
   }
 
@@ -818,36 +795,60 @@ export default class GameplayManager {
 
   onRoundStateChanged(newState) {
     this.setNewRoundStateText(newState);
+    this.syncTurnStatus();
   }
 
   setNewRoundStateText(newState) {
-    let text = "";
+    this.roundStateLabel = this.getRoundStateLabel(newState);
+  }
 
-    switch (newState) {
+  getRoundStateLabel(state) {
+    switch (state) {
       case RoundState.CHOOSE_TILE:
-        text = "Wähle ein Landschafts-Tile aus deiner Hand.";
-        break;
+        return "Tile auswählen";
 
       case RoundState.PLACE_TILE:
-        text = "Platziere das Landschafts-Tile auf dem Spielfeld.";
-        break;
+        return "Tile platzieren";
 
       case RoundState.PLACE_ANIMAL:
-        text = "Platziere das Tier auf dem Spielfeld.";
-        break;
+        return "Tier platzieren";
 
       case RoundState.CANNOT_PLACE_ANIMAL:
-        text = `Es gibt keine erlaubten Positionen für die Platzierung des Tieres.\n
-        Y: Überspringe die Tierplatzierung (skip).\n
-        B: Neues Tile wählen (undo).`;
-        break;
+        return "Tierplatzierung überspringen oder zurücksetzen";
+
+      case RoundState.DRAW:
+        return "Nachziehen";
+
+      case RoundState.GAME_OVER:
+        return "Spiel vorbei";
 
       default:
-        text = "";
-        break;
+        return "";
     }
+  }
 
-    console.log(`LÖSCH DIES NACH DEINEN TESTS:\nRound state changed to ${newState}.\nMessage: ${text}`);
-    // updateRoundInfo(text);
+  getRoundStateDescription(state) {
+    switch (state) {
+      case RoundState.CHOOSE_TILE:
+        return "Wähle ein Tile aus deiner Hand aus.";
+
+      case RoundState.PLACE_TILE:
+        return "Bewege und platziere das Tile auf dem Spielfeld.";
+
+      case RoundState.PLACE_ANIMAL:
+        return "Platziere jetzt das Tier auf dem gewählten Tile.";
+
+      case RoundState.CANNOT_PLACE_ANIMAL:
+        return "Y überspringt die Tierplatzierung, B geht zurück zur Tile-Auswahl.";
+
+      case RoundState.DRAW:
+        return "Es wird ein neues Tile gezogen.";
+
+      case RoundState.GAME_OVER:
+        return "Das Spiel ist vorbei.";
+
+      default:
+        return "";
+    }
   }
 }
