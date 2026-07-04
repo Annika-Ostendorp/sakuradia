@@ -4,7 +4,7 @@
 
 SAKURADIA is a strategic tile-placement game for one player inspired by [CASCADIA](https://www.spiel-des-jahres.de/spiele/cascadia/).<br>
 Many rules and features remain similar, but the player visually enters Japanese nature and interacts with animals such as pandas, koi, sika deer, cranes, and Japanese macaques.<br>
-The player manages bamboo forests, ponds, cherry blossom meadows, and other landscapes.
+The player manages bamboo forests, ponds, cherry blossom meadows, grasslands and mountains.
 
 For a complete understanding of the game flow, we recommend reading `GAME_RULES.md`.
 
