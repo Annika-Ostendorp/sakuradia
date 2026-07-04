@@ -1,5 +1,7 @@
 # SAKURADIA
 
+[English version](README_EN.md)
+
 SAKURADIA ist ein von [CASCADIA](https://www.spiel-des-jahres.de/spiele/cascadia/)
 inspiriertes strategisches Lege-Spiel für einen Spieler.<br>
 Viele Regeln und Funktionen bleiben erhalten, jedoch taucht der Spielende visuell in die japanische Natur ein und interagiert mit Tieren wie Panda, Koi, Sika, Kranich und Japanmakak.<br>
@@ -45,42 +47,42 @@ Wir empfehlen das Spielen von SAKURADIA mit Maus und Tastatur, da in der aktuell
 
 ### Maus/Tastatur-Steuerung
 
-* WASD / Pfeiltasten: Tile wählen, Tile oder Tier-Token bewegen
-* Space / Enter: bestätigen
-* Q / E: Tile drehen
-* B: Tile-Tier-Auswahl rückgängig machen (nur, wenn das gewählte Tier nicht platziert werden kann)
-* Y: Tier-Token-Platzierung überspringen  (nur, wenn das gewählte Tier nicht platziert werden kann)
-* RMB: Kamera schieben
-* Mausrad: Zoom einstellen
-* R: zwischen perspektivischer und orthografischer Kamera wechseln
+- WASD / Pfeiltasten: Tile wählen, Tile oder Tier-Token bewegen
+- Space / Enter: bestätigen
+- Q / E: Tile drehen
+- B: Tile-Tier-Auswahl rückgängig machen (nur, wenn das gewählte Tier nicht platziert werden kann)
+- Y: Tier-Token-Platzierung überspringen (nur, wenn das gewählte Tier nicht platziert werden kann)
+- RMB: Kamera schieben
+- Mausrad: Zoom einstellen
+- R: zwischen perspektivischer und orthografischer Kamera wechseln
 
 ### Controller-Steuerung
 
-* Left-Stick: navigieren
-* D-Pad links/rechts: navigieren
-* D-Pad oben/unten: Zoom einstellen
-* Right-Stick: Kamera drehen
-* Button-Süd: bestätigen
-* Button-West: zwischen perspektivischer und orthografischer Kamera wechseln
-* Button-Ost: Tile-Tier-Auswahl rückgängig machen (nur, wenn das gewählte Tier nicht platziert werden kann)
-* Button-Nord: Tier-Token-Platzierung überspringen (nur, wenn das gewählte Tier nicht platziert werden kann)
-* LT / RT: Tile wählen oder Tile drehen
-* LB / RB: Kamera nach links/rechts bewegen
+- Left-Stick: navigieren
+- D-Pad links/rechts: navigieren
+- D-Pad oben/unten: Zoom einstellen
+- Right-Stick: Kamera drehen
+- Button-Süd: bestätigen
+- Button-West: zwischen perspektivischer und orthografischer Kamera wechseln
+- Button-Ost: Tile-Tier-Auswahl rückgängig machen (nur, wenn das gewählte Tier nicht platziert werden kann)
+- Button-Nord: Tier-Token-Platzierung überspringen (nur, wenn das gewählte Tier nicht platziert werden kann)
+- LT / RT: Tile wählen oder Tile drehen
+- LB / RB: Kamera nach links/rechts bewegen
 
 ### Abkürzungen erklärt
 
-* LMB: linke Maustaste
-* RMB: rechte Maustaste
-* Left-Stick: linker Analog-Stick am Controller
-* Right-Stick: rechter Analog-Stick am Controller
-* D-Pad: Steuerkreuz am Controller
-* Button-Nord: oberer Controller-Button, z. B. Y auf Xbox oder Dreieck auf PlayStation
-* Button-Süd: unterer Controller-Button, z. B. A auf Xbox oder X auf PlayStation
-* Button-West: linker Controller-Button, z. B. X auf Xbox oder Quadrat auf PlayStation
-* Button-Ost: rechter Controller-Button, z. B. B auf Xbox oder Kreis auf PlayStation
-* LT: linker Trigger
-* RT: rechter Trigger
-* LB: linker Schulterbutton
-* RB: rechter Schulterbutton
-* WASD: Tastaturtasten W, A, S, D
-* Q / E: Tastaturtasten Q und E
+- LMB: linke Maustaste
+- RMB: rechte Maustaste
+- Left-Stick: linker Analog-Stick am Controller
+- Right-Stick: rechter Analog-Stick am Controller
+- D-Pad: Steuerkreuz am Controller
+- Button-Nord: oberer Controller-Button, z. B. Y auf Xbox oder Dreieck auf PlayStation
+- Button-Süd: unterer Controller-Button, z. B. A auf Xbox oder X auf PlayStation
+- Button-West: linker Controller-Button, z. B. X auf Xbox oder Quadrat auf PlayStation
+- Button-Ost: rechter Controller-Button, z. B. B auf Xbox oder Kreis auf PlayStation
+- LT: linker Trigger
+- RT: rechter Trigger
+- LB: linker Schulterbutton
+- RB: rechter Schulterbutton
+- WASD: Tastaturtasten W, A, S, D
+- Q / E: Tastaturtasten Q und E

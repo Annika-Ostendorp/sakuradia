@@ -1,5 +1,7 @@
 # SPIELREGELN
 
+[English version](GAME_RULES.md)
+
 ## Inhaltsverzeichnis
 
 1. [Einleitung](#einleitung)
