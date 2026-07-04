@@ -21,7 +21,6 @@ For a complete understanding of the game flow, we recommend reading `GAME_RULES.
 * Tiles and animals are displayed as complete Blender models.
 * Animals are additionally represented with icons.
 * Details about the game flow and information such as the score are fully visible in the UI.
-* By switching between perspective and orthographic camera, players can keep a clear overview of the game board when zooming, as icons are adjusted based on visual distance.
 
 ## Playing SAKURADIA
 
@@ -54,20 +53,22 @@ We recommend playing SAKURADIA with mouse and keyboard, because not all function
 * Y: skip animal token placement (only if the selected animal cannot be placed)
 * RMB: move camera
 * Mouse wheel: adjust zoom
-* R: switch between perspective and orthographic camera
+* R: switch between perspective and orthographic camera<br>
+(By switching between perspective and orthographic camera, players can keep a clear overview<br> of the game board when zooming, as icons are adjusted based on visual distance.)
 
 ### Controller Controls
 
 * Left Stick: navigate
+* LT / RT: select tile or rotate tile
+* LB / RB: move camera left/right
 * D-Pad left/right: navigate
 * D-Pad up/down: adjust zoom
 * Right Stick: rotate camera
 * South Button: confirm
-* West Button: switch between perspective and orthographic camera
 * East Button: undo tile-animal selection (only if the selected animal cannot be placed)
 * North Button: skip animal token placement (only if the selected animal cannot be placed)
-* LT / RT: select tile or rotate tile
-* LB / RB: move camera left/right
+* West Button: switch between perspective and orthographic camera<br>
+(By switching between perspective and orthographic camera, players can keep a clear overview<br> of the game board when zooming, as icons are adjusted based on visual distance.)
 
 ### Abbreviations Explained
 

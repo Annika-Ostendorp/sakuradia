@@ -21,7 +21,6 @@ Für ein vollständiges Verständnis des Spielflusses empfehlen wir das Lesen de
 - Tiles und Tiere werden als vollständige Blender-Modelle dargestellt.
 - Tiere werden zusätzlich mithilfe von Icons dargestellt.
 - Details zum Spielablauf und Informationen wie der Punktestand sind vollständig in der UI einsehbar.
-- Mithilfe des Wechsels zwischen perspektivischer und orthografischer Kamera, sowie dem Zoomen und der Distanzberechnung für visuelle Icons, können Spielende die Übersicht über das Spielfeld behalten.
 
 ## SAKURADIA spielen
 
@@ -54,20 +53,22 @@ Wir empfehlen das Spielen von SAKURADIA mit Maus und Tastatur, da in der aktuell
 - Y: Tier-Token-Platzierung überspringen (nur, wenn das gewählte Tier nicht platziert werden kann)
 - RMB: Kamera schieben
 - Mausrad: Zoom einstellen
-- R: zwischen perspektivischer und orthografischer Kamera wechseln
+- R: zwischen perspektivischer und orthografischer Kamera wechseln<br>
+(Durch den Wechsel zwischen perspektivischer und orthografischer Kamera können Spielende beim Zoomen<br> den Überblick über das Spielfeld behalten, da die Icons anhand der visuellen Distanz angepasst werden.)
 
 ### Controller-Steuerung
 
 - Left-Stick: navigieren
+- LT / RT: Tile wählen oder Tile drehen
+- LB / RB: Kamera nach links/rechts bewegen
 - D-Pad links/rechts: navigieren
 - D-Pad oben/unten: Zoom einstellen
 - Right-Stick: Kamera drehen
 - Button-Süd: bestätigen
-- Button-West: zwischen perspektivischer und orthografischer Kamera wechseln
 - Button-Ost: Tile-Tier-Auswahl rückgängig machen (nur, wenn das gewählte Tier nicht platziert werden kann)
 - Button-Nord: Tier-Token-Platzierung überspringen (nur, wenn das gewählte Tier nicht platziert werden kann)
-- LT / RT: Tile wählen oder Tile drehen
-- LB / RB: Kamera nach links/rechts bewegen
+- Button-West: zwischen perspektivischer und orthografischer Kamera wechseln<br>
+(Durch den Wechsel zwischen perspektivischer und orthografischer Kamera können Spielende beim Zoomen<br> den Überblick über das Spielfeld behalten, da die Icons anhand der visuellen Distanz angepasst werden.)
 
 ### Abkürzungen erklärt
 
