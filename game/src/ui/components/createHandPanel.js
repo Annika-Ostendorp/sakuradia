@@ -1,3 +1,4 @@
+import { assetPath } from "../../utils/assetPath.js";
 import '../styles/handPanel.css';
 
 const LANDSCAPE_COLORS = Object.freeze({
@@ -10,11 +11,11 @@ const LANDSCAPE_COLORS = Object.freeze({
 });
 
 const LANDSCAPE_IMAGES = Object.freeze({
-  BambooForest: '/assets/images/landscape/bamboo_topview.png',
-  Mountain: '/assets/images/landscape/mountain_topview.png',
-  Pond: '/assets/images/landscape/river_topview.png',
-  Sakura: '/assets/images/landscape/sakura_tree_topview.png',
-  Wetland: '/assets/images/landscape/grass_topview.png',
+  BambooForest: assetPath("/assets/images/landscape/bamboo_topview.png"),
+  Mountain: assetPath("/assets/images/landscape/mountain_topview.png"),
+  Pond: assetPath("/assets/images/landscape/river_topview.png"),
+  Sakura: assetPath("/assets/images/landscape/sakura_tree_topview.png"),
+  Wetland: assetPath("/assets/images/landscape/grass_topview.png"),
 });
 
 const LANDSCAPE_IMAGE_SCALES = Object.freeze({
@@ -24,27 +25,27 @@ const LANDSCAPE_IMAGE_SCALES = Object.freeze({
 });
 
 const DRAWN_ANIMAL_IMAGES = Object.freeze({
-  Crane: '/assets/images/animals/CraneAvatar.svg',
-  Japanmakak: '/assets/images/animals/JapanmakakAvatar.svg',
-  Koi: '/assets/images/animals/KoiAvatar.svg',
-  Panda: '/assets/images/animals/PandaAvatar.svg',
-  Sika: '/assets/images/animals/SikaAvatar.svg',
+  Crane: assetPath("/assets/images/animals/CraneAvatar.svg"),
+  Japanmakak: assetPath("/assets/images/animals/JapanmakakAvatar.svg"),
+  Koi: assetPath("/assets/images/animals/KoiAvatar.svg"),
+  Panda: assetPath("/assets/images/animals/PandaAvatar.svg"),
+  Sika: assetPath("/assets/images/animals/SikaAvatar.svg"),
 });
 
 const ALLOWED_ANIMAL_ICONS = Object.freeze({
-  Crane: '/assets/images/animals/CraneIcon.png',
-  Japanmakak: '/assets/images/animals/JapanmakakIcon.png',
-  Koi: '/assets/images/animals/KoiIcon.png',
-  Panda: '/assets/images/animals/PandaIcon.png',
-  Sika: '/assets/images/animals/SikaIcon.png',
+  Crane: assetPath("/assets/images/animals/CraneIcon.png"),
+  Japanmakak: assetPath("/assets/images/animals/JapanmakakIcon.png"),
+  Koi: assetPath("/assets/images/animals/KoiIcon.png"),
+  Panda: assetPath("/assets/images/animals/PandaIcon.png"),
+  Sika: assetPath("/assets/images/animals/SikaIcon.png"),
 });
 
 const SCORECARD_IMAGES = Object.freeze({
-  Japanmakak: '/assets/images/scorecards/JapanmakakScorecard.png',
-  Koi: '/assets/images/scorecards/KoiScorecard.png',
-  Crane: '/assets/images/scorecards/KranichScorecard.png',
-  Panda: '/assets/images/scorecards/PandaScorecard.png',
-  Sika: '/assets/images/scorecards/SikaScorecard.png',
+  Japanmakak: assetPath("/assets/images/scorecards/JapanmakakScorecard.png"),
+  Koi: assetPath("/assets/images/scorecards/KoiScorecard.png"),
+  Crane: assetPath("/assets/images/scorecards/KranichScorecard.png"),
+  Panda: assetPath("/assets/images/scorecards/PandaScorecard.png"),
+  Sika: assetPath("/assets/images/scorecards/SikaScorecard.png"),
 });
 
 let areScorecardsPreloaded = false;

@@ -1,3 +1,4 @@
+import { assetPath } from "../utils/assetPath.js";
 import * as THREE from "three";
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
@@ -6,7 +7,7 @@ export default class TextSpawner {
     static font = null;
     static fontPromise = null;
 
-    static fontPath = "/assets/fonts/inter/Inter 18pt_Bold.json";
+    static fontPath = assetPath("/assets/fonts/inter/Inter 18pt_Bold.json");
 
     static async loadFont() {
         if (this.font) {

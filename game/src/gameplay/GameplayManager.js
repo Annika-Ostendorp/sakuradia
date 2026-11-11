@@ -1,3 +1,4 @@
+import { assetPath } from "../utils/assetPath.js";
 import { RoundState } from "../data/RoundState.js";
 import Game from "./Game.js";
 import { createHandPanel } from "../ui/components/createHandPanel.js";
@@ -154,7 +155,7 @@ export default class GameplayManager {
   async onSubmitted() {
     const previousState = this.getCurrentRoundState();
 
-    this.audioManager.playInteraction("/assets/audio/sfx/Click.mp3");
+    this.audioManager.playInteraction(assetPath("/assets/audio/sfx/Click.mp3"));
 
     // Je nach State
     switch (previousState) {
