@@ -1,11 +1,13 @@
 import * as THREE from "three";
 import "../styles/global.css";
+
 import {
   createGameCamera,
   createGameOrbitControls,
   updateOrbitControlsWithRightStick,
   moveOrbitCameraHorizontal,
-} from "/src/rendering/OrbitalCamera.js";
+} from "../rendering/OrbitalCamera.js";
+
 import {
   createOrthographicCamera,
   createOrthographicDragControls,
@@ -13,21 +15,27 @@ import {
   DEFAULT_ORTHO_VIEW_SIZE,
   MIN_ORTHO_VIEW_SIZE,
   MAX_ORTHO_VIEW_SIZE,
-} from "/src/rendering/OrthographicCamera.js";
-import ModelLoader from "/src/utils/ModelLoader.js";
-import SmoothAnimator from "/src/utils/SmoothAnimator.js";
+} from "../rendering/OrthographicCamera.js";
+
+import ModelLoader from "../utils/ModelLoader.js";
+import SmoothAnimator from "../utils/SmoothAnimator.js";
+
 import GameplayManager from "../gameplay/GameplayManager.js";
 import InputManager from "../input/InputManager.js";
 import DebugConfig from "../debug/DebugConfig.js";
+
 import { createRulesPopup } from "../ui/components/createRulesPopup.js";
+
 import ruleImage01 from "../assets/images/rules/Sakura_RulePopup-01.jpg";
 import ruleImage02 from "../assets/images/rules/Sakura_RulePopup-02.jpg";
 import ruleImage03 from "../assets/images/rules/Sakura_RulePopup-03.jpg";
 import ruleImage04 from "../assets/images/rules/Sakura_RulePopup-04.jpg";
 import ruleImage07 from "../assets/images/rules/Sakura_RulePopup-07.jpg";
 import ruleImage08 from "../assets/images/rules/Sakura_RulePopup-08.jpg";
-import AudioManager from "/src/audio/AudioManager.js";
-import { AudioType } from "/src/data/AudioType.js";
+
+import AudioManager from "../audio/AudioManager.js";
+import { AudioType } from "../data/AudioType.js";
+
 
 const RULE_PAGES = [
   { src: ruleImage01, alt: "Rules page 1" },
